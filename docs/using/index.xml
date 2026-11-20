@@ -1871,6 +1871,16 @@ The tracked FDS output of the T-junction fire is not in the repository; run
 &lt;code>set -e&lt;/code> must accept status 2 if incomplete runs are expected, e.g.
 &lt;code>uv run python run.py … || [ $? -eq 2 ]&lt;/code>. Argument errors also exit with
 status 2, before the run starts.&lt;/p>
+&lt;p>The exit status is derived from two values of the result: what happened to
+the run (execution: &lt;code>finished&lt;/code>, &lt;code>cancelled&lt;/code> or &lt;code>crashed&lt;/code>) and what it produced
+(outcome: &lt;code>completed&lt;/code>, &lt;code>incomplete&lt;/code>, &lt;code>rejected&lt;/code> or &lt;code>no_result&lt;/code>). Status 2 does
+not tell an incomplete run from an argument error; the manifest &lt;code>outcome&lt;/code>
+block does (&lt;code>execution&lt;/code>, &lt;code>status&lt;/code>, &lt;code>end_reason&lt;/code>), and the &lt;code>ResultEvent&lt;/code> of
+the Python API carries &lt;code>execution&lt;/code> and &lt;code>outcome&lt;/code>. A run is &lt;code>rejected&lt;/code> when
+the configuration was refused before the simulation ran: a failed setup or
+a spawn or insertion check that fails before the first progress sample (an
+over-full spawn area, a bad spawn value, an agent JuPedSim refuses). It is
+&lt;code>crashed&lt;/code> when any other exception ends it after the simulation started. Both exit with status 1.&lt;/p>
 &lt;h2>Inspecting an FDS case&lt;span class="hx-absolute -hx-mt-20" id="inspecting-an-fds-case">&lt;/span>
 &lt;a href="#inspecting-an-fds-case" class="subheading-anchor" aria-label="Permalink for this section">&lt;/a>&lt;/h2>&lt;p>&lt;code>scripts/inspect_fds.py&lt;/code> summarises what quantities FDS wrote and whether
 they are within tenability-relevant ranges. Its &lt;code>--height&lt;/code> defaults to 1.6 m,
@@ -3280,7 +3290,7 @@ with &lt;code>--output-sqlite&lt;/code> it is copied beside the trajectory as
 &lt;/tr>
 &lt;tr>
 &lt;td>&lt;code>outcome&lt;/code>&lt;/td>
-&lt;td>how the run ended: &lt;code>status&lt;/code> (&lt;code>completed&lt;/code> or &lt;code>incomplete&lt;/code>), &lt;code>end_reason&lt;/code> (&lt;code>all_evacuated&lt;/code>, &lt;code>time_limit&lt;/code>, &lt;code>flows_closed&lt;/code>, &lt;code>all_mobile_left&lt;/code> or &lt;code>deadlock&lt;/code>), &lt;code>agents_remaining&lt;/code> and &lt;code>agents_not_spawned&lt;/code>, and &lt;code>deadlock&lt;/code> (&lt;code>agents&lt;/code>, &lt;code>since_s&lt;/code>, &lt;code>positions&lt;/code>, &lt;code>ended_run&lt;/code>) when a deadlock was detected, as in &lt;a href="#reading-the-results">Reading the results&lt;/a>&lt;/td>
+&lt;td>how the run ended: &lt;code>execution&lt;/code> (always &lt;code>finished&lt;/code>: a manifest is written only for a run that finished), &lt;code>status&lt;/code> (&lt;code>completed&lt;/code> or &lt;code>incomplete&lt;/code>), &lt;code>end_reason&lt;/code> (&lt;code>all_evacuated&lt;/code>, &lt;code>time_limit&lt;/code>, &lt;code>flows_closed&lt;/code>, &lt;code>all_mobile_left&lt;/code> or &lt;code>deadlock&lt;/code>), &lt;code>agents_remaining&lt;/code> and &lt;code>agents_not_spawned&lt;/code>, and &lt;code>deadlock&lt;/code> (&lt;code>agents&lt;/code>, &lt;code>since_s&lt;/code>, &lt;code>positions&lt;/code>, &lt;code>ended_run&lt;/code>) when a deadlock was detected, as in &lt;a href="#reading-the-results">Reading the results&lt;/a>&lt;/td>
 &lt;/tr>
 &lt;tr>
 &lt;td>&lt;code>heat_clothing&lt;/code>&lt;/td>
@@ -8021,7 +8031,7 @@ not finish, and do not use its time as a value censored at
 &lt;/div>
 &lt;p class="docs-files__summary">The example script, the two scenarios, the FDS deck of part 2, run.py, pinned package versions and a README.txt with the commands and the expected result. FDS output is not included: a clone of the repository has it, or you write it with FDS in about 30 s.&lt;/p>
 &lt;dl class="docs-files__facts">
-&lt;div>&lt;dt>Built from&lt;/dt>&lt;dd>pyFDS-Evac &lt;a href="https://github.com/PedestrianDynamics/pyFDS-Evac/commit/2798a196ed39ca24b6844d4ed41490bbf1075115">&lt;code>2798a19&lt;/code>&lt;/a>; &lt;code>requirements.txt&lt;/code> pins the packages of &lt;code>uv.lock&lt;/code>&lt;/dd>&lt;/div>
+&lt;div>&lt;dt>Built from&lt;/dt>&lt;dd>pyFDS-Evac &lt;a href="https://github.com/PedestrianDynamics/pyFDS-Evac/commit/ee96f3896262b13f72f7263dd252f96b6efa9353">&lt;code>ee96f38&lt;/code>&lt;/a>; &lt;code>requirements.txt&lt;/code> pins the packages of &lt;code>uv.lock&lt;/code>&lt;/dd>&lt;/div>
 &lt;div>&lt;dt>FDS&lt;/dt>&lt;dd>you run it; the page used &lt;code>FDS-6.10.1-0-g12efa16-release&lt;/code>, 30 s wall clock, one process, on an Apple M3 Pro, macOS&lt;/dd>&lt;/div>
 &lt;div>&lt;dt>pyFDS-Evac run&lt;/dt>&lt;dd>about 10 s&lt;/dd>&lt;/div>
 &lt;div>&lt;dt>Expected result&lt;/dt>&lt;dd>&lt;code>mean = 44.5 s, SD = 1.8 s&lt;/code>&lt;br>&lt;code>min-max = 41.5-46.0 s&lt;/code>&lt;br>&lt;code>95th percentile = 46.0 s&lt;/code>&lt;br>&lt;code>exit times [], incapacitated 1, remaining 1&lt;/code>&lt;br>&lt;span class="docs-files__note">made at commit &lt;code>9c820e0f&lt;/code>&lt;/span>&lt;/dd>&lt;/div>
@@ -8045,7 +8055,7 @@ not finish, and do not use its time as a value censored at
 &lt;li>&lt;code>assets/iso_table22_coupled/geometry.wkt&lt;/code>: walkable area of the gas room&lt;/li>
 &lt;li>&lt;code>assets/iso_table22_coupled/README.md&lt;/code>: what the gas room is and where it comes from&lt;/li>
 &lt;/ul>
-&lt;p class="docs-files__note">&lt;code>README.txt&lt;/code> lists the exact versions and the commands. SHA-256: &lt;code class="docs-files__hash">e3a52af2a32c89f7237b131c3be7c21ce2c594d10dc404ded6a6529b7d613812&lt;/code>&lt;/p>
+&lt;p class="docs-files__note">&lt;code>README.txt&lt;/code> lists the exact versions and the commands. SHA-256: &lt;code class="docs-files__hash">b8499a18fa373f10a14d0b003c3497824e763d781c86ee46cc35b845c8acfd97&lt;/code>&lt;/p>
 &lt;/details>
 &lt;/aside>
 &lt;p>The zip holds the decks but no FDS output; its &lt;code>README.txt&lt;/code> runs the
