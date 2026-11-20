@@ -18,7 +18,10 @@ min DIFF within 10 s and the failing area within 10 %. The tolerance is not
 changed to pass. It holds for the ``nearest`` rule (the release's) and for
 the default ``exists`` rule (block maximum); row A is a nearest-node
 reference, so ``exists`` is checked against it, not against the release's
-own cell rule.
+own cell rule. Row A itself now uses the module's ``first_crossing_level``
+and ``release_measures``, so stage 2 checks the rebuild of the grid and the
+RSET, not those two functions; stage 1 and the released ``aset_map.txt``
+are the independent anchor for them.
 """
 
 import importlib.util

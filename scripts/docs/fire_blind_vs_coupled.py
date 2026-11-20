@@ -58,13 +58,10 @@ from first_fds_case_aset import (  # noqa: E402
     _check_slice_height,
     first_crossings,
     location_aset,
+    point_crossings,
 )
 
 from pyfds_evac import (  # noqa: E402
-    DefaultFedConfig,
-    DefaultFedModel,
-    ExtinctionField,
-    FdsFedField,
     SmokeSpeedConfig,
 )
 
@@ -422,13 +419,11 @@ def position_difference(folder):
 
 def fixed_point_aset(fds):
     sim = _check_slice_height(fds)
-    k_field = ExtinctionField.from_fds(str(fds), simulation=sim)
-    fed_field = FdsFedField.from_fds(str(fds), simulation=sim)
-    fed_model = DefaultFedModel(fed_field, DefaultFedConfig())
     criteria = {key: CRITERIA[key] for key in STUDY_CRITERIA}
-    loc = location_aset(k_field, fed_model, criteria)
+    loc = location_aset(point_crossings(fds, sim, criteria))
     for point, expected in EXPECTED_K_ASET.items():
-        assert loc.loc[point, "K 0.3"] == expected, (point, loc.loc[point])
+        # Level crossings are on FDS frame times (23.005 s); the pages print seconds.
+        assert round(loc.loc[point, "K 0.3"]) == expected, (point, loc.loc[point])
     return loc
 
 

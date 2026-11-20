@@ -671,9 +671,17 @@ class Fire:
     raw: dict = field(default_factory=dict)  # criterion -> (t, ny, nx) bool
 
 
+# Bump when the cached quantities change; v2: right-endpoint doses (#997).
+CACHE_VERSION = 2
+
+
 def fire_fields(fds_dir, cache):
-    """Node first-crossing times per criterion and the screen values, cached."""
-    path = cache / f"{fds_dir.name}.npz"
+    """Node first-crossing times per criterion and the screen values, cached.
+
+    The file name carries ``CACHE_VERSION``, so a cache written by an older
+    rule is never read.
+    """
+    path = cache / f"{fds_dir.name}.v{CACHE_VERSION}.npz"
     if path.exists():
         z = np.load(path, allow_pickle=True)
         fire = Fire(fds_dir.name, z["times"], z["xs"], z["ys"])
