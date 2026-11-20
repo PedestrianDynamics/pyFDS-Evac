@@ -1,0 +1,54 @@
+&HEAD CHID='slice_node_vs_cell',
+      TITLE='Compartment fire with a descending smoke layer: node-centred and cell-centred slices at 1.6 m (#231)' /
+
+! 6 x 6 x 3 m compartment, adiabatic walls, one 0.6 m wide, 0.6 m high opening
+! in the x = 0 wall. A 0.4 x 0.4 m propane burner (160 kW after a 10 s ramp)
+! stands at the centre. The hot smoke layer fills from the ceiling and its
+! interface descends through 1.6 m (pyFDS-Evac's default sampling height,
+! FDS+Evac's HUMAN_SMOKE_HEIGHT) while the plume edge is a sharp horizontal
+! gradient on the same plane. The opening sets the final layer height below
+! 1.6 m, so the interface crosses the sampling height during the run.
+!
+! Grid: 0.2 m in x and y, 0.1 m in z, so z = 1.6 m is a node plane and the
+! cell centres next to it are at 1.55 and 1.65 m.
+&MESH IJK=30,30,30, XB=0.0,6.0,0.0,6.0,0.0,3.0 /
+&TIME T_END=120.0 /
+&MISC TMPA=20.0 /
+&DUMP DT_SLCF=2.0, SMOKE3D=.FALSE. /
+
+&REAC FUEL='PROPANE', SOOT_YIELD=0.05, CO_YIELD=0.04 /
+&SPEC ID='SOOT' /
+
+&RAMP ID='BURNER_RAMP', T=0.0,  F=0.0 /
+&RAMP ID='BURNER_RAMP', T=10.0, F=1.0 /
+&SURF ID='BURNER', HRRPUA=1000.0, RAMP_Q='BURNER_RAMP', COLOR='RED' /
+&OBST XB=2.8,3.2,2.8,3.2,0.0,0.2, SURF_IDS='BURNER','INERT','INERT' /
+
+&VENT SURF_ID='OPEN', XB=0.0,0.0,2.7,3.3,0.0,0.6 /
+
+! The node-centred slice (FDS default) and the cell-centred slice of the same
+! quantity, declared as pairs. A cell-centred PBZ slice takes the cell that
+! holds the plane, so one at 1.55 m and one at 1.65 m bracket the node plane
+! at 1.6 m.
+&SLCF PBZ=1.6, QUANTITY='EXTINCTION COEFFICIENT'                                 /
+&SLCF PBZ=1.6, QUANTITY='VOLUME FRACTION', SPEC_ID='CARBON MONOXIDE'             /
+&SLCF PBZ=1.6, QUANTITY='VOLUME FRACTION', SPEC_ID='CARBON DIOXIDE'              /
+&SLCF PBZ=1.6, QUANTITY='VOLUME FRACTION', SPEC_ID='OXYGEN'                      /
+&SLCF PBZ=1.6, QUANTITY='TEMPERATURE'                                            /
+
+&SLCF PBZ=1.55, CELL_CENTERED=.TRUE., QUANTITY='EXTINCTION COEFFICIENT'                                 /
+&SLCF PBZ=1.55, CELL_CENTERED=.TRUE., QUANTITY='VOLUME FRACTION', SPEC_ID='CARBON MONOXIDE'             /
+&SLCF PBZ=1.55, CELL_CENTERED=.TRUE., QUANTITY='VOLUME FRACTION', SPEC_ID='CARBON DIOXIDE'              /
+&SLCF PBZ=1.55, CELL_CENTERED=.TRUE., QUANTITY='VOLUME FRACTION', SPEC_ID='OXYGEN'                      /
+&SLCF PBZ=1.55, CELL_CENTERED=.TRUE., QUANTITY='TEMPERATURE'                                            /
+
+&SLCF PBZ=1.65, CELL_CENTERED=.TRUE., QUANTITY='EXTINCTION COEFFICIENT'                                 /
+&SLCF PBZ=1.65, CELL_CENTERED=.TRUE., QUANTITY='VOLUME FRACTION', SPEC_ID='CARBON MONOXIDE'             /
+&SLCF PBZ=1.65, CELL_CENTERED=.TRUE., QUANTITY='VOLUME FRACTION', SPEC_ID='CARBON DIOXIDE'              /
+&SLCF PBZ=1.65, CELL_CENTERED=.TRUE., QUANTITY='VOLUME FRACTION', SPEC_ID='OXYGEN'                      /
+&SLCF PBZ=1.65, CELL_CENTERED=.TRUE., QUANTITY='TEMPERATURE'                                            /
+
+! A vertical slice through the burner shows where the interface is.
+&SLCF PBY=3.0, QUANTITY='TEMPERATURE' /
+
+&TAIL /

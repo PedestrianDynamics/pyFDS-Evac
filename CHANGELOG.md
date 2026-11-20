@@ -30,6 +30,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   three), and to 9.9e-4 through the run loop; a stationary occupant in a new
   FDS fire deck (`assets/pathfinder_fed_stationary`) matches FDS's own `FED`
   device within 0.1 % at 119 s. Tests only; no model change.
+- A measurement of node-centred against cell-centred slice readings at 1.6 m
+  (#231): `assets/slice_node_vs_cell`, `scripts/verification/slice_node_vs_cell.py`
+  and the page "Node-centred against cell-centred slices" report how far the
+  value pyFDS-Evac reads from a default slice is from the cell value FDS+Evac
+  uses, for K, the speed factor and the gas and heat FED rates. No change to
+  the sampling code; `CELL_CENTERED=T` slices were already read.
 - Every model warns, at setup and in the effective configuration, when the
   region an agent centre can occupy (the walkable area eroded by the largest
   spawn radius plus the model's wall clearance) is farther than 0.03 m from an

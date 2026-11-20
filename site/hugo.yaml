@@ -119,6 +119,7 @@ module:
         - "testing-heat.md"
         - "testing-heat-radiometer.md"
         - "testing-pathfinder-fed.md"
+        - "testing-slice-node-vs-cell.md"
         - "testing-familiarity.md"
         - "assets.md"
     - source: ../artifacts

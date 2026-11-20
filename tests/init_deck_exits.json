@@ -11583,6 +11583,30 @@
    ]
   ]
  },
+ "assets/slice_node_vs_cell/slice_node_vs_cell.fds":{
+  "vent_1":[
+   [
+    0.5,
+    3.3
+   ],
+   [
+    0.5,
+    2.7
+   ],
+   [
+    0.0,
+    2.7
+   ],
+   [
+    0.0,
+    3.3
+   ],
+   [
+    0.5,
+    3.3
+   ]
+  ]
+ },
  "assets/station/Station210_clean.fds":{},
  "assets/station_prereg/fds/station_dx010_central.fds":{
   "vent_1":[

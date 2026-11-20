@@ -410,7 +410,7 @@ contains the centre of the agent's evacuation-grid cell (evac.f90:6337,
 :16078); pyFDS-Evac reads the extinction coefficient from the nearest
 value position of an FDS slice at a fixed height, which for FDS's
 default node-centred slices is a node value averaged over the
-surrounding cells.  The path-averaged extinction coefficient, which Börger et al.
+surrounding cells (measured in [Node-centred against cell-centred slices](testing-slice-node-vs-cell.md): a few per cent in K away from gradients, tens of per cent at a plume edge or layer interface).  The path-averaged extinction coefficient, which Börger et al.
 (2024) [2] take along the line of sight to a sign and pyFDS-Evac takes
 along the walked polyline, is used in pyFDS-Evac for route cost only,
 not for walking speed.
