@@ -604,7 +604,8 @@ Handbook Ch. 63 (equation level), in coupled corridor runs on synthetic
 fields, and on FDS cases at 100, 150 and 200 °C. The default ISO Eq. (9) is
 run on the 150 and 200 °C cases
 ([#307](https://github.com/PedestrianDynamics/pyFDS-Evac/issues/307)); the
-layer regime has no FDS case yet
+layer regime has an FDS case that it misses in part: 9 of 63 gauge comparisons
+fall outside ±30 %
 ([#308](https://github.com/PedestrianDynamics/pyFDS-Evac/issues/308)). The
 checks, their numbers and the test assumptions are on
 [Verification › Heat dose](/verification/testing-heat.md#checks-against-the-handbook)
