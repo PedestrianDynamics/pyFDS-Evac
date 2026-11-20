@@ -131,6 +131,7 @@ def test_run_that_empties_is_completed(run):
     assert result.agents_not_spawned == 0
     assert result.end_reason == "all_evacuated"
     assert _manifest_outcome(result) == {
+        "execution": "finished",
         "status": "completed",
         "end_reason": "all_evacuated",
         "agents_remaining": 0,
@@ -155,6 +156,7 @@ def test_time_limit_with_agents_inside_is_incomplete(run):
     assert result.metrics["all_evacuated"] is False
     assert result.end_reason == "time_limit"
     assert _manifest_outcome(result) == {
+        "execution": "finished",
         "status": "incomplete",
         "end_reason": "time_limit",
         "agents_remaining": NUM_AGENTS,
@@ -285,13 +287,6 @@ def test_run_outcome_words_a_run_that_ended_with_only_dead_agents_inside():
     assert run_outcome("incomplete", 2, 0, "all_mobile_left").label == outcome.label
 
 
-def test_generated_script_words_a_run_that_ended_with_only_dead_agents_inside():
-    from pyfds_evac.config.script import python_script
-
-    code = python_script({"scenario": "x.json"})
-    assert '"all_mobile_left": "all mobile agents left"' in code
-
-
 def test_cli_summary_of_a_deadlocked_run():
     import run as cli
 
@@ -322,13 +317,6 @@ def test_run_outcome_words_a_deadlocked_run():
     assert run_outcome("incomplete", 1, 4, "deadlock").label == (
         "Incomplete: deadlock, 1 agent stuck, 4 not spawned"
     )
-
-
-def test_generated_script_words_a_deadlocked_run():
-    from pyfds_evac.config.script import python_script
-
-    code = python_script({"scenario": "x.json"})
-    assert '"deadlock": "deadlock"' in code
 
 
 @pytest.mark.parametrize(

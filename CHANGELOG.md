@@ -22,6 +22,15 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
+- A run reports an execution (`finished`, `cancelled`, `crashed`) and an
+  outcome (`completed`, `incomplete`, `rejected`, `no_result`) apart (#535).
+  `ResultEvent` gains `execution` and `outcome`; the manifest `outcome` block
+  gains `execution: "finished"`. `end_reason` stays the sub-reason, and
+  `deadlock.ended_run` still tells a deadlock that ended the run from one that
+  was only seen. `ResultEvent.status` and `exit_code` stay as legacy values
+  derived from the pair; exit codes are unchanged (0, 2, 1). The stop reason is
+  worded in one place (`frontend.stop_reason_phrase`), so the exported script
+  now words a deadlock as the CLI does ("deadlock, N agents stuck since t = s,").
 - `--heat-endpoint` checks the SFPE Ch. 63 humidity limit (p. 2383, < 10 %
   water vapour by volume) when the FDS case has a `WATER VAPOR VOLUME
   FRACTION` slice: `heat_humidity` reads `ok` or `humid` per FED row, with the

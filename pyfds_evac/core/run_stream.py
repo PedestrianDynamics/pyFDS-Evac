@@ -133,11 +133,14 @@ def _modelled(run_kwargs: Mapping[str, Any]) -> bool:
 def _result_event(
     result: Any, files: tuple[str, ...], exit_counts: dict[str, int] | None
 ) -> events.ResultEvent:
-    status = events.result_status(result.success)
+    outcome = events.OUTCOME_COMPLETED if result.success else events.OUTCOME_INCOMPLETE
+    execution = events.EXECUTION_FINISHED
     metrics = result.metrics
     return events.ResultEvent(
-        status=status,
-        exit_code=events.EXIT_CODES[status],
+        status=events.legacy_status(execution, outcome),
+        exit_code=events.exit_code(execution, outcome),
+        execution=execution,
+        outcome=outcome,
         summary=summary_line(result),
         fds_outside=metrics.get("fds_outside"),
         files=files,
@@ -184,6 +187,7 @@ def stream_run(
     files: tuple[str, ...] = ()
     result: Any = None
     recorder: FrameRecorder | None = None
+    started = False
 
     def check_cancel() -> None:
         if cancel is not None and cancel():
@@ -222,6 +226,7 @@ def stream_run(
                     emit, max_hz=max_hz, smoke_hz=smoke_hz, min_sim_s=min_sim_s
                 )
             emit(events.PhaseEvent(events.PHASE_RUNNING))
+            started = True
             result = run_scenario(
                 scenario,
                 progress_callback=on_progress,
@@ -233,13 +238,26 @@ def stream_run(
         exit_counts = None if recorder is None else dict(recorder.exit_counts)
         outcome = _result_event(result, files, exit_counts)
     except RunCancelled:
+        pair = (events.EXECUTION_CANCELLED, events.OUTCOME_NO_RESULT)
         outcome = events.ResultEvent(
-            events.STATUS_CANCELLED, events.EXIT_CODES[events.STATUS_CANCELLED]
+            events.legacy_status(*pair),
+            events.exit_code(*pair),
+            execution=pair[0],
+            outcome=pair[1],
         )
     except Exception as exc:  # reported to the front end, not raised
+        # Refused before the simulation started: finished, rejected; after:
+        # crashed, no result.
+        pair = (
+            (events.EXECUTION_CRASHED, events.OUTCOME_NO_RESULT)
+            if started
+            else (events.EXECUTION_FINISHED, events.OUTCOME_REJECTED)
+        )
         outcome = events.ResultEvent(
-            events.STATUS_FAILED,
-            events.EXIT_CODES[events.STATUS_FAILED],
+            events.legacy_status(*pair),
+            events.exit_code(*pair),
+            execution=pair[0],
+            outcome=pair[1],
             files=files,
             error=f"{type(exc).__name__}: {exc}",
             traceback=traceback.format_exc() if send_traceback else None,

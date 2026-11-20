@@ -4400,15 +4400,19 @@ def run_scenario(
                 fds_coverage=metrics.get("fds_coverage"),
                 fds_outside=metrics.get("fds_outside"),
                 outcome={
-                    key: metrics[key]
-                    for key in (
-                        "status",
-                        "end_reason",
-                        "agents_remaining",
-                        "agents_not_spawned",
-                        "deadlock",
-                    )
-                    if key in metrics
+                    # A manifest exists only for a run that finished (#535).
+                    "execution": "finished",
+                    **{
+                        key: metrics[key]
+                        for key in (
+                            "status",
+                            "end_reason",
+                            "agents_remaining",
+                            "agents_not_spawned",
+                            "deadlock",
+                        )
+                        if key in metrics
+                    },
                 },
                 sfm=(
                     sfm_model_settings(scenario.sim_params)

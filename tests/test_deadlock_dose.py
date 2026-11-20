@@ -25,6 +25,7 @@ from harness import (  # noqa: E402
 )
 
 from pyfds_evac.core.fed import TenabilityConfig  # noqa: E402
+from pyfds_evac.core.run_outputs import summary_line  # noqa: E402
 from pyfds_evac.core.scenario import (  # noqa: E402
     _agents_reaching_threshold,
     _threshold_reach_s,
@@ -122,6 +123,9 @@ def test_a_rising_dose_keeps_the_run_going_past_the_deadlock(caplog):
         assert deadlock["ended_run"] is False
         assert deadlock["agents"] == 1
         assert result.end_reason == "all_mobile_left"
+        # #535: a deadlock that was seen is not a deadlock that ended the run.
+        assert result.status == "incomplete"
+        assert "deadlock" not in summary_line(result)
         assert result.evacuation_time > DEADLOCK_END_S + 50.0
         assert result.agents_incapacitated == 2
         logged = [r.getMessage() for r in caplog.records if "Deadlock" in r.message]

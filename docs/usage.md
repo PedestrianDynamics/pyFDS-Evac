@@ -372,6 +372,15 @@ Both runs above exit with status 2. A script that runs `run.py` under
 `uv run python run.py … || [ $? -eq 2 ]`. Argument errors also exit with
 status 2, before the run starts.
 
+The exit status is derived from two values of the result: what happened to
+the run (execution: `finished`, `cancelled` or `crashed`) and what it produced
+(outcome: `completed`, `incomplete`, `rejected` or `no_result`). Status 2 does
+not tell an incomplete run from an argument error; the manifest `outcome`
+block does (`execution`, `status`, `end_reason`), and the `ResultEvent` of
+the Python API carries `execution` and `outcome`. A configuration refused
+before the simulation started is `rejected`; an exception during the run is
+`crashed`. Both exit with status 1.
+
 ## Inspecting an FDS case
 
 `scripts/inspect_fds.py` summarises what quantities FDS wrote and whether

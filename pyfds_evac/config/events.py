@@ -42,8 +42,23 @@ PHASES = (
     PHASE_DONE,
 )
 
-# How a run ended, and the exit status of ``pyfds-evac`` for it. An
-# argparse usage error also exits 2, so 2 alone does not mean incomplete.
+# What happened to the run (execution) and what it produced (outcome); see
+# ``docs/outputs.md``. The outcome values ``completed`` and ``incomplete``
+# are the run's ``status`` metric; ``end_reason`` is the sub-reason.
+EXECUTION_RUNNING = "running"
+EXECUTION_FINISHED = "finished"
+EXECUTION_CANCELLED = "cancelled"
+EXECUTION_CRASHED = "crashed"
+OUTCOME_COMPLETED = "completed"
+OUTCOME_INCOMPLETE = "incomplete"
+OUTCOME_REJECTED = "rejected"
+OUTCOME_NO_RESULT = "no_result"
+
+# Legacy ``ResultEvent.status``, derived from the (execution, outcome) pair
+# by ``legacy_status`` and kept through 0.9.x and 0.10, and the exit status
+# of ``pyfds-evac`` for it. An argparse usage error also exits 2, so 2 alone
+# does not mean incomplete; the structured result is the manifest's
+# ``outcome``.
 STATUS_SUCCESS = "success"
 STATUS_INCOMPLETE = "incomplete"
 STATUS_FAILED = "failed"
@@ -54,6 +69,52 @@ EXIT_CODES: dict[str, int | None] = {
     STATUS_FAILED: 1,
     STATUS_CANCELLED: None,
 }
+
+# The only legal pairs of a ``ResultEvent``, with the legacy status of each.
+_PAIR_STATUS: dict[tuple[str, str], str] = {
+    (EXECUTION_FINISHED, OUTCOME_COMPLETED): STATUS_SUCCESS,
+    (EXECUTION_FINISHED, OUTCOME_INCOMPLETE): STATUS_INCOMPLETE,
+    (EXECUTION_FINISHED, OUTCOME_REJECTED): STATUS_FAILED,
+    (EXECUTION_CRASHED, OUTCOME_NO_RESULT): STATUS_FAILED,
+    (EXECUTION_CANCELLED, OUTCOME_NO_RESULT): STATUS_CANCELLED,
+}
+
+
+def legacy_status(execution: str, outcome: str) -> str:
+    """The legacy ``ResultEvent.status`` of an (execution, outcome) pair.
+
+    Raises ``ValueError`` for a pair a run cannot have, for example
+    ``(finished, no_result)``: a run that finished without a result is a bug,
+    never a ``completed`` run.
+    """
+    try:
+        return _PAIR_STATUS[(execution, outcome)]
+    except KeyError:
+        raise ValueError(
+            f"illegal run state: execution={execution!r}, outcome={outcome!r}"
+        ) from None
+
+
+def exit_code(execution: str, outcome: str) -> int | None:
+    """The ``pyfds-evac`` exit status of an (execution, outcome) pair."""
+    return EXIT_CODES[legacy_status(execution, outcome)]
+
+
+def pair_of_status(status: str, *, started: bool = True) -> tuple[str, str]:
+    """The (execution, outcome) pair of a legacy *status*.
+
+    *started* tells a ``failed`` run that was refused before the simulation
+    started (False: finished, rejected) from one that crashed (True:
+    crashed, no_result).
+    """
+    if status == STATUS_FAILED and not started:
+        return EXECUTION_FINISHED, OUTCOME_REJECTED
+    if status == STATUS_FAILED:
+        return EXECUTION_CRASHED, OUTCOME_NO_RESULT
+    for pair, legacy in _PAIR_STATUS.items():
+        if legacy == status:
+            return pair
+    raise ValueError(f"unknown run status: {status!r}")
 
 
 @dataclass(frozen=True)
@@ -112,6 +173,16 @@ class ResultEvent:
     ``incapacitation_modelled`` says whether the run could incapacitate
     anyone (:func:`~pyfds_evac.config.frontend.incapacitation_modelled`);
     ``incapacitated`` is meaningful only when it is True.
+
+    ``execution`` (``"finished"``, ``"cancelled"`` or ``"crashed"``) and
+    ``outcome`` (``"completed"``, ``"incomplete"``, ``"rejected"`` or
+    ``"no_result"``) are the structured result; ``end_reason`` is the
+    sub-reason of an incomplete run. A ``rejected`` run was refused before
+    the simulation started. ``status`` and ``exit_code`` are legacy and
+    derived from the pair; when ``execution`` and ``outcome`` are left
+    out, they are derived from ``status`` (a ``failed`` run then counts as
+    crashed). A pair that disagrees with ``status`` or is not legal raises
+    ``ValueError``.
     """
 
     status: str
@@ -131,6 +202,22 @@ class ResultEvent:
     exit_counts: dict[str, int] | None = None
     incapacitation_modelled: bool | None = None
     end_reason: str | None = None
+    execution: str | None = None
+    outcome: str | None = None
+
+    def __post_init__(self) -> None:
+        execution, outcome = self.execution, self.outcome
+        if execution is None and outcome is None:
+            execution, outcome = pair_of_status(self.status)
+            object.__setattr__(self, "execution", execution)
+            object.__setattr__(self, "outcome", outcome)
+        elif execution is None or outcome is None:
+            raise ValueError("execution and outcome are given together")
+        if legacy_status(execution, outcome) != self.status:
+            raise ValueError(
+                f"status {self.status!r} does not match "
+                f"execution={execution!r}, outcome={outcome!r}"
+            )
 
 
 @dataclass(frozen=True)
