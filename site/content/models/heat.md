@@ -601,9 +601,9 @@ in [Assumptions (unsourced values)](#assumptions-unsourced-values).
 
 The heat laws are checked against hand formulas and the tables of SFPE
 Handbook Ch. 63 (equation level), in coupled corridor runs on synthetic
-fields, and on FDS cases at 100, 150 and 200 °C. The default ISO Eq. (9) has
-expected times only on the FDS cases
-([#307](https://github.com/PedestrianDynamics/pyFDS-Evac/issues/307)), and the
+fields, and on FDS cases at 100, 150 and 200 °C. The default ISO Eq. (9) is
+run on the 150 and 200 °C cases
+([#307](https://github.com/PedestrianDynamics/pyFDS-Evac/issues/307)); the
 layer regime has no FDS case yet
 ([#308](https://github.com/PedestrianDynamics/pyFDS-Evac/issues/308)). The
 checks, their numbers and the test assumptions are on
