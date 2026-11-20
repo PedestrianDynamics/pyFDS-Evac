@@ -209,3 +209,23 @@ def test_map_crossing_equals_the_fed_history_of_a_held_agent_in_an_engine_run():
         run.cleanup()
     assert first["time_s"] == 982.0
     assert (crossing.first_s == first["time_s"]).all()
+
+
+def test_scaled_level_crossing_reads_a_volume_fraction_in_ppm(monkeypatch):
+    sampler = _field("CARBON MONOXIDE VOLUME FRACTION", 0.0, 0.01, 7)
+    monkeypatch.setattr(fds_fields, "load_slice_sampler", lambda *a, **k: sampler)
+    crossing = fds_fields.read_level_crossing(
+        "unused", "CARBON MONOXIDE VOLUME FRACTION", 5000.0, scale=1e6
+    )
+    for x, y, first in zip(crossing.x, crossing.y, crossing.first_s):
+        hit = [t for t in FRAME_TIMES if sampler.sample(t, x, y) * 1e6 >= 5000.0]
+        assert first == (hit[0] if hit else np.inf)
+    assert np.isfinite(crossing.first_s).any() and np.isinf(crossing.first_s).any()
+    assert crossing.name == "CARBON MONOXIDE VOLUME FRACTION 5000"
+
+
+def test_level_crossing_rejects_a_nonpositive_limit_or_scale():
+    with pytest.raises(ValueError, match="positive"):
+        fds_fields.read_level_crossing("unused", "TEMPERATURE", 0.0)
+    with pytest.raises(ValueError, match="positive"):
+        fds_fields.read_level_crossing("unused", "TEMPERATURE", 1.0, scale=-1.0)

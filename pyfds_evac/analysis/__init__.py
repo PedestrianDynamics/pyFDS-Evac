@@ -32,7 +32,12 @@ from .aset_rset import (
     release_measures,
     seed_measures,
 )
-from .fds_fields import STAY_TEMPERATURE_C, AsetCriteria, read_crossings
+from .fds_fields import (
+    STAY_TEMPERATURE_C,
+    AsetCriteria,
+    read_crossings,
+    read_level_crossing,
+)
 from .plot import plot_maps
 from .rset import grid_from_walkable, load_exit_times, load_trajectory, rset_map
 
@@ -66,6 +71,7 @@ __all__ = [
     "pool_rset",
     "pool_seeds",
     "read_crossings",
+    "read_level_crossing",
     "reduce_to_cells",
     "release_measures",
     "rset_map",
