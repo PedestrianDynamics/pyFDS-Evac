@@ -174,6 +174,10 @@ $$
   applies it to the net or excess radiant term (spec 016). `heat_flux_kw_m2`
   stays the physical *q*; the constant is `ISO_RADIANT_THRESHOLD_KW_M2`.
 - **Not added to a convective law.** The rate is \(q^{1.33}/D\) alone.
+- **Not the time-to-pain or time-to-burn equations.** The coded radiant law is
+  the dose \(q^{1.33}/D\), not ISO Eqs. (7) and (8) or the Wieczorek and
+  Dembsey correlations, whose exponents are 1.56 and 1.9
+  ([published equations](/fundamentals/incapacitation-thresholds.md#radiant-pain-and-burn-times)).
 - Where the *q* that enters the dose (convection plus the counted radiant
   term) is at or below zero, or the temperature is not finite, the rate is
   zero: no dose, and no recovery. The physical *q* can be negative while

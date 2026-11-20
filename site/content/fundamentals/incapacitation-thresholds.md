@@ -176,6 +176,61 @@ puts them below FED = 0.40 (our arithmetic). Heat stays deterministic by
 default, since no source gives a spread for the convective laws
 ([#225](https://github.com/PedestrianDynamics/pyFDS-Evac/issues/225)).
 
+### Radiant pain and burn times
+
+Wieczorek and Dembsey (2001) give time-to-pain and time-to-burn
+correlations for radiant exposure of the skin, with *q* the incident
+radiant flux [kW/m²] and times in seconds (p. 96):
+
+| Equation | Endpoint | Time | Safety factor | Stated range [kW/m²] |
+|---|---|---|---|---|
+| Eq. (4), p. 96 | pain | \(t_p = 125\,q^{-1.9}\) | 2 on time | 1.7–10, confirmed to 20 |
+| Eq. (5), p. 96 | superficial second-degree burn | \(t_{2b} = 260\,q^{-1.56}\) | 1.6 on exposure time | 2–50 |
+| Eq. (4a), p. 97 | pain | \(t_p = 250\,q^{-1.9}\) | none | as Eq. (4) |
+| Eq. (5a), p. 97 | superficial second-degree burn | \(t_{2b} = 416\,q^{-1.56}\) | none | as Eq. (5) |
+
+Both pairs are fitted to the authors' skin heat-transfer model at the
+reference skin of their Table 2 (p. 93: 32.5 °C initial temperature,
+80 µm epidermis, pain receptors at 100 µm); the model is Eq. (1) for pain
+(p. 94) and Eqs. (2)–(3) for the burn damage integral (pp. 94–95). The
+paper states that 1.7 kW/m² is the critical flux below which no pain is
+experienced however long the exposure (p. 96). The recommended equations
+are (4) and (5); (4a) and (5a) are given "for comparative purposes" (p. 97).
+Against the full model, the simplified times differ by at most 0.1 s from
+10 kW/m² up, and are shorter at 1.7 and 2 kW/m² (by 12 % for pain and up
+to 29 % for burns at the coldest skin of the paper's range, p. 106).
+
+ISO 13571:2012 Eqs. (7) and (8), which cite this paper as ref. [17], are
+the equations without the safety factors: 6.9 *q*^−1.56 min is 414 s,
+Eq. (5a) with 416 s, and 4.2 *q*^−1.9 min is 252 s, Eq. (4a) with 250 s
+(our conversion; the small differences are rounding of the constants).
+ISO's times are therefore 1.6 times (burn) and 2 times (pain) longer than
+those of the equations the paper recommends. At 2.5 kW/m², the ISO
+threshold flux, pain comes at about 44 s by ISO against 22 s by Eq. (4),
+and a burn at about 99 s against 62 s by Eq. (5) (our arithmetic).
+
+The paper compares (4a) and (5a) with the dose form \(t = A\,q^{-4/3}\)
+used in the United Kingdom, which it cites to Hymes, Boydell and Prescott
+(1996) (ref. [12]): pain at 92 (kW/m²)^4/3·s and a superficial
+second-degree burn at 210–700 (kW/m²)^4/3·s, with 113 for pain from Mudan
+and Croce (pp. 96–97). It finds the unfactored times consistent with these
+(conclusions, p. 108). We have not read ref. [12].
+
+Heat-tolerance variability enters the paper as ranges, not as a
+distribution. Initial skin temperature is varied over 27–38 °C and
+epidermal thickness over 16–430 µm, (Table 9, p. 103; the paper's literature
+review, pp. 98–102, supplies the data); pain receptor depth is held fixed
+for lack of data (p. 103). With β the skin temperature over 32.5 °C and
+γ the epidermal thickness over 80 µm, correction factors multiply the
+time of Eqs. (4) and (5): a quadratic in β for pain (Eq. 6, p. 104),
+another for burns (Eq. 7, p. 105), and a function of *q* and γ for
+thickness (Eq. 8, p. 106). Table 10 (p. 107) gives the pain-time factor
+as 1.92 at 27 °C and 0.29 at 38 °C, the burn-time factor as 1.25 to 0.50,
+and the thickness factor at 50 kW/m² as 0.76 (16 µm) to 2.35 (430 µm). These are
+min/max bounds with no stated probability, so they give no σ and do not
+replace the σ ≈ 0.39 above, which is a lethality probit slope. The
+paper contains no probit, no convective-heat data and no FED threshold.
+
 How pyFDS-Evac applies this: [Models › Heat › Incapacitation](/models/heat.md#incapacitation).
 
 ## Sources
@@ -220,6 +275,12 @@ How pyFDS-Evac applies this: [Models › Heat › Incapacitation](/models/heat.m
 - Hockey, S. M., & Rew, P. J. (1996). *Human response to thermal
   radiation*. Contract Research Report 97/1996. HSE Books, Sudbury. Cited
   by Ch. 70 as ref. [125]; read in full (§4.2, Table 5.1, App. B).
+- Wieczorek, C. J., & Dembsey, N. A. (2001). Human variability correction
+  factors for use with simplified engineering tools for predicting pain
+  and second degree skin burns. *Journal of Fire Protection Engineering*,
+  11(2), 88–111; pp. 93–97, 103–107. ISO ref. [17] for Eqs. (7) and (8);
+  read in full.
+  [doi:10.1106/0D9U-KLP9-TG1P-XJ1B](https://doi.org/10.1106/0D9U-KLP9-TG1P-XJ1B)
 - Purser, D. A. (1997). Review of human response to thermal radiation.
   *Fire Safety Journal*, 28, 290–291. Cited by Ch. 70 as ref. [126]; a
   one-page review of Hockey and Rew, read; it gives no probit.
