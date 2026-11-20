@@ -448,6 +448,70 @@ fds-evac-data/heat_radiometer/layer_308 --out <dir>` (FDS 6.10.1-0-g12efa16,
 `fds-evac-data/heat_radiometer/layer_308`). The test is
 `external_data` and skips without that folder.
 
+## Radiometer source against FDS gauges
+
+`--heat-radiant-source radiometer` ([#276](https://github.com/PedestrianDynamics/pyFDS-Evac/issues/276))
+reads the FDS `RADIOMETER GAS` devices of the #224 decks as the radiant term
+and adds convection from the `TEMPERATURE` slice. Setting: seven device
+positions on y = 2.05 m, z = 1.6 m, orientations up, +x, −x and down, h = 8
+W/(m²·K), *T*<sub>s</sub> = 35 °C (the `&PROP` of the decks). The
+radiometer and the FDS gauge hold the same radiation solution, so the
+comparison checks the reader and the assembly of *q*, not the model, and
+says nothing about whether a plate is a person.
+
+**Gated** (`tests/verification/test_heat_radiometer_source_fds.py`; marked
+`external_data`, skipped without the sciebo data):
+
+- *Reading.* The radiometer term of the history row (the fields
+  `heat_flux_row_fields` writes, sampled at the device positions through the
+  model) equals an independent linear interpolation in time of `RAD_z16_<o>-k` at eight times between 1 and
+  9.99 s, for the layer and uniform decks and all four orientations, to
+  10⁻⁶ kW/m².
+- *Identity.* *q* − `GAUGE_z16_<o>-k` = h (*T*<sub>slice</sub> −
+  `T_z16-k`) / 1000 to 10⁻⁶ kW/m², the same cases, an identity of FDS
+  Eq. 22.35 given the reading.
+- *Threshold on the burner deck.* Where the net reading is 2.5 kW/m² or
+  more the dose rate is *q*^1.33/16.7 per minute with the reading counted;
+  below that it is the convective part alone, at every device position and
+  every 0.5 s, facing +x and up.
+
+**Reported, not gated.** |*q* / *q*<sub>gauge</sub> − 1| in percent
+(min / median / max over the 7 positions), which equals h Δ*T* / *q* with
+Δ*T* the slice against the device temperature:
+
+| deck | facing | *t* = 3 s | *t* = 6 s | *t* = 9 s |
+|---|---|---|---|---|
+| layer | up | 0.00 / 0.01 / 0.01 | 0.02 / 0.06 / 0.19 | 0.47 / 1.22 / 1.92 |
+| layer | +x | 0.01 / 0.01 / 0.02 | 0.04 / 0.12 / 0.34 | 0.88 / 2.06 / 3.48 |
+| layer | −x | 0.01 / 0.01 / 0.02 | 0.05 / 0.12 / 0.42 | 0.80 / 2.36 / 3.39 |
+| layer | down | 0.02 / 0.03 / 0.05 | 0.09 / 0.26 / 0.84 | 1.63 / 4.09 / 6.29 |
+| uniform | all four | 0.00 / 0.00 / 0.00 | 0.00 / 0.00 / 0.00 | 0.00 / 0.00 / 0.00 |
+
+The miss grows with time because the head air heats and the slice and the
+device differ most then; it is largest facing down, where the gauge is
+smallest (about 0.9 kW/m²) and the same h Δ*T* is a larger share.
+
+**The 21 cases of #308 with the radiometer source** (`layer_308`, facing up,
++x and −x at the 7 positions, *t* = 3, 6, 9 s): all 63 (position, time)
+pairs are inside ±30 %, against 54 of 63 for the layer term above. The
+ratio *q*<sub>model</sub> / *q*<sub>FDS</sub> − 1 is −1.9 % at most facing up
+(median −0.06 %), −3.5 % facing +x (median −0.12 %) and −3.4 % facing −x
+(median −0.12 %); the identity above holds in each case. The wall-facing
+gauges that the layer term missed by 33–54 % are within 3.5 %, as the
+reading is FDS's own radiation solution at the point, walls included. The #308 agents spawn anywhere in 0.22 m boxes, off the one-row grid,
+so the 21 cases are sampled at the device positions through the model, not
+through coupled runs; the CLI stops with the coverage error for the
+committed #308 scenario (also tested).
+
+What this does not show: the radiometer source on a 2-D grid of FDS devices
+(the #224 data hold one row; the 2-D interpolation is tested on synthetic
+values only), and any difference between a plate and a body. A new FDS run
+with a grid would show the first.
+
+Reproduction: `HEAT_RADIOMETER_DATA=<data>/heat_radiometer uv run pytest
+tests/verification/test_heat_radiometer_source_fds.py -s` prints the tables.
+The data folders are read through a mirror and not changed.
+
 ## Test and reference-deck assumptions
 
 Values of the test decks and test bands that no consulted source fixes. They
@@ -498,6 +562,10 @@ assumptions are on
   #224 radiometer decks are the reference data of the isotropic and burner
   checks ([Heat radiometer](testing-heat-radiometer.md)); the #308 case reads
   a copy of the layer deck.
+  The `radiometer` source is checked in `tests/test_heat_radiometer_source.py`
+  (hand formulas, coverage, horizon, `&PROP`, CLI rules) and, against the FDS
+  data, in `tests/verification/test_heat_radiometer_source_fds.py`
+  ([#276](https://github.com/PedestrianDynamics/pyFDS-Evac/issues/276)).
   The `INTEGRATED INTENSITY` source is checked in
   `tests/test_heat_integrated_intensity.py` and
   `tests/verification/test_heat_integrated_intensity_coupled.py`

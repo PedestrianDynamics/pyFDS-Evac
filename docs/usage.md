@@ -184,8 +184,9 @@ each flag sets.
 | `--heat-emissivity E` | 0.5 | — | Gas emissivity at the head; `total-flux` only. |
 | `--heat-convective-coefficient H` | 5.0 W/m²/K | — | Convective coefficient; `total-flux` only. |
 | `--heat-skin-temperature T` | 35.0 °C | — | Fixed skin temperature; `total-flux` only. |
-| `--heat-radiant-source S` | `gas` | `gas`, `integrated-intensity` | Radiant term from the gas at the head, or the excess flux from the FDS `INTEGRATED INTENSITY` slice. `integrated-intensity` needs `total-flux` and `--heat-u-factor`, and the slice at the slice height. |
+| `--heat-radiant-source S` | `gas` | `gas`, `integrated-intensity`, `radiometer` | Radiant term from the gas at the head, the excess flux from the FDS `INTEGRATED INTENSITY` slice, or the net reading of FDS `RADIOMETER GAS` devices. `integrated-intensity` needs `total-flux` and `--heat-u-factor`, and the slice at the slice height. `radiometer` needs `total-flux` and `--heat-radiometer-orientation`, radiometers at the slice height on a regular grid, and the deck with `GAUGE_TEMPERATURE` equal to `--heat-skin-temperature`. |
 | `--heat-u-factor F` | none | [0.25, 1] | Factor *f* on the integrated intensity *U*; required with `integrated-intensity`. |
+| `--heat-radiometer-orientation X,Y,Z` | none | three numbers, not all zero | Direction the radiometer plate faces, for example `0,0,1` (up); one orientation per run. Required with `radiometer`, an error without it. |
 | `--heat-regime R` | `smoke` | `smoke`, `layer` | `layer`: head in clear air under a hot layer. Needs `total-flux` and the three layer flags below, or the run stops with `ValueError`. |
 | `--heat-layer-height M` | none | finite | Height of the `TEMPERATURE` slice read as the hot layer. |
 | `--heat-view-factor φ` | none | [0, 1] | View factor from the skin to the layer. |

@@ -154,6 +154,8 @@ Extra columns appear with some heat options:
 | `heat_water_vapour_fraction` | `--heat-endpoint` with a `WATER VAPOR VOLUME FRACTION` slice: the sampled fraction [mol/mol, 0-1] |
 | `heat_flux_kw_m2` | `--heat-fed-method total-flux`: the heat flux to the skin [kW/m²] |
 | `heat_integrated_intensity_kw_m2` | `--heat-radiant-source integrated-intensity`: *U* at the agent [kW/m²] |
+| `heat_radiometer_kw_m2` | `--heat-radiant-source radiometer`: the net radiometer reading at the agent [kW/m²]; NaN outside the FDS domain |
+| `heat_radiometer_incident_kw_m2` | `--heat-radiant-source radiometer`: the incident flux that reading implies, reading/ε + σT_s⁴ [kW/m²], a diagnostic that does not enter the dose |
 | `heat_layer_temperature_c` | `--heat-regime layer`: layer temperature [°C] |
 | `hbr_ppm`, `hf_ppm`, `so2_ppm`, `acrolein_ppm`, `formaldehyde_ppm` | FDS output with that species slice; each is written right after `hcl_ppm`, only when sampled |
 | `in_fds_domain` | FDS output: `True` where every sampled gas and heat slice covers the agent, `False` where it reads ambient air outside them |
