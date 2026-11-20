@@ -18,14 +18,24 @@ Workaround record. Reason: fdsvismap ignores ``hide_times`` / ``show_times``.
 Affected versions: fdsvismap 0.2.1 to 0.3.3 (pinned exactly). Upstream issue:
 fdsvismap#63. Regression tests: ``tests/test_timed_obstructions.py``. Remove
 when fdsvismap reads the toggle times itself.
+
+Workaround record. Reason: fdsvismap builds a non-uniform coordinate grid from
+``slc.get_coordinates()`` on decks with mixed mesh resolutions (#928), causing
+shape mismatch with ``slc.to_global()``.
+Affected versions: fdsvismap 0.2.1 to 0.3.3 (pinned exactly). Upstream issue:
+PedestrianDynamics/pyFDS-Evac#928. Regression tests: ``tests/test_mixed_mesh_vismap.py``.
+Remove when fdsvismap derives its grid from ``to_global()`` or resamples mixed meshes.
 """
 
 from __future__ import annotations
 
+import math
 from bisect import bisect_right
 from collections.abc import Sequence
 from dataclasses import dataclass
 from typing import Any
+
+import numpy as np
 
 
 @dataclass(frozen=True)
@@ -133,3 +143,186 @@ def obstruction_periods(
         periods.append(ObstructionPeriod(tuple(grouped[index]), present))
         previous = ids
     return periods
+
+
+def slice_global_coordinates(slc: Any) -> tuple[np.ndarray, np.ndarray] | None:
+    """Return the uniform (x, y) coordinates of a horizontal FDS slice.
+
+    fdsreader's ``slc.get_coordinates()`` only concatenates unique coordinate
+    ticks across subslices without resampling coarser meshes, producing a
+    non-uniform grid when meshes have different resolutions (mixed meshes, #928).
+    In contrast, ``slc.to_global()`` builds a uniform Cartesian grid using the
+    finest step size across all meshes (step_sizes_min).
+
+    This function extracts that exact finest uniform grid from the slice's
+    subslice meshes without loading or allocating the 3D/4D data array.
+    """
+    subslices = getattr(slc, "_subslices", None)
+    if not subslices:
+        return None
+
+    orientation = getattr(slc, "orientation", None)
+    if orientation != 3:
+        return None
+
+    coord_min = {"x": float("inf"), "y": float("inf")}
+    coord_max = {"x": float("-inf"), "y": float("-inf")}
+    step_sizes_min = {"x": float("inf"), "y": float("inf")}
+
+    for sslc in subslices.values():
+        mesh = getattr(sslc, "mesh", None)
+        if mesh is None or not hasattr(sslc, "get_coordinates"):
+            return None
+        coords = sslc.get_coordinates(ignore_cell_centered=True)
+        mesh_coords = getattr(mesh, "coordinates", None)
+        if mesh_coords is None:
+            return None
+        for dim in ("x", "y"):
+            mesh_nodes = coords.get(dim)
+            if mesh_nodes is None or len(mesh_nodes) == 0:
+                return None
+            coord_min[dim] = min(float(mesh_nodes[0]), coord_min[dim])
+            coord_max[dim] = max(float(mesh_nodes[-1]), coord_max[dim])
+            dim_coords = mesh_coords.get(dim)
+            if dim_coords is None or len(dim_coords) < 2:
+                return None
+            step = float(dim_coords[1] - dim_coords[0])
+            if step <= 0:
+                return None
+            step_sizes_min[dim] = min(step, step_sizes_min[dim])
+
+    cell_centered = getattr(slc, "cell_centered", False)
+    coords_out: dict[str, np.ndarray] = {}
+    for dim in ("x", "y"):
+        span = coord_max[dim] - coord_min[dim]
+        d_min = step_sizes_min[dim]
+        if d_min <= 0 or not math.isfinite(d_min) or span < 0:
+            return None
+        steps = max(int(round(span / d_min)), 1) + (0 if cell_centered else 1)
+        if cell_centered:
+            half = d_min / 2.0
+            coords_out[dim] = np.linspace(
+                coord_min[dim] + half, coord_max[dim] - half, steps
+            )
+        else:
+            coords_out[dim] = np.linspace(coord_min[dim], coord_max[dim], steps)
+
+    return coords_out["x"], coords_out["y"]
+
+
+def align_vismap_grid(vis: Any) -> bool:
+    """Ensure VisMap's coordinate grid matches the uniform global extinction slice.
+
+    When FDS meshes have mixed resolutions, ``VisMap.read_fds_data`` assigns
+    non-uniform coordinates from ``slc.get_coordinates()``. This function aligns
+    ``vis.all_x_coords`` and ``vis.all_y_coords`` to the uniform Cartesian grid
+    of ``slc.to_global()``, updates ``vis.fds_grid_shape`` and ``vis.cell_size``,
+    and rebuilds the obstruction array if a mismatch was detected.
+
+    Returns True if alignment was performed (grid was updated), False otherwise.
+    """
+    slc = getattr(vis, "slc", None)
+    if slc is None:
+        return False
+
+    uniform_coords = slice_global_coordinates(slc)
+    if uniform_coords is None:
+        return False
+
+    gx, gy = uniform_coords
+    cur_x = getattr(vis, "all_x_coords", None)
+    cur_y = getattr(vis, "all_y_coords", None)
+
+    if (
+        cur_x is not None
+        and cur_y is not None
+        and len(cur_x) == len(gx)
+        and len(cur_y) == len(gy)
+        and np.allclose(cur_x, gx, atol=1e-5)
+        and np.allclose(cur_y, gy, atol=1e-5)
+    ):
+        return False
+
+    vis.all_x_coords = gx
+    vis.all_y_coords = gy
+    vis.fds_grid_shape = (len(gx), len(gy))
+    extent = getattr(vis, "extent", None)
+    if extent is not None and getattr(extent, "shape", None) == (2, 2):
+        dx = float(extent[0, 1] - extent[0, 0]) / len(gx)
+        dy = float(extent[1, 1] - extent[1, 0]) / len(gy)
+    else:
+        dx = float(gx[1] - gx[0]) if len(gx) > 1 else 1.0
+        dy = float(gy[1] - gy[0]) if len(gy) > 1 else 1.0
+    vis.cell_size = (dx, dy)
+    if hasattr(vis, "build_obstructions_array"):
+        vis.build_obstructions_array()
+    if hasattr(vis, "_invalidate_results"):
+        vis._invalidate_results()
+    return True
+
+
+def validate_vismap_shapes(vis: Any) -> None:
+    """Validate that VisMap's spatial arrays match the extinction array dimensions.
+
+    Raises ValueError with a clear, descriptive explanation if spatial masks and
+    extinction slices have mismatched dimensions.
+    """
+    all_x = getattr(vis, "all_x_coords", None)
+    all_y = getattr(vis, "all_y_coords", None)
+    if all_x is None or all_y is None or len(all_x) == 0 or len(all_y) == 0:
+        return
+
+    expected_spatial_shape = (len(all_y), len(all_x))
+
+    obstructions = getattr(vis, "obstructions_array", None)
+    if obstructions is not None and getattr(obstructions, "size", 0) > 0:
+        if obstructions.shape != expected_spatial_shape:
+            raise ValueError(
+                f"VisMap spatial array shape mismatch: obstructions_array has shape "
+                f"{obstructions.shape}, expected {expected_spatial_shape} from coordinates "
+                f"({len(all_y)} y, {len(all_x)} x)."
+            )
+
+    angle_dict = getattr(vis, "all_sign_angle_array_dict", {})
+    non_concealed_dict = getattr(vis, "all_sign_non_concealed_cells_array_dict", {})
+    for sign_id, angle_arr in angle_dict.items():
+        if (
+            isinstance(angle_arr, np.ndarray)
+            and angle_arr.shape != expected_spatial_shape
+        ):
+            raise ValueError(
+                f"VisMap spatial array shape mismatch for sign {sign_id}: angle array has shape "
+                f"{angle_arr.shape}, expected {expected_spatial_shape} from coordinates "
+                f"({len(all_y)} y, {len(all_x)} x)."
+            )
+
+    for sign_id, nc_arr in non_concealed_dict.items():
+        if isinstance(nc_arr, np.ndarray) and nc_arr.shape != expected_spatial_shape:
+            raise ValueError(
+                f"VisMap spatial array shape mismatch for sign {sign_id}: non-concealed array has shape "
+                f"{nc_arr.shape}, expected {expected_spatial_shape} from coordinates "
+                f"({len(all_y)} y, {len(all_x)} x)."
+            )
+
+    time_points = getattr(vis, "vismap_time_points", None)
+    if (
+        time_points is not None
+        and len(time_points) > 0
+        and hasattr(vis, "get_extco_array_at_time")
+    ):
+        try:
+            extco_array = vis.get_extco_array_at_time(float(time_points[0]))
+            if (
+                isinstance(extco_array, np.ndarray)
+                and extco_array.shape != (len(all_x), len(all_y))
+            ):
+                raise ValueError(
+                    f"VisMap extinction array dimension mismatch: get_extco_array_at_time() returned "
+                    f"shape {extco_array.shape} (transposed to {extco_array.T.shape}), but spatial "
+                    f"coordinates define shape {expected_spatial_shape} ({len(all_y)} y, {len(all_x)} x). "
+                    "This occurs when FDS simulation meshes have mixed resolutions and the grid was not aligned (#928)."
+                )
+        except Exception as exc:
+            if isinstance(exc, ValueError) and "dimension mismatch" in str(exc):
+                raise
+

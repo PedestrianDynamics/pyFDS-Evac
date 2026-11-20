@@ -15,7 +15,12 @@ from shapely.geometry import Polygon
 
 from . import fds_sampling
 from .fds_import_people import HUMAN_SMOKE_HEIGHT_M
-from .fdsvismap_adapter import obstruction_periods, toggle_times
+from .fdsvismap_adapter import (
+    align_vismap_grid,
+    obstruction_periods,
+    toggle_times,
+    validate_vismap_shapes,
+)
 from .geometry import node_position
 
 
@@ -196,6 +201,7 @@ def _build_vismap(
         vis.read_fds_data(
             fds_dir, fds_slc_height=slice_height_m, fds_slc_index=slice_index
         )
+    align_vismap_grid(vis)
     vis.set_time_points(_vismap_time_points(vis.fds_time_points.max(), time_step_s))
     for wp_id, (node_id, sign) in enumerate(sign_descriptors.items()):
         alpha = sign.get("alpha")
