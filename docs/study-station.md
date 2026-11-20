@@ -9,11 +9,11 @@ and compared the exit use of the simulated survivors with survivor exit-use
 data (Fahy, Proulx & Flynn 2011, Table 2). The comparison was
 pre-registered: the criteria were frozen before the first FDS fire run.
 
-**Every scored gate fails.** V1 fails, V2 fails and V3, the primary claim,
-fails. V4 to V6 and the other owed items were scored afterwards, with
-scorers written before their outputs were opened
-([below](#owed-items-scored-afterwards)). The registered wording for the primary
-claim applies: **"coupling adds no measurable skill to exit choice here"**.
+**Every gate scored at first publication fails.** V1 fails, V2 fails and
+V3, the primary claim, fails. V4 to V6 and the other owed items were scored
+afterwards, as disclosed results with some deviations
+([below](#owed-items-scored-afterwards)). The registered wording for the
+primary claim applies: **"coupling adds no measurable skill to exit choice here"**.
 
 This page publishes the failure under the pre-registration's failure
 policy (§8): "A failed criterion is published as a disclosed failure".
@@ -256,9 +256,10 @@ These items are required by the pre-registration and were owed when the
 page was first published
 ([#950](https://github.com/PedestrianDynamics/pyFDS-Evac/issues/950)).
 They are disclosed results, scored after V1 to V3 were known. The scorers
-are in `assets/station_fahy/score_owed.py` and were committed with their
-tests before the output they score was opened; every look is in the look
-log. They use the same runs (seeds 4 to 23, commit `aaeda1f3`); nothing was
+are in `assets/station_fahy/score_owed.py`. Each was committed with its
+tests before its first look, except where [Deviations and
+history](#deviations-and-history) lists a change after a look; every look is
+in the look log. They use the same runs (seeds 4 to 23, commit `aaeda1f3`); nothing was
 re-run and nothing was tuned. The frozen `validate.py` is unchanged
 (sha256 `2313b91a…`). The scorers read the outputs with the current
 lockfile, not the freeze lockfile (`uv.lock` differs; the runs do not).
@@ -268,9 +269,9 @@ lockfile, not the freeze lockfile (`uv.lock` differs; the runs do not).
 |---|---|---|---|
 | V4, first-target front share | not scored | none | The runs did not record the first target (`output_route_history` was unset). |
 | V4, NIST construct, arm R | 0.329 pooled (per seed 0.312 / 0.330 / 0.345) | none | Reported. Arm C+jam 0.400 (0.387 / 0.398 / 0.420), arm U 0.408 (0.387 / 0.408 / 0.424). |
-| V5, highest 60 s moving mean | undefined in all 20 seeds of C+jam, U and R | 0.9 to 1.5 person/s | No 60 s window fits between the first arrival and t_jam. |
+| V5, highest 60 s moving mean | undefined as registered in all 20 seeds of C+jam, U and R. The 60 s window ending at t_jam, which starts before the first arrival, gives 3.0 to 3.3 (C+jam), 3.1 to 3.3 (U) and 2.05 to 2.27 (R) person/s | 0.9 to 1.5 person/s | No 60 s window fits between the first arrival and t_jam. The second reading is above the band in every seed, against the registered direction (biased low). Whether this is a fail is for the maintainer. |
 | V6, T5 (50 % of dance-floor gas cells above 120 °C at the 1.5 m slice) | 68.0 s (10 %: 67.0 s, 90 %: 72.0 s) | [65, 100] s | pass |
-| V6, T6 (95 % of masked gas cells below 12 % O₂) | not reached by 250 s; the masked share peaks at 92.1 % at 234 s | [65, 115] s | fail with the connectivity-only mask; the verdict depends on room exclusions the registration does not give (see below) |
+| V6, T6 (95 % of masked gas cells below 12 % O₂) | not reached by 250 s; the masked share peaks at 92.1 % at 234 s | [65, 115] s | not determined as registered: the registered mask subtracts rooms by name, and no coordinates are given. With a connectivity-only mask (no room subtracted) it is not reached, so that reading fails |
 | V6, 0.1 m grid check | not scored | T5, T6 | The 0.1 m run has no output: the data folder holds the deck only. |
 | V6, realised against prescribed HRR | energy ratio 0.764; peak 52.1 MW at 92.0 s against 56.7 MW at 91 s | none | Reported (central deck). |
 | Survival under Fahy resampling | see the table below | none | Reported beside V3. |
@@ -297,9 +298,16 @@ give it, and the pre-registration forbids re-running the matrix.
 m) at 30.5 to 34.1 s, and t_jam is 86 s, so the span is 51.9 to 55.5 s.
 Registered: the highest 60 s moving mean from the first arrival to t_jam.
 The window is not shortened and does not run past t_jam, so no V5 value
-exists. In that span 182 to 197 agents cross in C+jam, 184 to 200 in U and
-123 to 136 in R. The page gives no rate and no verdict. The first arrival is
-read as the first crossing of the door line, one reading of "first arrival".
+exists as registered. In that span 182 to 197 agents cross in C+jam, 184 to
+200 in U and 123 to 136 in R; the crossings match the front exits. Flow
+before the first arrival is zero, so the 60 s window ending at t_jam holds
+every crossing. Its rate is 3.0 to 3.3 person/s in C+jam, 3.1 to 3.3 in U and
+2.05 to 2.27 in R (min to max over seeds), above 1.5 in every seed. That
+second reading lets the window start before the first arrival (26 s); it is
+not the registered one and it runs against the registered direction.
+Whether the undefined result stands or counts as a fail is a decision for the
+maintainer. The first arrival is read as the first crossing of the door
+line, one reading of "first arrival".
 
 **V6.** T5 is the first slice frame (1 s interval) at which at least half
 of the 654 gas nodes of the dance-floor box (A4) exceed 120 °C. NIST's
@@ -314,8 +322,11 @@ gas nodes). With it, the masked share below 12 % oxygen reaches 83 % at
 150 s and 92.1 % at 234 s, never 95 %. The nodes still at or above 12 % at
 the end lie mostly in two groups, 433 nodes at x −3.4 to 1.6 m, y −1.4 to
 3.2 m and 360 nodes at x −12.0 to −10.2 m, y −6.8 to 0.4 m. Whether they
-are the excluded rooms is not established; excluding them is a choice the
-registration does not make, and it is not made here. By zone (O₂ 95 %):
+are the excluded rooms is not established. The deck labels none of its obstructions
+as an office or storage room and one as bathroom fixtures, at x −1.42 m,
+y −1.24 m, inside the first group's box; the second group has no room label.
+Excluding the groups is a choice the registration does not make, and it is not
+made here. By zone (O₂ 95 %):
 dance floor 102 s, sunroom 96 s, main bar 109 s, dart room 114 s, foyer
 122 s. The sunroom reaches 120 °C (half of its nodes) at 84 s on the 1.6 m
 plane; NIST's "by 90 s" refers to a vertical slice.
@@ -324,30 +335,36 @@ plane; NIST's "by 90 s" refers to a vertical slice.
 reported beside the V3 sign test (plan, line 146): how often a W difference
 survives resampling of Fahy's table. These are rates for a difference in W;
 they say nothing about occupants. Reading: 4000 multinomial resamples of
-Fahy's table, one per draw, shared by all 20 seeds and both arms. A
-difference survives a draw when it keeps its observed sign and its size is
-at least 0.03. "V3 holds" is the share of draws in which V3 as registered
-(R lower in at least 15 of 20 seeds and a mean at least 0.03 lower) holds.
+Fahy's table, one per draw, shared by all 20 seeds and both arms. Two
+readings of "survives" are given. "Sign": the difference keeps its observed
+sign; this is the reading under which the plan's figure (above 99 % for a
+uniform 0.03 difference) holds, which the tests check on a synthetic case.
+"Size": it keeps its sign and is at least 0.03, the reading used first. The
+plan does not say whether its rates are the referee's three synthetic cases
+or rates on observed differences. "V3 holds" is the share of draws in which V3
+as registered (R lower in at least 15 of 20 seeds and a mean at least 0.03
+lower) holds.
 
-| Row | Mean W(R) − W(C+jam) | Per seed, min / median / max | Mean survives | V3 holds |
-|---|---|---|---|---|
-| primary, central | +0.078 | 0.601 / 0.996 / 1.000 | 0.999 | 0.000 |
-| low yields | +0.092 | 0.971 / 1.000 / 1.000 | 1.000 | 0.000 |
-| high yields | +0.033 | 0.000 / 0.511 / 0.996 | 0.496 | 0.000 |
-| +15 s | +0.068 | 0.481 / 0.994 / 1.000 | 0.998 | 0.000 |
-| −15 s | +0.004 | 0.000 / 0.170 / 0.969 | 0.000 | 0.001 |
-| t_jam 71 s | +0.030 | 0.004 / 0.467 / 0.927 | 0.461 | 0.000 |
-| t_jam 102 s | +0.074 | 0.868 / 1.000 / 1.000 | 1.000 | 0.000 |
-| pre-movement zero | +0.106 | 1.000 / 1.000 / 1.000 | 1.000 | 0.000 |
-| pre-movement tracked | +0.096 | 0.995 / 1.000 / 1.000 | 1.000 | 0.000 |
-| `w_queue` 0.024 (a Fahy fit) | +0.030 | 0.001 / 0.460 / 0.984 | 0.472 | 0.000 |
-| R-na | +0.075 | 0.872 / 0.994 / 1.000 | 0.997 | 0.000 |
-| dose only | +0.072 | 0.749 / 1.000 / 1.000 | 1.000 | 0.000 |
+| Row | Mean W(R) − W(C+jam) | Sign, per seed (min / median / max) | Sign, mean | Size, per seed | Size, mean | V3 holds |
+|---|---|---|---|---|---|---|
+| primary, central | +0.078 | 0.998 / 1.000 / 1.000 | 1.000 | 0.601 / 0.996 / 1.000 | 0.999 | 0.000 |
+| low yields | +0.092 | 1.000 / 1.000 / 1.000 | 1.000 | 0.971 / 1.000 / 1.000 | 1.000 | 0.000 |
+| high yields | +0.033 | 0.544 / 0.969 / 1.000 | 0.984 | 0.000 / 0.511 / 0.996 | 0.496 | 0.000 |
+| +15 s | +0.068 | 0.966 / 1.000 / 1.000 | 1.000 | 0.481 / 0.994 / 1.000 | 0.998 | 0.000 |
+| −15 s | +0.004 | 0.265 / 0.930 / 1.000 | 0.586 | 0.000 / 0.170 / 0.969 | 0.000 | 0.001 |
+| t_jam 71 s | +0.030 | 0.467 / 0.976 / 1.000 | 0.979 | 0.004 / 0.467 / 0.927 | 0.461 | 0.000 |
+| t_jam 102 s | +0.074 | 1.000 / 1.000 / 1.000 | 1.000 | 0.868 / 1.000 / 1.000 | 1.000 | 0.000 |
+| pre-movement zero | +0.106 | 1.000 / 1.000 / 1.000 | 1.000 | 1.000 / 1.000 / 1.000 | 1.000 | 0.000 |
+| pre-movement tracked | +0.096 | 1.000 / 1.000 / 1.000 | 1.000 | 0.995 / 1.000 / 1.000 | 1.000 | 0.000 |
+| `w_queue` 0.024 (a Fahy fit) | +0.030 | 0.509 / 0.986 / 1.000 | 0.985 | 0.001 / 0.460 / 0.984 | 0.472 | 0.000 |
+| R-na | +0.075 | 0.991 / 1.000 / 1.000 | 1.000 | 0.872 / 0.994 / 1.000 | 0.997 | 0.000 |
+| dose only | +0.072 | 0.999 / 1.000 / 1.000 | 1.000 | 0.749 / 1.000 / 1.000 | 1.000 | 0.000 |
 
 The V3m pairs (R against U) are scored the same way: the primary row has
-mean +0.093 and per-seed survival 0.894 / 1.000 / 1.000. The result is the
-one already reported: the primary difference is positive (R worse) and
-survives resampling; no row passes V3 in more than 0.1 % of draws.
+mean +0.093, per-seed sign survival 0.992 / 1.000 / 1.000 and size survival
+0.894 / 1.000 / 1.000. The result is the one already reported: the primary
+difference is positive (R worse) and keeps its sign under resampling; no row
+passes V3 in more than 0.1 % of draws.
 
 **Raised floors.** Agents are counted as on a raised floor when they start
 inside the platform or rear-strip boxes of the deck plan (302 and 66 placed
@@ -355,8 +372,9 @@ survivors over 20 seeds; the alcove holds none). In arm R 57.8 % of them
 reach FED 1 against 26.6 % of the others; in arm U, where nobody stops, 35.7 %
 against 23.7 %. The slice is sampled at an absolute height
 ([#365](https://github.com/PedestrianDynamics/pyFDS-Evac/issues/365)), so on
-these floors it sits 0.2 to 1.0 m higher above the feet than elsewhere. No
-claim is made from the difference.
+these floors it sits 0.2 to 0.6 m lower above the feet than elsewhere (the
+1.6 m plane is 1.0 m above the platform). No claim is made from the
+difference.
 
 ### Censored shares and t_jam splits
 
@@ -408,8 +426,14 @@ group at or after t_jam includes agents that stopped near a door.
 - The registration leaves some readings open: the first arrival of V5, the
   stopped agents and the entry and sunroom of V4, the rooms of the T6 mask,
   which agents are on a raised floor, and what "survives" means for a W
-  difference. Each reading is stated above and was fixed in the scorer before
-  its output was opened.
+  difference. Each reading is stated above. Most were fixed in the scorer
+  before its first look. These were changed or added after a look, and are
+  disclosed as such: the cell-to-node mask of V6 (above); the rule that a T6
+  or T5 value not reached by the last frame is a fail, and the list of
+  masked nodes still above 12 % oxygen, both added after the first T6 result;
+  the sign reading of "survives", added after the size reading had given 0.46
+  to 0.50 for differences of 0.03, against the plan's 99 %; and the V5 rate of
+  the window ending at t_jam, added after V5 was undefined.
 
 - Pre-movement, `w_queue` and t_jam rows have no arm-C build. They were
   scored for C+jam, U and R only.
