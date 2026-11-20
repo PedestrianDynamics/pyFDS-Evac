@@ -1260,6 +1260,21 @@ add and the failure modes that stay silent unless you read the warnings.&lt;/p>
 &lt;td>Write the FED history; columns on &lt;a href="https://pedestriandynamics.org/pyFDS-Evac/docs/using/outputs/#fed-history">Outputs&lt;/a>. Not written when neither FED track runs.&lt;/td>
 &lt;/tr>
 &lt;tr>
+&lt;td>&lt;code>--output-fed-summary CSV&lt;/code>&lt;/td>
+&lt;td>none&lt;/td>
+&lt;td>Write one row per agent: first time each criterion (gas FED, heat FED, FIC, visibility) was reached, the margin to the exit time and a &lt;code>pass&lt;/code>/&lt;code>fail&lt;/code>/&lt;code>open&lt;/code> outcome; columns on &lt;a href="https://pedestriandynamics.org/pyFDS-Evac/docs/using/outputs/#exposure-summary">Outputs&lt;/a>.&lt;/td>
+&lt;/tr>
+&lt;tr>
+&lt;td>&lt;code>--summary-fed-low X&lt;/code>, &lt;code>--summary-fed-high X&lt;/code>&lt;/td>
+&lt;td>0.3, 1&lt;/td>
+&lt;td>Thresholds of the summary for the gas FED, the heat FED and the FIC.&lt;/td>
+&lt;/tr>
+&lt;tr>
+&lt;td>&lt;code>--summary-visibility-limit-m M&lt;/code>, &lt;code>--summary-visibility-c C&lt;/code>&lt;/td>
+&lt;td>10 m, 3&lt;/td>
+&lt;td>The summary&amp;rsquo;s visibility crossing is &lt;em>K&lt;/em> &amp;gt;= C / limit, 0.3 1/m by default; C = 8 for light-emitting signs. Sources on &lt;a href="https://pedestriandynamics.org/pyFDS-Evac/docs/using/outputs/#exposure-summary">Outputs&lt;/a>.&lt;/td>
+&lt;/tr>
+&lt;tr>
 &lt;td>&lt;code>--inspect-fds&lt;/code>&lt;/td>
 &lt;td>off&lt;/td>
 &lt;td>List the FDS quantities of &lt;code>--fds-dir&lt;/code> as JSON and exit. Needs &lt;code>--fds-dir&lt;/code>.&lt;/td>
@@ -3169,6 +3184,12 @@ fields of the &lt;code>ScenarioResult&lt;/code> that &lt;code>run_scenario()&lt;
 &lt;td>one per agent that walks the stage graph&lt;/td>
 &lt;/tr>
 &lt;tr>
+&lt;td>Exposure summary&lt;/td>
+&lt;td>&lt;code>--output-fed-summary CSV&lt;/code>&lt;/td>
+&lt;td>a FED or a smoke history was kept&lt;/td>
+&lt;td>one per agent&lt;/td>
+&lt;/tr>
+&lt;tr>
 &lt;td>Pre-evacuation times&lt;/td>
 &lt;td>&lt;code>--output-pre-evacuation-times CSV&lt;/code>&lt;/td>
 &lt;td>always; header only when no agent has a pre-movement time&lt;/td>
@@ -3402,7 +3423,7 @@ without the gas FED, the gases read 0 (O₂ 20.9 %) and every gas rate and
 &lt;td>gas concentrations at the agent&lt;/td>
 &lt;/tr>
 &lt;tr>
-&lt;td>&lt;code>hcn_ppm&lt;/code>, &lt;code>no_ppm&lt;/code>, &lt;code>no2_ppm&lt;/code>&lt;/td>
+&lt;td>&lt;code>hcn_ppm&lt;/code>, &lt;code>no_ppm&lt;/code>, &lt;code>no2_ppm&lt;/code>, &lt;code>hcl_ppm&lt;/code>&lt;/td>
 &lt;td>ppm&lt;/td>
 &lt;td>0 when the case has no such slice&lt;/td>
 &lt;/tr>
@@ -3449,7 +3470,7 @@ without the gas FED, the gases read 0 (O₂ 20.9 %) and every gas rate and
 &lt;tr>
 &lt;td>&lt;code>fic&lt;/code>&lt;/td>
 &lt;td>—&lt;/td>
-&lt;td>fractional irritant concentration&lt;/td>
+&lt;td>fractional irritant concentration, with the SFPE incapacitation denominators (HCl 900 ppm), not the ISO 13571 ones (HCl 1000 ppm)&lt;/td>
 &lt;/tr>
 &lt;tr>
 &lt;td>&lt;code>fic_speed_factor&lt;/code>&lt;/td>
@@ -3498,6 +3519,10 @@ without the gas FED, the gases read 0 (O₂ 20.9 %) and every gas rate and
 &lt;td>&lt;code>--heat-regime layer&lt;/code>: layer temperature [°C]&lt;/td>
 &lt;/tr>
 &lt;tr>
+&lt;td>&lt;code>hbr_ppm&lt;/code>, &lt;code>hf_ppm&lt;/code>, &lt;code>so2_ppm&lt;/code>, &lt;code>acrolein_ppm&lt;/code>, &lt;code>formaldehyde_ppm&lt;/code>&lt;/td>
+&lt;td>FDS output with that species slice; each is written right after &lt;code>hcl_ppm&lt;/code>, only when sampled&lt;/td>
+&lt;/tr>
+&lt;tr>
 &lt;td>&lt;code>in_fds_domain&lt;/code>&lt;/td>
 &lt;td>FDS output: &lt;code>True&lt;/code> where every sampled gas and heat slice covers the agent, &lt;code>False&lt;/code> where it reads ambient air outside them&lt;/td>
 &lt;/tr>
@@ -3505,6 +3530,99 @@ without the gas FED, the gases read 0 (O₂ 20.9 %) and every gas rate and
 &lt;/table>
 &lt;p>The equations behind each rate are on &lt;a href="https://pedestriandynamics.org/pyFDS-Evac/models/fed/">Models › FED&lt;/a> and
 &lt;a href="https://pedestriandynamics.org/pyFDS-Evac/models/heat/">Models › Heat&lt;/a>.&lt;/p>
+&lt;h2>Exposure summary&lt;span class="hx-absolute -hx-mt-20" id="exposure-summary">&lt;/span>
+&lt;a href="#exposure-summary" class="subheading-anchor" aria-label="Permalink for this section">&lt;/a>&lt;/h2>&lt;p>&lt;code>--output-fed-summary CSV&lt;/code> writes one row per agent from the FED and smoke
+histories and the exit times of the run (&lt;code>ScenarioResult.exit_times&lt;/code>,
+the simulation time at which JuPedSim removed the agent). In Python,
+&lt;code>result.exposure_summary()&lt;/code> returns the same rows. A run that kept neither
+history writes no file. The run&amp;rsquo;s console output ends with one line per
+criterion: outcome counts and the first crossing time. The same totals
+are &lt;code>exposure_totals(rows)&lt;/code> in &lt;code>pyfds_evac.core.exposure_summary&lt;/code>; they are
+not written to the CSV. How to read it:
+&lt;a href="https://pedestriandynamics.org/pyFDS-Evac/docs/using/howto-aset-rset-check/">ASET/RSET check with FED&lt;/a>.&lt;/p>
+&lt;table>
+&lt;thead>
+&lt;tr>
+&lt;th>Column&lt;/th>
+&lt;th>Unit&lt;/th>
+&lt;th>Meaning&lt;/th>
+&lt;/tr>
+&lt;/thead>
+&lt;tbody>
+&lt;tr>
+&lt;td>&lt;code>agent_id&lt;/code>&lt;/td>
+&lt;td>—&lt;/td>
+&lt;td>JuPedSim id&lt;/td>
+&lt;/tr>
+&lt;tr>
+&lt;td>&lt;code>exit_time_s&lt;/code>&lt;/td>
+&lt;td>s&lt;/td>
+&lt;td>simulation time at which the agent was removed; empty if it is still inside&lt;/td>
+&lt;/tr>
+&lt;tr>
+&lt;td>&lt;code>censored&lt;/code>&lt;/td>
+&lt;td>—&lt;/td>
+&lt;td>&lt;code>True&lt;/code> when the agent is still inside at the end of the run (time limit, deadlock, incapacitated and left in place). Never inferred from the last frame&lt;/td>
+&lt;/tr>
+&lt;tr>
+&lt;td>&lt;code>last_sample_s&lt;/code>, &lt;code>incapacitated_s&lt;/code>&lt;/td>
+&lt;td>s&lt;/td>
+&lt;td>last history sample while inside; time of incapacitation, empty if none (the record ends there, so later crossings are unobserved)&lt;/td>
+&lt;/tr>
+&lt;tr>
+&lt;td>&lt;code>outside_fds_samples&lt;/code>&lt;/td>
+&lt;td>—&lt;/td>
+&lt;td>with FDS output: samples read as ambient air outside the slices; a crossing there is not evidence&lt;/td>
+&lt;/tr>
+&lt;tr>
+&lt;td>&lt;code>heat_evaluated&lt;/code>&lt;/td>
+&lt;td>—&lt;/td>
+&lt;td>&lt;code>False&lt;/code> when no heat model ran&lt;/td>
+&lt;/tr>
+&lt;tr>
+&lt;td>&lt;code>fed_max&lt;/code>, &lt;code>heat_fed_max&lt;/code>, &lt;code>fic_max&lt;/code>, &lt;code>k_max&lt;/code>&lt;/td>
+&lt;td>—, —, —, 1/m&lt;/td>
+&lt;td>maximum of the gas FED, the heat FED, the FIC and the extinction coefficient while inside&lt;/td>
+&lt;/tr>
+&lt;tr>
+&lt;td>&lt;code>t_fed_ge_&amp;lt;thr&amp;gt;_s&lt;/code>, &lt;code>t_heat_fed_ge_&amp;lt;thr&amp;gt;_s&lt;/code>, &lt;code>t_fic_ge_&amp;lt;thr&amp;gt;_s&lt;/code>&lt;/td>
+&lt;td>s&lt;/td>
+&lt;td>first sample time with the value &lt;code>&amp;gt;=&lt;/code> the threshold; empty if never. Exactly two thresholds, &lt;code>--summary-fed-low&lt;/code> and &lt;code>--summary-fed-high&lt;/code> (0.3 and 1); in Python, &lt;code>ExposureSummaryConfig.fed_thresholds&lt;/code> takes any list&lt;/td>
+&lt;/tr>
+&lt;tr>
+&lt;td>&lt;code>t_k_ge_&amp;lt;K&amp;gt;_s&lt;/code>&lt;/td>
+&lt;td>s&lt;/td>
+&lt;td>first sample time with &lt;em>K&lt;/em> &lt;code>&amp;gt;=&lt;/code> C / limit; &lt;code>&amp;lt;K&amp;gt;&lt;/code> is that number (0.3 by default)&lt;/td>
+&lt;/tr>
+&lt;tr>
+&lt;td>&lt;code>diff_&amp;lt;criterion&amp;gt;_s&lt;/code>&lt;/td>
+&lt;td>s&lt;/td>
+&lt;td>crossing time minus exit time: negative means the limit was reached before the agent left; empty when censored or never crossed&lt;/td>
+&lt;/tr>
+&lt;tr>
+&lt;td>&lt;code>outcome_&amp;lt;criterion&amp;gt;&lt;/code>&lt;/td>
+&lt;td>—&lt;/td>
+&lt;td>&lt;code>fail&lt;/code>: crossed while inside (an agent still inside that crossed fails, without a margin); &lt;code>pass&lt;/code>: left, with no crossing; &lt;code>open&lt;/code>: still inside with no crossing, or no sample, so the margin is undetermined; &lt;code>not_evaluated&lt;/code>: the run did not compute the quantity&lt;/td>
+&lt;/tr>
+&lt;/tbody>
+&lt;/table>
+&lt;ul>
+&lt;li>The FIC is the engine&amp;rsquo;s: SFPE incapacitation denominators (HCl 900 ppm),
+not the ISO 13571 FEC (HCl 1000 ppm), and one threshold list serves the
+FED and the FIC. No ISO FEC is reported.&lt;/li>
+&lt;li>Visibility: &lt;em>K&lt;/em> &lt;code>&amp;gt;=&lt;/code> C / limit. The defaults are a limit of 10 m
+(Engineers Australia 2014 p. 15, NZBC C/VM2 commentary p. 30, vfdb TB 04-01
+Table 8.3) and C = 3 for light-reflecting signs, so &lt;em>K&lt;/em> = 0.3 1/m; use
+&lt;code>--summary-visibility-c 8&lt;/code> for light-emitting signs (C from Jin, as quoted
+in vfdb p. 314 and ISO 13571:2012 Note 2 p. 11). The vfdb limit
+D_L = 0.1 1/m is &lt;em>K&lt;/em> = 0.23 1/m, which Schröder et al. (2020) used.&lt;/li>
+&lt;li>A criterion without its history reads &lt;code>not_evaluated&lt;/code> with empty cells:
+heat without a heat model (the 20 °C of the FED history is ambient, not a
+result), the gas FED and the FIC in a heat-only run, &lt;em>K&lt;/em> without a smoke
+model.&lt;/li>
+&lt;li>Crossing times have the resolution of the history: the first sample at or
+after the true crossing. The sample at the exit time counts as inside.&lt;/li>
+&lt;/ul>
 &lt;h2>Route history&lt;span class="hx-absolute -hx-mt-20" id="route-history">&lt;/span>
 &lt;a href="#route-history" class="subheading-anchor" aria-label="Permalink for this section">&lt;/a>&lt;/h2>&lt;table>
 &lt;thead>
@@ -7903,7 +8021,7 @@ not finish, and do not use its time as a value censored at
 &lt;/div>
 &lt;p class="docs-files__summary">The example script, the two scenarios, the FDS deck of part 2, run.py, pinned package versions and a README.txt with the commands and the expected result. FDS output is not included: a clone of the repository has it, or you write it with FDS in about 30 s.&lt;/p>
 &lt;dl class="docs-files__facts">
-&lt;div>&lt;dt>Built from&lt;/dt>&lt;dd>pyFDS-Evac &lt;a href="https://github.com/PedestrianDynamics/pyFDS-Evac/commit/5dea647e095389b1c34ebc5c665c8016d72cfa7a">&lt;code>5dea647&lt;/code>&lt;/a>; &lt;code>requirements.txt&lt;/code> pins the packages of &lt;code>uv.lock&lt;/code>&lt;/dd>&lt;/div>
+&lt;div>&lt;dt>Built from&lt;/dt>&lt;dd>pyFDS-Evac &lt;a href="https://github.com/PedestrianDynamics/pyFDS-Evac/commit/2798a196ed39ca24b6844d4ed41490bbf1075115">&lt;code>2798a19&lt;/code>&lt;/a>; &lt;code>requirements.txt&lt;/code> pins the packages of &lt;code>uv.lock&lt;/code>&lt;/dd>&lt;/div>
 &lt;div>&lt;dt>FDS&lt;/dt>&lt;dd>you run it; the page used &lt;code>FDS-6.10.1-0-g12efa16-release&lt;/code>, 30 s wall clock, one process, on an Apple M3 Pro, macOS&lt;/dd>&lt;/div>
 &lt;div>&lt;dt>pyFDS-Evac run&lt;/dt>&lt;dd>about 10 s&lt;/dd>&lt;/div>
 &lt;div>&lt;dt>Expected result&lt;/dt>&lt;dd>&lt;code>mean = 44.5 s, SD = 1.8 s&lt;/code>&lt;br>&lt;code>min-max = 41.5-46.0 s&lt;/code>&lt;br>&lt;code>95th percentile = 46.0 s&lt;/code>&lt;br>&lt;code>exit times [], incapacitated 1, remaining 1&lt;/code>&lt;br>&lt;span class="docs-files__note">made at commit &lt;code>9c820e0f&lt;/code>&lt;/span>&lt;/dd>&lt;/div>
@@ -7927,7 +8045,7 @@ not finish, and do not use its time as a value censored at
 &lt;li>&lt;code>assets/iso_table22_coupled/geometry.wkt&lt;/code>: walkable area of the gas room&lt;/li>
 &lt;li>&lt;code>assets/iso_table22_coupled/README.md&lt;/code>: what the gas room is and where it comes from&lt;/li>
 &lt;/ul>
-&lt;p class="docs-files__note">&lt;code>README.txt&lt;/code> lists the exact versions and the commands. SHA-256: &lt;code class="docs-files__hash">84b14b386c7c96bf02e837ef5eed223b3d768f1a4ed9ff3b58f65ec3d0b1ca00&lt;/code>&lt;/p>
+&lt;p class="docs-files__note">&lt;code>README.txt&lt;/code> lists the exact versions and the commands. SHA-256: &lt;code class="docs-files__hash">e3a52af2a32c89f7237b131c3be7c21ce2c594d10dc404ded6a6529b7d613812&lt;/code>&lt;/p>
 &lt;/details>
 &lt;/aside>
 &lt;p>The zip holds the decks but no FDS output; its &lt;code>README.txt&lt;/code> runs the
@@ -8245,4 +8363,72 @@ so copy both first if you want to keep them. With &lt;code>run.py --output-sqlit
 &lt;li>&lt;a href="https://pedestriandynamics.org/pyFDS-Evac/docs/getting-started/walkthrough/">Real-FDS walkthrough&lt;/a>&lt;/li>
 &lt;li>&lt;a href="https://pedestriandynamics.org/pyFDS-Evac/docs/understanding/limitations/">Limitations&lt;/a>&lt;/li>
 &lt;/ul>
-&lt;p>pyFDS-Evac is research software, provided without warranty.&lt;/p></description></item></channel></rss>
+&lt;p>pyFDS-Evac is research software, provided without warranty.&lt;/p></description></item><item><title>How do I check each agent against ASET with FED, as in Pathfinder?</title><link>https://pedestriandynamics.org/pyFDS-Evac/docs/using/howto-aset-rset-check/</link><pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate><guid>https://pedestriandynamics.org/pyFDS-Evac/docs/using/howto-aset-rset-check/</guid><description>
+&lt;p>A Pathfinder-style check keeps the occupants moving through the fire&amp;rsquo;s
+smoke, records the dose each one collects on the way, and compares the time
+a limit is reached with the time the occupant leaves. This page does the
+same with &lt;code>--output-fed-summary&lt;/code>. It reads no new physics: the summary is
+a post-processing of the FED and smoke histories the run already writes.&lt;/p>
+&lt;p>&lt;strong>You need&lt;/strong> the FDS output of &lt;a href="https://pedestriandynamics.org/pyFDS-Evac/docs/getting-started/first-fds-case/">A crowd in a fire&lt;/a> in
+&lt;code>$FDS&lt;/code>. Nothing here runs FDS.&lt;/p>
+&lt;h2>1. Keep the occupants walking and the dose on&lt;span class="hx-absolute -hx-mt-20" id="1-keep-the-occupants-walking-and-the-dose-on">&lt;/span>
+&lt;a href="#1-keep-the-occupants-walking-and-the-dose-on" class="subheading-anchor" aria-label="Permalink for this section">&lt;/a>&lt;/h2>&lt;p>&lt;code>--disable-tenability&lt;/code> turns off the irritant slowdown and both
+incapacitation checks. Smoke still slows walking, and the gas FED, the heat
+FED and the FIC are still accumulated and written. Nobody drops, so every
+agent has one RSET and the margin to each limit is defined for all of them.&lt;/p>
+&lt;div class="hextra-code-block hx-relative hx-mt-6 first:hx-mt-0 hx-group/code">
+&lt;div>&lt;div class="highlight">&lt;pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;">&lt;code class="language-bash" data-lang="bash">&lt;span style="display:flex;">&lt;span>uv run python run.py --scenario assets/t_junction --fds-dir &lt;span style="color:#e6db74">&amp;#34;&lt;/span>$FDS&lt;span style="color:#e6db74">&amp;#34;&lt;/span> &lt;span style="color:#ae81ff">\
+&lt;/span>&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#ae81ff">&lt;/span> --disable-tenability &lt;span style="color:#ae81ff">\
+&lt;/span>&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#ae81ff">&lt;/span> --output-fed-summary tj/summary.csv&lt;/span>&lt;/span>&lt;/code>&lt;/pre>&lt;/div>&lt;/div>&lt;div class="hextra-code-copy-btn-container hx-opacity-0 hx-transition group-hover/code:hx-opacity-100 hx-flex hx-gap-1 hx-absolute hx-m-[11px] hx-right-0 hx-top-0">
+&lt;button
+class="hextra-code-copy-btn hx-group/copybtn hx-transition-all active:hx-opacity-50 hx-bg-primary-700/5 hx-border hx-border-black/5 hx-text-gray-600 hover:hx-text-gray-900 hx-rounded-md hx-p-1.5 dark:hx-bg-primary-300/10 dark:hx-border-white/10 dark:hx-text-gray-400 dark:hover:hx-text-gray-50"
+title="Copy code"
+>
+&lt;div class="copy-icon group-[.copied]/copybtn:hx-hidden hx-pointer-events-none hx-h-4 hx-w-4">&lt;/div>
+&lt;div class="success-icon hx-hidden group-[.copied]/copybtn:hx-block hx-pointer-events-none hx-h-4 hx-w-4">&lt;/div>
+&lt;/button>
+&lt;/div>
+&lt;/div>
+&lt;p>This checks a design: the occupants are not allowed to fall. Leaving the
+checks on, and the dose with them, answers a different question, what
+happens to the people once they drop. Run both when both matter.&lt;/p>
+&lt;h2>2. Read the summary&lt;span class="hx-absolute -hx-mt-20" id="2-read-the-summary">&lt;/span>
+&lt;a href="#2-read-the-summary" class="subheading-anchor" aria-label="Permalink for this section">&lt;/a>&lt;/h2>&lt;p>One row per agent. For each criterion there are three columns:&lt;/p>
+&lt;ul>
+&lt;li>&lt;code>t_&amp;lt;criterion&amp;gt;_s&lt;/code>: first sample time at which the value reached the
+threshold (&lt;code>&amp;gt;=&lt;/code>), empty if never;&lt;/li>
+&lt;li>&lt;code>diff_&amp;lt;criterion&amp;gt;_s&lt;/code>: crossing time minus exit time, so a negative value
+means the limit was reached before the agent left (the sign of
+DIFF = ASET - RSET);&lt;/li>
+&lt;li>&lt;code>outcome_&amp;lt;criterion&amp;gt;&lt;/code>: &lt;code>fail&lt;/code>, &lt;code>pass&lt;/code>, &lt;code>open&lt;/code> or &lt;code>not_evaluated&lt;/code>.&lt;/li>
+&lt;/ul>
+&lt;p>An agent still inside at &lt;code>max_simulation_time&lt;/code> has no exit time
+(&lt;code>censored&lt;/code> is &lt;code>True&lt;/code>, &lt;code>exit_time_s&lt;/code> is empty). If it crossed, it failed,
+with no margin. If it did not, the outcome is &lt;code>open&lt;/code>: its margin is
+undetermined, and the summary never fills it from the last frame. Read the
+counts of &lt;code>pass&lt;/code> only together with the number of censored agents.&lt;/p>
+&lt;p>Heat is &lt;code>not_evaluated&lt;/code> when the run had no TEMPERATURE slice, not
+ambient. The run&amp;rsquo;s console output ends with one line per criterion giving
+the outcome counts and the first crossing.&lt;/p>
+&lt;p>The thresholds are options: &lt;code>--summary-fed-low&lt;/code> and &lt;code>--summary-fed-high&lt;/code>
+(0.3 and 1) for the gas FED, the heat FED and the FIC;
+&lt;code>--summary-visibility-limit-m&lt;/code> (10 m) and &lt;code>--summary-visibility-c&lt;/code> (3) for
+the visibility, which is crossed when K reaches C / limit, 0.3 1/m by
+default. See &lt;a href="https://pedestriandynamics.org/pyFDS-Evac/docs/using/outputs/#exposure-summary">Outputs&lt;/a> for the columns and the
+sources of the defaults.&lt;/p>
+&lt;h2>What differs from Pathfinder&lt;span class="hx-absolute -hx-mt-20" id="what-differs-from-pathfinder">&lt;/span>
+&lt;a href="#what-differs-from-pathfinder" class="subheading-anchor" aria-label="Permalink for this section">&lt;/a>&lt;/h2>&lt;p>These are differences in the run, not in the summary:&lt;/p>
+&lt;ul>
+&lt;li>the O2 term starts below 20 % here and below 19.5 % in Pathfinder (set
+&lt;code>--o2-threshold-percent 19.5&lt;/code> to match);&lt;/li>
+&lt;li>the speed in smoke follows Lund by default here; Fridolf&amp;rsquo;s Eq. 7 is
+available and is being verified
+(&lt;a href="https://github.com/PedestrianDynamics/pyFDS-Evac/issues/146" target="_blank" rel="noopener">#146&lt;/a>);&lt;/li>
+&lt;li>the gas is read at one slice height for everyone, not at each occupant&amp;rsquo;s
+own height
+(&lt;a href="https://github.com/PedestrianDynamics/pyFDS-Evac/issues/150" target="_blank" rel="noopener">#150&lt;/a>,
+&lt;a href="https://github.com/PedestrianDynamics/pyFDS-Evac/issues/157" target="_blank" rel="noopener">#157&lt;/a>).&lt;/li>
+&lt;/ul>
+&lt;p>The crossing time has the resolution of &lt;code>--smoke-update-interval&lt;/code> (1 s by
+default). An agent that crossed between its last sample and its exit reads
+&lt;code>pass&lt;/code>.&lt;/p></description></item></channel></rss>
