@@ -65,6 +65,7 @@ from .rules import (
     no_known_exit_issue,
     no_known_exit_value_issue,
     predict_mechanisms,
+    radiometer_issue,
     routing_issue,
     spawn_issue,
     speed_alias_issue,
@@ -573,7 +574,11 @@ def _errors(
             ConfigIssue("D32", "fds_dir", messages.horizon_error(overrun), "I")
         )
     if m.heat_fed:
-        issue = integrated_intensity_issue(opts, fds) or heat_value_issue(opts)
+        issue = (
+            integrated_intensity_issue(opts, fds)
+            or radiometer_issue(opts)
+            or heat_value_issue(opts)
+        )
         if issue is not None:
             errors.append(issue)
     issue = visibility_value_issue(opts, raw, m)
@@ -869,6 +874,7 @@ def _predicted_heat(opts: Any, sampling: dict[str, Any]) -> dict[str, Any]:
         "skin_temperature_celsius": option(opts, "heat_skin_temperature"),
         "radiant_source": option(opts, "heat_radiant_source"),
         "u_factor": option(opts, "heat_u_factor"),
+        "radiometer_orientation": option(opts, "heat_radiometer_orientation"),
         "regime": option(opts, "heat_regime"),
         "view_factor": option(opts, "heat_view_factor") if layer else None,
         "layer_emissivity": option(opts, "heat_layer_emissivity") if layer else None,

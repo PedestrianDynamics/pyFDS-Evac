@@ -323,6 +323,24 @@ def integrated_intensity_issue(opts: Any, fds: Any) -> ConfigIssue | None:
     return None
 
 
+def radiometer_issue(opts: Any) -> ConfigIssue | None:
+    """D17: the radiometer source without its method or orientation, or the reverse."""
+    source = option(opts, "heat_radiant_source")
+    orientation = option(opts, "heat_radiometer_orientation")
+    if source != "radiometer":
+        if orientation is None:
+            return None
+        message = messages.ORIENTATION_NEEDS_RADIOMETER
+        return ConfigIssue("D17", "heat_radiometer_orientation", message, "B")
+    if option(opts, "heat_fed_method") != "total-flux":
+        message = messages.RADIOMETER_NEEDS_TOTAL_FLUX
+        return ConfigIssue("D17", "heat_radiant_source", message, "B")
+    if orientation is None:
+        message = messages.RADIOMETER_NEEDS_ORIENTATION
+        return ConfigIssue("D17", "heat_radiometer_orientation", message, "B")
+    return None
+
+
 # --- options with no effect ------------------------------------------------
 
 
@@ -418,6 +436,10 @@ def _heat_reason(opts: Any, dest: str, m: Mechanisms) -> _Reason:
         option(opts, "heat_radiant_source") != "integrated-intensity"
     ):
         return ("D18", "without --heat-radiant-source integrated-intensity", False)
+    if dest == "heat_emissivity" and option(opts, "heat_radiant_source") == (
+        "radiometer"
+    ):
+        return ("D18", "with --heat-radiant-source radiometer", False)
     if dest in _LAYER_ONLY and option(opts, "heat_regime") != "layer":
         return ("D19", "without --heat-regime layer", False)
     if dest in _HEAT_TENABILITY and not m.tenability:
@@ -551,6 +573,7 @@ HEAT_OPTIONS = (
     "heat_skin_temperature",
     "heat_radiant_source",
     "heat_u_factor",
+    "heat_radiometer_orientation",
     "heat_regime",
     "heat_layer_height",
     "heat_view_factor",
@@ -624,7 +647,10 @@ def heat_value_issue(opts: Any) -> ConfigIssue | None:
             option(opts, "heat_skin_temperature"),
         )
         fed._check_radiant_source(
-            option(opts, "heat_radiant_source"), method, option(opts, "heat_u_factor")
+            option(opts, "heat_radiant_source"),
+            method,
+            option(opts, "heat_u_factor"),
+            option(opts, "heat_radiometer_orientation"),
         )
         # run_config passes the layer values only in the layer regime.
         layer = regime == "layer"

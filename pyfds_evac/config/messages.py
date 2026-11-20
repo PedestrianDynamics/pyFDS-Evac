@@ -163,6 +163,18 @@ INTEGRATED_INTENSITY_NEEDS_U = (
 )
 
 
+RADIOMETER_NEEDS_TOTAL_FLUX = (
+    "--heat-radiant-source radiometer needs --heat-fed-method total-flux."
+)
+RADIOMETER_NEEDS_ORIENTATION = (
+    "--heat-radiant-source radiometer needs --heat-radiometer-orientation "
+    "x,y,z (0,0,1 faces up); there is no default."
+)
+ORIENTATION_NEEDS_RADIOMETER = (
+    "--heat-radiometer-orientation needs --heat-radiant-source radiometer."
+)
+
+
 def integrated_intensity_slice_missing(fds_dir: str) -> str:
     """D17: the case has no INTEGRATED INTENSITY slice."""
     return (

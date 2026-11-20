@@ -3867,6 +3867,7 @@ def run_scenario(
                                 float(heat_inputs.temperature_celsius),
                                 heat_inputs.layer_temperature_celsius,
                                 integrated_intensity_kw_m2=heat_inputs.integrated_intensity_kw_m2,
+                                radiometer_kw_m2=heat_inputs.radiometer_kw_m2,
                             )
                         )
                         if fed_domain_fields:

@@ -766,6 +766,21 @@ def _cell_centre_z(subslice) -> float:
     return float(0.5 * (nodes[k - 1] + nodes[k]))
 
 
+def slice_cell_height_m(slice_obj) -> float:
+    """The z size [m] of the mesh cell that holds a horizontal slice's values.
+
+    The largest over the slice's meshes.
+    """
+    z_mid = _slice_z_mid(slice_obj)
+    heights = []
+    for sub in slice_obj.subslices:
+        nodes = np.asarray(sub.mesh.coordinates["z"], dtype=float)
+        k = int(np.searchsorted(nodes, z_mid, side="right")) - 1
+        k = max(0, min(k, nodes.size - 2))
+        heights.append(float(nodes[k + 1] - nodes[k]))
+    return max(heights)
+
+
 def nearest_height_index(heights: list[float], requested_m: float) -> int:
     """Index of the height nearest *requested_m*; the first of equally near."""
     return min(range(len(heights)), key=lambda i: abs(heights[i] - requested_m))

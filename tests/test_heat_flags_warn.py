@@ -28,6 +28,7 @@ NON_DEFAULT = {
     "heat_skin_temperature": "36",
     "heat_radiant_source": "integrated-intensity",
     "heat_u_factor": "0.5",
+    "heat_radiometer_orientation": "0,0,1",
     "heat_regime": "layer",
     "heat_layer_height": "2.5",
     "heat_view_factor": "0.5",

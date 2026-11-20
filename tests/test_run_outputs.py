@@ -208,6 +208,21 @@ def test_fed_csv_has_the_gas_columns_and_each_optional_group_when_present(tmp_pa
     assert rows == [{**gas, **HEAT_COLUMNS}]
 
 
+def test_fed_csv_writes_the_radiometer_columns_after_the_flux(tmp_path):
+    """#276: the net reading and the incident flux follow ``heat_flux_kw_m2``."""
+    gas = {name: str(index) for index, name in enumerate(FED_COLUMNS)}
+    extra = {
+        "heat_flux_kw_m2": "3.2",
+        "heat_radiometer_kw_m2": "3.0",
+        "heat_radiometer_incident_kw_m2": "3.511",
+    }
+    path = tmp_path / "radiometer.csv"
+    run_outputs._write_fed_history_csv([{**gas, **extra}], str(path))
+    header, rows = _csv(path)
+    assert header == FED_COLUMNS + list(extra)
+    assert rows == [{**gas, **extra}]
+
+
 def test_exit_csv_records_whether_the_exit_was_in_the_agents_map(tmp_path):
     """``exit_in_map`` is written; the writer ignores keys it does not know."""
     path = tmp_path / "exits.csv"

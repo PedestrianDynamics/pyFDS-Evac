@@ -250,7 +250,8 @@
   "action": "_StoreAction",
   "choices": [
    "gas",
-   "integrated-intensity"
+   "integrated-intensity",
+   "radiometer"
   ],
   "const": null,
   "default": "gas",
@@ -258,6 +259,16 @@
   "nargs": null,
   "required": false,
   "type": null
+ },
+ "--heat-radiometer-orientation": {
+  "action": "_StoreAction",
+  "choices": null,
+  "const": null,
+  "default": null,
+  "dest": "heat_radiometer_orientation",
+  "nargs": null,
+  "required": false,
+  "type": "_orientation"
  },
  "--heat-regime": {
   "action": "_StoreAction",

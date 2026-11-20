@@ -237,6 +237,7 @@ def test_common_tier_is_the_gui_sections():
         "heat_skin_temperature",
         "heat_radiant_source",
         "heat_u_factor",
+        "heat_radiometer_orientation",
         "heat_regime",
         "heat_layer_height",
         "heat_view_factor",
