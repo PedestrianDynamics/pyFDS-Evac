@@ -232,6 +232,7 @@ assets/schroeder2020_room/hrr060_2door/hrr060_2door.fds	0	300.00	2	100		dd6dbfeb
 assets/schroeder2020_room/rel_1door/rel_1door.fds	0	300.00	1	100		fa946eaf3505d72b9591a56d71f8f1e05a78c65ab645b99992bc6addff2e1410
 assets/schroeder2020_room/rel_1door_dx010/rel_1door_dx010.fds	0	300.00	1	100		fa946eaf3505d72b9591a56d71f8f1e05a78c65ab645b99992bc6addff2e1410
 assets/schroeder2020_room/rel_2door/rel_2door.fds	0	300.00	2	100		1265281f324a17320aab50225d95a37cd2590db2d801887e1082eb06169f489e
+assets/slice_node_vs_cell/slice_node_vs_cell.fds	0	36.00	1	100		9994e6b3093e682b0b782744053176e3e0ea42d864df85698c270cbef40f9b1e
 assets/station/Station210_clean.fds	1				the deck has no &MESH with XB; nothing to import	
 assets/station_prereg/fds/station_dx010_central.fds	0	533.12	39	100		271fdddbb0de050fad5bfb49f3e57f647b3253d115a8db92c797e720f4a9aa8a
 assets/station_prereg/fds/station_dx020_central.fds	0	534.65	27	100		f1d8a6c9fab1fa58911455f8c7c3b8f27bc99cfa71db9171e4607f55aef18eaf
