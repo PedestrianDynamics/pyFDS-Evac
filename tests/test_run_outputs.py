@@ -185,6 +185,7 @@ HEAT_COLUMNS = {
     "heat_endpoint": "convective",
     "heat_outside_validity": "True",
     "heat_humidity": "0.5",
+    "heat_water_vapour_fraction": "0.05",
     "heat_flux_kw_m2": "1.5",
     "heat_integrated_intensity_kw_m2": "2.5",
     "heat_layer_temperature_c": "80.0",

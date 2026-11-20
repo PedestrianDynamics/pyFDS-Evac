@@ -72,7 +72,7 @@ with `--output-sqlite` it is copied beside the trajectory as
 | `outcome` | how the run ended: `status` (`completed` or `incomplete`), `end_reason` (`all_evacuated`, `time_limit`, `flows_closed`, `all_mobile_left` or `deadlock`), `agents_remaining` and `agents_not_spawned`, and `deadlock` (`agents`, `since_s`, `positions`, `ended_run`) when a deadlock was detected, as in [Reading the results](#reading-the-results) |
 | `heat_clothing` | `clothed` or `unclothed`, when an ISO 13571 convective heat law ran |
 | `heat_fed_threshold_override` | the `--heat-fed-threshold` value, only when it was set |
-| `heat_endpoint`, `heat_validity` | the SFPE endpoint and its validity limits, only with `--heat-endpoint` |
+| `heat_endpoint`, `heat_validity` | the SFPE endpoint and its validity limits, only with `--heat-endpoint`; `heat_validity` also holds `humidity` (`ok`, `humid` or `unknown`), `humid_rows`, `humid_agents` and `max_water_vapour_fraction` |
 | `smoke_blind` | `true`, only with `--smoke-blind` |
 | `fds_coverage` | when FDS slices are sampled: the setup check of the scenario against the slice coverage, with `quantities`, `walkable_area_m2`, `walkable_outside_m2`, `areas_outside_m2` (exits, checkpoints, spawn areas), `signs_outside`, `signs_off_vismap_grid_m` and `edges_outside_m` (route edges) |
 | `fds_outside` | with `fds_coverage`: the history rows sampled outside the FDS slices, as `rows`, `agents` and `agent_seconds`, the same as `metrics["fds_outside"]` |
@@ -142,7 +142,8 @@ Extra columns appear with some heat options:
 
 | Columns | Present with |
 |---|---|
-| `heat_endpoint`, `heat_outside_validity`, `heat_humidity` | `--heat-endpoint`; `heat_outside_validity` is `True` above 205 °C or for a non-finite sample, `heat_humidity` is `unknown` |
+| `heat_endpoint`, `heat_outside_validity`, `heat_humidity` | `--heat-endpoint`; `heat_outside_validity` is `True` above 205 °C or for a non-finite sample, `heat_humidity` is `ok` below 10 % water vapour by volume, `humid` at or above it, and `unknown` without a `WATER VAPOR VOLUME FRACTION` slice |
+| `heat_water_vapour_fraction` | `--heat-endpoint` with a `WATER VAPOR VOLUME FRACTION` slice: the sampled fraction [mol/mol, 0-1] |
 | `heat_flux_kw_m2` | `--heat-fed-method total-flux`: the heat flux to the skin [kW/m²] |
 | `heat_integrated_intensity_kw_m2` | `--heat-radiant-source integrated-intensity`: *U* at the agent [kW/m²] |
 | `heat_layer_temperature_c` | `--heat-regime layer`: layer temperature [°C] |

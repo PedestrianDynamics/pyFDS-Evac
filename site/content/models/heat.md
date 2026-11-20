@@ -487,9 +487,20 @@ The FED history CSV (`--output-fed-history`) carries `temperature_celsius`,
 `incapacitation_cause` (`gas`, `heat` or `gas+heat`) for agents that stopped.
 With `--heat-endpoint` it also carries `heat_endpoint`,
 `heat_outside_validity` (`True` above 205 °C or for a non-finite temperature)
-and `heat_humidity` (always `unknown`). The run manifest then records
+and `heat_humidity`. When the case has a `WATER VAPOR VOLUME FRACTION` slice
+(for example `&SLCF PBZ=1.6, QUANTITY='VOLUME FRACTION', SPEC_ID='WATER VAPOR' /`)
+at the heat slice height, it is sampled with the temperature: the fraction
+(mol/mol, 0-1) goes to `heat_water_vapour_fraction` and `heat_humidity` reads
+`ok` below 0.10 (10 % by volume) and `humid` at or above it. Without the slice
+it reads `unknown`; so it does if the slice lies at another height than the
+temperature slice, which also logs a warning. The laws hold for air with less than 10 % water vapour
+(p. 2383) and overestimate the tolerance time in humid air; the check is
+observational, so the dose, thresholds and incapacitation do not change, and
+the run logs one warning when any sample is `humid`. The other heat modes do
+not use these laws and do not sample water vapour. The run manifest records
 `heat_endpoint` and `heat_validity`: the 205 °C limit, marked as assumed, the
-humidity status and the < 10 % water-vapour limit. `incapacitation_cause` still reads `heat` for every
+< 10 % water-vapour limit, the humidity status of the run, `humid_rows`,
+`humid_agents` and `max_water_vapour_fraction`. `incapacitation_cause` still reads `heat` for every
 endpoint; `heat_endpoint` says which one.
 
 With `--heat-fed-method total-flux` the FED history also carries
@@ -569,8 +580,10 @@ in [Assumptions (unsourced values)](#assumptions-unsourced-values).
 - **Population spread.** No consulted source gives a spread of tolerance
   for the convective dose; the opt-in σ = 0.94 is borrowed from the gas dose
   ([#225](https://github.com/PedestrianDynamics/pyFDS-Evac/issues/225)).
-- **Validity range.** Humidity is not sampled, so humid smoke is never
-  flagged; `heat_humidity` reads `unknown`
+- **Validity range.** Humid smoke is flagged only when the case has a
+  `WATER VAPOR VOLUME FRACTION` slice at the heat height; otherwise
+  `heat_humidity` reads `unknown`. The rate is not corrected for humid air,
+  as the Handbook gives no law for it
   ([#272](https://github.com/PedestrianDynamics/pyFDS-Evac/issues/272)). Without `--heat-endpoint`, temperatures above 205 °C are not
   flagged either, although Eq. 63.44 rests on the same data (p. 2382); ISO
   states no temperature range for Eqs. (9) and (10).

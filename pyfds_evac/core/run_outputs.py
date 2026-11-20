@@ -101,6 +101,9 @@ def _write_fed_history_csv(rows, output_path: str) -> None:
     ]
     if rows and "heat_endpoint" in rows[0]:
         fieldnames += ["heat_endpoint", "heat_outside_validity", "heat_humidity"]
+        # Rows outside the vapour slice lack the key; DictWriter writes "".
+        if any("heat_water_vapour_fraction" in row for row in rows):
+            fieldnames.append("heat_water_vapour_fraction")
     if rows and "heat_flux_kw_m2" in rows[0]:
         fieldnames.append("heat_flux_kw_m2")
     if rows and "heat_integrated_intensity_kw_m2" in rows[0]:
