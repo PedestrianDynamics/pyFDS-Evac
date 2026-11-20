@@ -51,8 +51,11 @@ import tempfile
 import threading
 from collections.abc import Iterator
 from contextlib import contextmanager
+from dataclasses import dataclass
 from pathlib import Path
 from typing import Any
+
+import numpy as np
 
 _LOCK = threading.RLock()
 
@@ -163,3 +166,77 @@ def open_fds_simulation(path: str | Path) -> Any:
     """``fdsreader.Simulation(path)`` that leaves the case directory unchanged."""
     with fdsreader_without_cache():
         return _case_safe_class()(str(path))
+
+
+@dataclass(frozen=True)
+class DevicePoint:
+    """One output column of an FDS device, as fdsreader reports it.
+
+    ``id`` is the column name (``<ID>-<k>`` for a ``POINTS`` line);
+    ``quantity`` is fdsreader's ``quantity_name``, which for FDS 6.10.1 has no
+    ``GAS`` suffix. ``data`` holds one value per output time.
+    """
+
+    id: str
+    quantity: str
+    xyz: tuple[float, float, float]
+    orientation: tuple[float, float, float]
+    unit: str
+    data: np.ndarray
+
+
+@dataclass(frozen=True)
+class DeviceSet:
+    """The devices of a case: the output times and one point per column."""
+
+    chid: str
+    case_dir: Path
+    times: np.ndarray
+    points: tuple[DevicePoint, ...]
+
+
+def read_fds_devices(path: str | Path) -> DeviceSet:
+    """Every device column of the FDS case in directory *path*.
+
+    Verified against fdsreader 1.14.0: ``Simulation.devices`` iterates
+    ``Device`` objects with ``id``, ``quantity_name``, ``xyz``,
+    ``orientation``, ``unit`` and ``data``; the ``Time`` device
+    (``quantity_name`` ``TIME``) holds the output times. fdsreader does not
+    expose ``&PROP`` values; read the deck for those.
+    """
+    case_dir = Path(path)
+    try:
+        simulation = open_fds_simulation(case_dir)
+        devices = list(simulation.devices)
+    except Exception as exc:
+        raise ValueError(
+            f"cannot read the devices of the FDS case in {case_dir}: {exc}"
+        ) from exc
+    clocks = [d for d in devices if d.quantity_name == "TIME"]
+    if len(clocks) != 1:
+        raise ValueError(
+            f"cannot read the devices of the FDS case in {case_dir}: expected one "
+            f"TIME device, found {len(clocks)}"
+        )
+    times = np.asarray(clocks[0].data, dtype=float)
+    points = tuple(_device_point(d) for d in devices if d is not clocks[0])
+    for point in points:
+        if point.data.shape != times.shape:
+            raise ValueError(
+                f"device {point.id!r} in {case_dir} has {point.data.size} values, "
+                f"the output has {times.size} times"
+            )
+    return DeviceSet(
+        chid=str(simulation.chid), case_dir=case_dir, times=times, points=points
+    )
+
+
+def _device_point(device: Any) -> DevicePoint:
+    return DevicePoint(
+        id=str(device.id),
+        quantity=str(device.quantity_name),
+        xyz=tuple(float(v) for v in device.xyz),  # type: ignore[arg-type]
+        orientation=tuple(float(v) for v in device.orientation),  # type: ignore[arg-type]
+        unit=str(device.unit),
+        data=np.asarray(device.data, dtype=float),
+    )
