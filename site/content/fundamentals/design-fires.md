@@ -263,7 +263,9 @@ the 2012 edition (MBIE 2012, Table 2.1). Everything else is the main
 fire's, including the 1.5 MW cap, so the deck is not the C/VM2 design
 fire: C/VM2 grows to 20 MW. It carries no post-flashover yields (soot
 0.14 and CO 0.40 kg/kg after flashover, taken as an upper layer at
-500 °C, or once the fire is ventilation limited). Per MJ it
+500 °C, or once the fire is ventilation limited); in its FDS run the
+hottest Room 3 thermocouple reaches 276 °C, so the pre-flashover yields
+hold for the whole run. Per MJ it
 releases about 0.2 times the soot and 0.3 times the CO of the PVC fire
 (3.5 against 16.7 g/MJ soot). It has one FDS run (6.10.1, 6 MPI
 processes, 4168 s) and no evacuation runs.

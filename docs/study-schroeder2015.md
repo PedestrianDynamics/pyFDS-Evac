@@ -141,6 +141,8 @@ kW/s², soot yield 0.07, CO yield 0.04 kg/kg, 20 MJ/kg; see
 It is a sensitivity case for
 [#419](https://github.com/PedestrianDynamics/pyFDS-Evac/issues/419). It has
 an FDS run but no evacuation runs: no number on this page comes from it.
+Its hottest Room 3 thermocouple reaches 276 °C, below C/VM2's 500 °C
+flashover criterion, so its pre-flashover yields hold for the whole run.
 
 ### How the main fire was chosen
 
