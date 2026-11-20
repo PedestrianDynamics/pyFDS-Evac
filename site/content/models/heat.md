@@ -291,6 +291,21 @@ with \(T_L\) the temperature of a second `TEMPERATURE` slice at
   2.33 is below the 2.5 kW/m² radiant threshold, so a layer at the anchor
   adds no radiant dose; a black layer with φ = 1 counts from about
   207 °C ([Where the radiant threshold acts](#where-the-radiant-threshold-acts)).
+- **The layer term underpredicts a descending layer.** Against FDS skin
+  gauges facing up at 1.6 m, it is within ±30 % for a steady layer at
+  2.0 m (18 to 21 of 21 points, whether the layer base is the FDS
+  `LAYER HEIGHT` or a fixed 1.8, 2.0 or 2.5 m; ε_L = 1). For a layer
+  descending from the ceiling, every choice of base reads 40 to 50 % low
+  before the layer reaches the head (7 points; median ratio 0.51 to 0.61). The
+  layer picture leaves out the flame, the plume and the walls. Taking
+  the base from `LAYER HEIGHT`, or ε_L from `ABSORPTION COEFFICIENT`, did
+  not improve on this and is not implemented
+  ([#274](https://github.com/PedestrianDynamics/pyFDS-Evac/issues/274);
+  decks `heat_radiometer_layer_274*.fds` and
+  `heat_radiometer_descending.fds`, output in
+  `fds-evac-data/heat_radiometer/`). Where the deck has radiometers, the
+  [radiometer source](#radiant-flux-from-fds-radiometers) needs neither a
+  layer height nor ε_L.
 - **The regime is a user choice** for the whole run. No source gives a rule
   to decide it per agent
   ([#275](https://github.com/PedestrianDynamics/pyFDS-Evac/issues/275)).
@@ -705,8 +720,9 @@ in [Assumptions (unsourced values)](#assumptions-unsourced-values).
   one slice at one height: it reads ceiling-jet temperatures near the
   ceiling and assumes one ceiling height for the whole domain. There is no
   layer reduction from several heights, and \(\varepsilon_L\) is a constant,
-  not taken from FDS's `ABSORPTION COEFFICIENT`
-  ([#274](https://github.com/PedestrianDynamics/pyFDS-Evac/issues/274)).
+  not taken from FDS's `ABSORPTION COEFFICIENT`. Both were tested and did
+  not improve the layer term ([Hot layer](#hot-layer);
+  [#274](https://github.com/PedestrianDynamics/pyFDS-Evac/issues/274)).
 - **Regime selection.** The regime is one user choice for the whole run.
   In the smoke regime the default ε = 0.5 treats every head as in smoke.
   Above about 285 °C that overestimates the dose in clear hot air; set
