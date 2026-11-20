@@ -5,8 +5,9 @@ tenability limit is reached at the agent's own position with its exit time.
 It also samples the same limits at fixed points and on a grid (a person
 standing still from ignition), and computes when the signs of each route stop
 being visible (fdsvismap). Nothing here changes the engine: the per-agent
-values come from the run's output files, the fields from ``ExtinctionField``
-and ``FdsFedField``, the sign maps from fdsvismap.
+values come from the run's output files, the fixed-point and map ASET from
+``pyfds_evac.analysis`` (slice nodes, frame times, the engine's dose rule), the
+sign maps from fdsvismap.
 
 Make the fire run first, as on the page (``RUNS`` any output directory,
 ``FDS`` the FDS output directory)::
@@ -44,14 +45,14 @@ from matplotlib.lines import Line2D
 from matplotlib.patches import Patch, Polygon, Rectangle
 from shapely import contains_xy, wkt
 
-from pyfds_evac import (
-    DefaultFedConfig,
-    DefaultFedModel,
-    ExtinctionField,
-    FdsFedField,
-    SmokeSpeedConfig,
+from pyfds_evac import SmokeSpeedConfig
+from pyfds_evac.analysis import (
+    AsetCriteria,
+    aset_map,
+    grid_from_walkable,
+    read_crossings,
+    read_level_crossing,
 )
-from pyfds_evac.core.fed import default_fic
 
 ROOT = Path(__file__).resolve().parents[2]
 ASSET = ROOT / "assets" / "t_junction"
@@ -83,16 +84,24 @@ F_FIC_HCL_PPM = 900.0
 CT_HCL_PPM_MIN = 114000.0  # Purser lethal dose, the FLD_irr term of the FED
 K_10M = 3.0 / 10.0  # 10 m with C = 3 (Jin, reflecting sign; FDS default)
 
-# Criterion -> test on a table with columns k, hcl, co, fed.
+# Criterion -> (column of the per-agent table k, hcl, co, fed; limit). The same
+# limits give the fixed-point and map ASET from the slices (FDS_LEVEL).
 CRITERIA = {
-    "K 0.3": lambda d: d.k >= K_10M,
-    "FIC_imp 1": lambda d: d.hcl >= 200.0,  # Purser escape impairment
-    "ISO FEC 0.3": lambda d: d.hcl >= 300.0,
-    "SFPE FIC 1": lambda d: d.hcl >= 900.0,
-    "ISO FEC 1": lambda d: d.hcl >= 1000.0,
-    "CO 2700": lambda d: d.co >= 2700.0,  # EA short exposure
-    "FED 0.3": lambda d: d.fed >= 0.3,
-    "FED 1": lambda d: d.fed >= 1.0,
+    "K 0.3": ("k", K_10M),
+    "FIC_imp 1": ("hcl", 200.0),  # Purser escape impairment
+    "ISO FEC 0.3": ("hcl", 300.0),
+    "SFPE FIC 1": ("hcl", 900.0),
+    "ISO FEC 1": ("hcl", 1000.0),
+    "CO 2700": ("co", 2700.0),  # EA short exposure
+    "FED 0.3": ("fed", 0.3),
+    "FED 1": ("fed", 1.0),
+}
+# Column -> (FDS slice quantity, factor from the volume fraction to the
+# column's unit).
+FDS_LEVEL = {
+    "k": ("SOOT EXTINCTION COEFFICIENT", 1.0),
+    "hcl": ("HYDROGEN CHLORIDE VOLUME FRACTION", 1e6),
+    "co": ("CARBON MONOXIDE VOLUME FRACTION", 1e6),
 }
 SENSITIVITY_K = (0.23, 0.6, 0.8, 1.0)
 
@@ -226,8 +235,8 @@ def first_crossings(rec, people, criteria):
     rec = rec.join(people["exit"], on="agent_id")
     rec = rec[~(rec.time_s > rec["exit"])]
     out = pd.DataFrame(index=people.index)
-    for key, test in criteria.items():
-        out[key] = rec[test(rec)].groupby("agent_id").time_s.min()
+    for key, (column, limit) in criteria.items():
+        out[key] = rec[rec[column] >= limit].groupby("agent_id").time_s.min()
     return out
 
 
@@ -248,54 +257,61 @@ def _check_slice_height(fds_dir):
     return sim
 
 
-def _series(k_field, fed_model, x, y, times):
-    """K, HCl, CO and the dose of someone standing at (x, y) from t = 0."""
-    rows, fed = [], 0.0
-    for t in times:
-        inputs, rate = fed_model.sample_rate(t, x, y)
-        rows.append(
-            {
-                "k": k_field.sample_extinction(t, x, y),
-                "hcl": F_FIC_HCL_PPM * default_fic(inputs),
-                "co": 1e4 * inputs.co_volume_fraction_percent,
-                "fed": fed,
-            }
+def point_crossings(fds_dir, sim, criteria):
+    """Slice-node first-crossing times per criterion, from ``pyfds_evac.analysis``.
+
+    Level criteria read the slice frames; FED is the dose of someone standing
+    from t = 0 with the engine's rule (right endpoint, 1 s clock).
+    """
+    out = {}
+    for name, (column, limit) in criteria.items():
+        if column == "fed":
+            only_fed = AsetCriteria(
+                visibility_limit_m=None, temperature_c=None, heat_fed=None, fed=limit
+            )
+            (out[name],) = read_crossings(
+                str(fds_dir), only_fed, slice_height_m=SLICE_Z, simulation=sim
+            )
+            continue
+        quantity, scale = FDS_LEVEL[column]
+        out[name] = read_level_crossing(
+            str(fds_dir),
+            quantity,
+            limit,
+            scale=scale,
+            name=name,
+            slice_height_m=SLICE_Z,
+            simulation=sim,
         )
-        fed += rate / 60.0
-    return pd.DataFrame(rows, index=times)
+    return out
 
 
-def _first(d, test):
-    hit = test(d)
-    return d.index[hit].min() if hit.any() else np.nan
-
-
-def location_aset(k_field, fed_model, criteria):
-    """First time each criterion is met at each fixed point, from ignition."""
-    times = np.arange(0.0, T_END + 0.5, 1.0)
+def location_aset(crossings):
+    """First time each criterion is met at each fixed point (nearest slice node)."""
     table = {}
     for name, (x, y) in LOCATIONS.items():
-        d = _series(k_field, fed_model, x, y, times)
-        table[name] = {key: _first(d, test) for key, test in criteria.items()}
+        row = {}
+        for key, c in crossings.items():
+            first = c.first_s[np.hypot(c.x - x, c.y - y).argmin()]
+            row[key] = first if np.isfinite(first) else np.nan
+        table[name] = row
     return pd.DataFrame(table).T
 
 
-def grid_aset(k_field, fed_field, walkable, cell=0.5):
-    """Earliest of K >= 0.3 and ISO FEC >= 0.3 on a grid, from ignition."""
+def grid_aset(crossings, cell=0.5):
+    """Earliest of K >= 0.3 and ISO FEC >= 0.3 per map cell, from ignition.
+
+    The cell takes the slice node nearest its centre (the module's
+    ``nearest`` rule); cells with no floor are NaN. Rows run from y = 0.
+    """
+    walkable = wkt.loads((ASSET / "geometry.wkt").read_text())
+    grid = grid_from_walkable(walkable, cell)
+    both = [crossings["K 0.3"], crossings["ISO FEC 0.3"]]
+    aset = np.flipud(aset_map(grid, both, cell_rule="nearest").time_s)
+    n_y, n_x = round(13.0 / cell), round(30.0 / cell)
     xs = np.arange(cell / 2, 30.0, cell)
     ys = np.arange(cell / 2, 13.0, cell)
-    gx, gy = np.meshgrid(xs, ys)
-    inside = contains_xy(walkable, gx, gy)
-    aset = np.full(gx.shape, np.nan)
-    aset[inside] = np.inf
-    for t in np.arange(0.0, T_END + 0.5, 1.0):
-        rows, cols = np.nonzero(np.isinf(aset))
-        for j, i in zip(rows, cols, strict=True):
-            x, y = gx[j, i], gy[j, i]
-            hcl = fed_field.sample_inputs(t, x, y).hcl_ppm
-            if k_field.sample_extinction(t, x, y) >= K_10M or hcl >= 300.0:
-                aset[j, i] = t
-    return xs, ys, aset, cell
+    return xs, ys, aset[:n_y, :n_x], cell
 
 
 # --- Sign visibility (fdsvismap) ---
@@ -384,7 +400,7 @@ def report(people, tracks, rec, cross, loc, vis):
         f"({loc['K 0.3'].max():.0f} s): {len(late)}"
     )
 
-    sens = {f"K {k}": (lambda d, k=k: d.k >= k) for k in SENSITIVITY_K}
+    sens = {f"K {k}": ("k", k) for k in SENSITIVITY_K}
     sens_cross = first_crossings(rec, people, sens)
     for k in SENSITIVITY_K:
         c = sens_cross[f"K {k}"]
@@ -818,14 +834,12 @@ def main():
     rec = records(args.runs)
     cross = first_crossings(rec, people, CRITERIA)
     # The deck writes slices at z = 2.0 m only; the 1.6 m default resolves to it.
-    k_field = ExtinctionField.from_fds(str(args.data), simulation=sim)
-    fed_field = FdsFedField.from_fds(str(args.data), simulation=sim)
-    fed_model = DefaultFedModel(fed_field, DefaultFedConfig())
-    loc = location_aset(k_field, fed_model, CRITERIA | {"K 1.0": lambda d: d.k >= 1.0})
+    crossings = point_crossings(args.data, sim, CRITERIA | {"K 1.0": ("k", 1.0)})
+    loc = location_aset(crossings)
     vis = sign_vismap(args.data, config)
     report(people, tracks, rec, cross, loc, vis)
 
-    grid = grid_aset(k_field, fed_field, walkable)
+    grid = grid_aset(crossings)
     fig_map(walkable, config, grid, loc, vis)
     fig_agents(people, cross)
     fig_extinction(rec)
