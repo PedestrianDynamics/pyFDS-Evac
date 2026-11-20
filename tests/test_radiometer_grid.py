@@ -237,6 +237,13 @@ def _pt(point_id):
     )
 
 
+def test_a_deck_without_tmpa_gives_a_gauge_at_20_c():
+    """FDS's TMPA default (20 degC) is the gauge temperature D5 checks."""
+    deck = DECK.replace("&MISC TMPA=18. /\n", "")
+    got = radiometer_props(parse_fds_text(deck), [_pt("RAD_b-1"), _pt("RAD_d")])
+    assert [p.gauge_temperature_c for p in got.values()] == [20.0, 20.0]
+
+
 def test_prop_values_come_from_the_deck_with_fds_defaults():
     got = _props("RAD_a-1", "RAD_a-2", "RAD_b-1", "RAD_c", "RAD_d")
     assert list(got) == ["RAD_a", "RAD_b", "RAD_c", "RAD_d"]
