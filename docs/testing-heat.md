@@ -325,8 +325,9 @@ threshold.
 
 The layer regime is checked
 against hand formulas and the 200 °C / 2.5 kW/m² anchor (p. 2382), with
-synthetic temperature fields; no FDS case runs the layer regime yet
-([#308](https://github.com/PedestrianDynamics/pyFDS-Evac/issues/308)).
+synthetic temperature fields, and on an FDS case
+([#308](https://github.com/PedestrianDynamics/pyFDS-Evac/issues/308)), which
+it misses in part: see [Layer regime against FDS gauges](#layer-regime-against-fds-gauges).
 
 The `INTEGRATED INTENSITY` source is checked against hand formulas, a
 committed FDS 6.10.1 case (`assets/heat_integrated_intensity`, slice *U*
@@ -335,6 +336,100 @@ and *T* against FDS's own devices), and the #224 radiometer data, where
 in all four orientations within 3 %. The 300 °C layer, soot fraction and
 geometry of the committed case, and the gauge's h = 8 and \(T_s\) = 35 °C
 in the #224 decks, are assumptions of those test decks, not sourced values.
+
+## Layer regime against FDS gauges
+
+`--heat-regime layer` (#308) on FDS 6.10.1 output of
+`assets/heat_radiometer/heat_radiometer_layer_308.fds`: the #224 layer deck
+(sealed adiabatic 4 × 4 × 3 m room, 300 °C sooty layer above 2.0 m, walls and
+air below at 20 °C, 10 s) with a `TEMPERATURE` slice at 2.5 m and a device
+`T_z25` added; every other namelist is unchanged, and the devices at 1.6 m
+reproduce the #224 run exactly. The run is transient: the layer cools from
+300 °C to about 260 °C and the head temperature at 1.6 m rises from 20 °C to
+60 °C within 10 s, so the constant φ and ε_L meet a changing field.
+
+The reference is the FDS `GAUGE HEAT FLUX GAS` device of the same position
+and orientation (net flux of a skin-like gauge at 35 °C, *h* = 8), at 1.6 m
+and *x* = 0.45–3.45 m on *y* = 2.05 m, facing up, +x (`px`) or −x (`mx`), at
+*t* = 3, 6 and 9 s. The convective term is at most about 6 % of the flux (negative
+at 3 s, while the air is below the gauge's 35 °C), so this case tests the
+radiant layer term.
+
+**View factor.** φ is not a free number here. It is the geometric view factor
+from a differential element at the gauge, with the gauge's orientation, to
+the base of the layer (the 4 × 4 m rectangle at z = 2.0 m, 0.4 m above the
+gauge), the closed form for a differential element and a rectangle summed over
+the four sub-rectangles around the foot point: Howell, *A Catalog of
+Radiation Heat Transfer Configurations*, entries C-11 (parallel, `up`) and
+C-14 (perpendicular, `px`, `mx`); also in Incropera, *Fundamentals of Heat
+and Mass Transfer*. It is geometry, not a fit to FDS
+(`scripts/verification/heat_layer_view_factor.py`; the test checks the closed
+forms against numerical integration). φ values:
+
+| *x* (m) | 0.45 | 0.95 | 1.45 | 1.95 | 2.45 | 2.95 | 3.45 |
+|---|---|---|---|---|---|---|---|
+| up | 0.861 | 0.946 | 0.964 | 0.968 | 0.966 | 0.951 | 0.891 |
+| px | 0.419 | 0.413 | 0.405 | 0.391 | 0.366 | 0.317 | 0.204 |
+| mx | 0.167 | 0.302 | 0.359 | 0.387 | 0.402 | 0.412 | 0.418 |
+
+The layer regime takes one φ per run, so the CLI is run once per
+(orientation, position) with that φ and one stationary agent read at the
+device *x* (21 runs of the scenario in `assets/heat_radiometer_layer_308`,
+seven agents with a pre-movement longer than the run).
+
+**Predeclared, before the run.** Expected flux from φ, ε_L = 1, *T*<sub>L</sub> =
+300 °C and the head temperature of the #224 run; band
+|*q*<sub>model</sub> / *q*<sub>FDS</sub> − 1| ≤ 30 % (the radiant band
+above) at every position and time, per orientation. A miss is a result: φ,
+ε_L, the band and the times were not changed after the run.
+
+**Result: a miss in every orientation.** The model flux against the FDS gauge,
+7 positions per row (median flux in kW/m²; ratio *q*<sub>model</sub> /
+*q*<sub>FDS</sub> over the positions):
+
+| facing | *t* (s) | *q*<sub>FDS</sub> | *q*<sub>model</sub> | ratio min – max | inside ±30 % |
+|---|---|---|---|---|---|
+| up | 3 | 4.06 | 4.71 | 1.15 – 1.17 | 7 of 7 |
+| up | 6 | 3.39 | 4.24 | 1.22 – 1.26 | 7 of 7 |
+| up | 9 | 3.09 | 3.97 | 1.28 – 1.37 | 4 of 7 |
+| px | 3 | 2.12 | 1.87 | 0.56 – 0.93 | 6 of 7 |
+| px | 6 | 1.87 | 1.69 | 0.61 – 0.97 | 6 of 7 |
+| px | 9 | 1.71 | 1.63 | 0.67 – 1.05 | 6 of 7 |
+| mx | 3 | 2.02 | 1.86 | 0.46 – 0.94 | 6 of 7 |
+| mx | 6 | 1.72 | 1.67 | 0.51 – 0.98 | 6 of 7 |
+| mx | 9 | 1.71 | 1.61 | 0.55 – 1.06 | 6 of 7 |
+
+54 of 63 (position, time) pairs are inside the band, 9 are outside: `up` at
+*t* = 9 s for *x* = 1.45, 1.95 and 2.45 m (the model is 30–37 % above FDS);
+`px` at *x* = 3.45 m and `mx` at *x* = 0.45 m at all three times, the
+gauges that face the nearest wall at 0.55 m and 0.45 m, where φ is 0.20 and 0.17 and
+the model is 33–54 % below FDS. The expected flux written down before the run
+(layer at its initial 300 °C) lies inside the band for 34 of 63 pairs: it is
+too high for `up` at 6 and 9 s (ratio 1.5–1.9) because the layer cools. The
+implied φ<sub>eff</sub> = (*q*<sub>FDS</sub> − convective) /
+(ε_L σ (*T*<sub>L</sub>⁴ − *T*<sub>s</sub>⁴)) is 0.67–0.84 for `up` against φ of
+0.86–0.97, and 0.31–0.46 for the sides.
+
+What the case does not show: why the model is high for `up`. The model
+ignores the walls and the lower hemisphere: the layer base is the only
+emitter in φ, while FDS's walls and floor start at 20 °C, absorb, and
+re-emit (the #224 layer deck gives *q*/*U* of about 0.41 facing up, not
+0.5). That reading is not tested here. Whether the ε_L = 1 assumption
+(a black layer) contributes is not tested either.
+
+Intermediate checks, all 63 pairs: the model flux equals the hand formula
+from its own sampled temperatures to 2·10⁻¹⁰ kW/m² (tolerance 10⁻⁶); the
+sampled layer temperature agrees with the `T_z25` device within 1.2 %
+(tolerance 2 %); the sampled head temperature agrees with `T_z16` within
+0.2 % at 3 s, 2.9 % at 6 s and 12 % at 9 s, when it rises by up to 20 K/s;
+the 6 and 9 s deviations exceed the 2 % used for the slice–device check of
+#221 and are recorded, not explained.
+
+Reproduction: `python scripts/verification/heat_layer_308.py --fds-dir
+fds-evac-data/heat_radiometer/layer_308 --out <dir>` (FDS 6.10.1-0-g12efa16,
+4 ranks, 6 s wall time; output and the predeclared table in
+`fds-evac-data/heat_radiometer/layer_308`). The test is
+`external_data` and skips without that folder.
 
 ## Test and reference-deck assumptions
 
@@ -345,14 +440,15 @@ assumptions are on
 
 | Parameter | Value | CLI flag / config key | Where used | Why this value | What would source it |
 |---|---|---|---|---|---|
-| #224 decks: gas and soot | 300 °C, soot mass fraction 0.005; layer base 2.0 m | deck files `assets/heat_radiometer/*.fds` | FDS reference data only; the heat model does not read them; the `INTEGRATED INTENSITY` radiometer tests | A sooty layer that radiates at head height | A measured compartment fire with radiometers |
+| #224 decks: gas and soot | 300 °C, soot mass fraction 0.005; layer base 2.0 m | deck files `assets/heat_radiometer/*.fds` | FDS reference data; the `INTEGRATED INTENSITY` radiometer tests; the #308 case reads a copy of the layer deck | A sooty layer that radiates at head height | A measured compartment fire with radiometers |
 | #224 decks: burner and grid | propane, soot yield 0.01, 0.6 × 0.6 m at 1100 kW/m²; 4 × 4 × 3 m room (6 × 4 × 4 m open for the burner), 0.1 m cells | deck files `assets/heat_radiometer/*.fds` | As above | A flame reaching head height on a grid that resolves 1.6 m | As above |
 | #224 skin gauge | emissivity 1, h = 8 W/(m²·K), 35 °C | `&PROP` in the #224 decks and `assets/heat_integrated_intensity` | Gauge values the `INTEGRATED INTENSITY` tests compare against | Emissivity 1 is the FDS default, taken as the skin's; h = 8 is the top of the Handbook's 5–8 | Skin emissivity and h of a clothed person |
+| #308 layer case | layer slice at 2.5 m, ε_L = 1, φ geometric per gauge (0.20–0.97), *h* = 8 W/(m²·K), *T*<sub>s</sub> = 35 °C, one agent per gauge position, 10 s | `--heat-regime layer --heat-layer-height 2.5 --heat-view-factor φ --heat-layer-emissivity 1 --heat-convective-coefficient 8 --heat-skin-temperature 35` | `tests/verification/test_heat_layer_fds_case.py` | 2.5 m is mid-layer of the 2.0–3.0 m layer; ε_L = 1 takes the 0.005 soot layer as black, not checked against FDS; φ is the view factor from the gauge to the layer base, not a fit | A measured layer emissivity and a view factor that includes the walls (#274, #275) |
 | #221 CI deck | 300 °C sooty layer above 1.2 m, soot 0.005, 2 × 2 × 2.4 m, 0.2 m cells | `assets/heat_integrated_intensity/heat_integrated_intensity.fds` | `tests/verification/test_heat_integrated_intensity_coupled.py` | Two heights with different *U* in a small committed case | None needed: it checks the reader against FDS's own devices |
 | Table reading | ±0.5 min | none (test) | Eq. 63.44 against Table 63.20 (`tests/verification/test_heat_fed_verif.py`, [#219](https://github.com/PedestrianDynamics/pyFDS-Evac/issues/219)) | Whole-minute entries read as rounded | The unrounded values behind Table 63.20 |
 | Test band, convective | factor 2 | none (test) | Eq. 63.44 against Table 63.20 convective rows (#219) | Wide enough for the 0.61–1.07 spread found | None planned. ISO 13571:2012 states ±25 % for the identical Eq. (10) (§8.3.2); three rows (0.61–0.66) lie outside it. We read ±25 % as the uncertainty of Eq. (10) about its own data, not as agreement with Table 63.20, so the factor 2 stays; the data behind Eq. (10) (Purser 2008) were not consulted ([#289](https://github.com/PedestrianDynamics/pyFDS-Evac/issues/289)) |
 | Test band, hot-layer anchor | ±10 % | none (test) | Black layer at 200 °C against "approximately 2.5 kW/m²" (p. 2382, #219) | "approximately" in the text | A precise flux for that anchor |
-| Test band, radiant rows | ±30 % (±25 % in the #221 face-on check) | none (test) | Eq. 63.43 against Table 63.20 radiant rows (#219, #221) | Chosen in #219 | A stated uncertainty of Table 63.20 |
+| Test band, radiant rows | ±30 % (±25 % in the #221 face-on check) | none (test) | Eq. 63.43 against Table 63.20 radiant rows (#219, #221); the same band for the #308 layer flux against the FDS gauges | Chosen in #219 | A stated uncertainty of Table 63.20 |
 | Flame pass | black sphere, radius 0.1 m, 1000 °C; one pass FED < 0.02 | none (test) | `tests/verification/test_heat_flame_pass_reference.py` (#219) | A small flame; the pass stays far below the fatal dose | A measured flame and path |
 
 
@@ -378,11 +474,13 @@ assumptions are on
   `--heat-regime layer` is checked the same way, against hand formulas and
   the 200 °C / 2.5 kW/m² anchor of p. 2382
   (`tests/test_heat_layer_flux.py`,
-  `tests/verification/test_heat_layer_flux_coupled.py`) on synthetic fields
-  only; no FDS case runs the layer regime yet
-  ([#308](https://github.com/PedestrianDynamics/pyFDS-Evac/issues/308)). The
-  #224 radiometer decks are FDS-only reference data
-  ([Heat radiometer](testing-heat-radiometer.md)).
+  `tests/verification/test_heat_layer_flux_coupled.py`) on synthetic fields,
+  and on an FDS case with a geometric view factor
+  (`tests/verification/test_heat_layer_fds_case.py`,
+  [#308](https://github.com/PedestrianDynamics/pyFDS-Evac/issues/308)). The
+  #224 radiometer decks are the reference data of the isotropic and burner
+  checks ([Heat radiometer](testing-heat-radiometer.md)); the #308 case reads
+  a copy of the layer deck.
   The `INTEGRATED INTENSITY` source is checked in
   `tests/test_heat_integrated_intensity.py` and
   `tests/verification/test_heat_integrated_intensity_coupled.py`

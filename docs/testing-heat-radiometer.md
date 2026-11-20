@@ -8,10 +8,10 @@ math: true
 | | |
 |---|---|
 | **Component** | Radiant heat to a person, reference data for the total-flux heat dose and its `INTEGRATED INTENSITY` source ([#221](https://github.com/PedestrianDynamics/pyFDS-Evac/issues/221)–[#223](https://github.com/PedestrianDynamics/pyFDS-Evac/issues/223)) |
-| **Level** | FDS case, FDS only: no pyFDS-Evac run |
+| **Level** | FDS case, FDS only: no pyFDS-Evac run on these decks |
 | **Asset** | `assets/heat_radiometer` (`_layer`, `_uniform`, `_burner`) |
 | **Expected value from** | radiation geometry (q/U = 1/4, 1/2, 1) and FDS's own gauge equations (FDS User's Guide Eqs. 22.35–22.36) |
-| **Status** | FDS-only reference data; no run reads these decks. The uniform room is the expected value of the *f* = 1/4 check of the `INTEGRATED INTENSITY` source (`test_heat_integrated_intensity_coupled.py`) |
+| **Status** | FDS-only reference data; no run reads these decks (a copy of the layer deck, with a 2.5 m slice, is read by the layer-regime case of [#308](https://github.com/PedestrianDynamics/pyFDS-Evac/issues/308); see [Heat dose](testing-heat.md#layer-regime-against-fds-gauges)). The uniform room is the expected value of the *f* = 1/4 check of the `INTEGRATED INTENSITY` source (`test_heat_integrated_intensity_coupled.py`) |
 
 ![Where the incident flux q sits between U/4 and U at 1.6 m for plates facing up, +x, −x and down, in the three decks](/images/verification/heat_radiometer_ratio.png)
 
