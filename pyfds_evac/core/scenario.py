@@ -1000,6 +1000,14 @@ def _mobile_positions(
     }
 
 
+def _agents_with_rising_dose(
+    positions: Mapping[int, tuple[float, float]],
+    dose_rate_per_min: Mapping[int, float],
+) -> list[int]:
+    """The stuck agents (ids of *positions*) whose latest dose rate is above 0 (#988)."""
+    return [a for a in positions if dose_rate_per_min.get(a, 0.0) > 0.0]
+
+
 def _deadlock_held(
     simulation: Any,
     incapacitated: set[int],
@@ -2957,6 +2965,11 @@ def run_scenario(
         # Set when the whole crowd stood still over the deadlock window (#760).
         deadlock_detector = DeadlockDetector()
         stopped_deadlock: Deadlock | None = None
+        # First deadlock of a run that went on because a stuck agent's dose
+        # was still rising (#988), and each agent's latest dose rate [1/min]
+        # (gas or heat FED, the larger).
+        continued_deadlock: Deadlock | None = None
+        dose_rate_per_min: dict[int, float] = {}
 
         while simulation.elapsed_time() < scenario.max_simulation_time:
             current_time = simulation.elapsed_time()
@@ -3018,9 +3031,10 @@ def run_scenario(
                 stopped_all_mobile_left = True
                 break
             if deadlock_detector.due(current_time):
+                mobile_positions = _mobile_positions(simulation, incapacitated_agents)
                 stopped_deadlock = deadlock_detector.observe(
                     current_time,
-                    _mobile_positions(simulation, incapacitated_agents),
+                    mobile_positions,
                     # A crowd may wait for an exit that has yet to open (#373).
                     held=can_spawn
                     or current_time < last_exit_opening_s
@@ -3031,6 +3045,21 @@ def run_scenario(
                         agent_wait_info,
                     ),
                 )
+                rising = (
+                    _agents_with_rising_dose(mobile_positions, dose_rate_per_min)
+                    if stopped_deadlock is not None
+                    else []
+                )
+                if stopped_deadlock is not None and rising:
+                    if continued_deadlock is None:
+                        continued_deadlock = stopped_deadlock
+                        _logger.warning(
+                            "Deadlock detected at t = %.1f s: the run continues "
+                            "because the dose of %d stuck agent(s) is still rising.",
+                            current_time,
+                            len(rising),
+                        )
+                    stopped_deadlock = None
                 if stopped_deadlock is not None:
                     break
             if has_flow_spawning:
@@ -3564,6 +3593,7 @@ def run_scenario(
                                         current_fed=state["cumulative"],
                                     )
                                 )
+                                gas_rate_per_min = float(components.total_rate_per_min)
                             else:
                                 inputs, _rate_per_min, cumulative = fed_model.advance(
                                     current_time,
@@ -3573,9 +3603,11 @@ def run_scenario(
                                     current_fed=state["cumulative"],
                                 )
                                 components = default_fed_components(inputs)
+                                gas_rate_per_min = float(_rate_per_min)
                             state["cumulative"] = float(cumulative)
                             state["last_update_s"] = float(current_time)
                         else:
+                            gas_rate_per_min = 0.0
                             inputs = DefaultFedInputs()
                             components = default_fed_components(inputs)
 
@@ -3609,6 +3641,9 @@ def run_scenario(
                         else:
                             heat_inputs = HeatFedInputs()
                             heat_rate_per_min = 0.0
+                        dose_rate_per_min[agent_id] = max(
+                            gas_rate_per_min, float(heat_rate_per_min)
+                        )
 
                         fic_value = default_fic(inputs)
                         incapacitated_now = agent_id in incapacitated_agents
@@ -4217,8 +4252,14 @@ def run_scenario(
             metrics["fill_placement"] = spawning_info["fill_placement"]
         # The stuck agents of a run stopped by the deadlock rule (#760); only
         # such a run gets the key.
-        if stopped_deadlock is not None:
-            metrics["deadlock"] = stopped_deadlock.to_dict()
+        # The first deadlock of a run that went on (#988) is reported too,
+        # with ended_run false.
+        reported_deadlock = stopped_deadlock or continued_deadlock
+        if reported_deadlock is not None:
+            metrics["deadlock"] = {
+                **reported_deadlock.to_dict(),
+                "ended_run": stopped_deadlock is not None,
+            }
         # Only agents that were given an exit can have taken a replayed one.
         _warn_unused_replay(replay_exits, {aid: spawn_keys[aid] for aid in agent_exits})
         if smoke_speed_model is not None:

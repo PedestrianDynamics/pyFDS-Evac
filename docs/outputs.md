@@ -69,7 +69,7 @@ with `--output-sqlite` it is copied beside the trajectory as
 | `scenario_path` | the scenario file that was loaded |
 | `fds_dir`, `fds_version` | absolute FDS directory, and the FDS version read from its `.smv`; `null` without FDS output |
 | `created_utc` | time the run finished, UTC |
-| `outcome` | how the run ended: `status` (`completed` or `incomplete`), `end_reason` (`all_evacuated`, `time_limit`, `flows_closed`, `all_mobile_left` or `deadlock`), `agents_remaining` and `agents_not_spawned`, and `deadlock` (`agents`, `since_s`, `positions`) when the run stopped as a deadlock, as in [Reading the results](#reading-the-results) |
+| `outcome` | how the run ended: `status` (`completed` or `incomplete`), `end_reason` (`all_evacuated`, `time_limit`, `flows_closed`, `all_mobile_left` or `deadlock`), `agents_remaining` and `agents_not_spawned`, and `deadlock` (`agents`, `since_s`, `positions`, `ended_run`) when a deadlock was detected, as in [Reading the results](#reading-the-results) |
 | `heat_clothing` | `clothed` or `unclothed`, when an ISO 13571 convective heat law ran |
 | `heat_fed_threshold_override` | the `--heat-fed-threshold` value, only when it was set |
 | `heat_endpoint`, `heat_validity` | the SFPE endpoint and its validity limits, only with `--heat-endpoint` |
@@ -261,7 +261,7 @@ An exit known for more than one reason has one row, with the first.
 | `agents_not_spawned` | flow agents that had not entered when the run stopped: cut off by `max_simulation_time`, or still waiting for a free position when their flow window closed. A configuration error while building a flow agent stops the run instead of being counted here |
 | `metrics["flow_spawns_deferred"]` | how often a flow found no free position in its spawn area and waited, counted per flow and time step: two flows waiting in one step count twice; the run then prints one line per such flow (#710) |
 | `status` | `"completed"` when every agent entered and left; `"incomplete"` when the run reached `max_simulation_time` with agents inside or still to enter, when the building emptied after its flow windows closed with flow agents not spawned, when only incapacitated agents remain inside and no flow window is open, or when the whole crowd stood still and the run stopped as a deadlock |
-| `end_reason` | why the run stopped: `"all_evacuated"` for a completed run; `"time_limit"` when `max_simulation_time` stopped it; `"flows_closed"` when the building emptied after the last flow window with agents still to enter had closed, before the time limit; `"all_mobile_left"` when every mobile agent has left, only incapacitated agents remain inside and no flow window is open; `"deadlock"` when every mobile agent inside stood still (net displacement below 0.03 m over the last 100 s) and no agent was in pre-movement, at a waiting stage or still to spawn. The run stops at once, before the time limit. Also in `metrics["end_reason"]` |
+| `end_reason` | why the run stopped: `"all_evacuated"` for a completed run; `"time_limit"` when `max_simulation_time` stopped it; `"flows_closed"` when the building emptied after the last flow window with agents still to enter had closed, before the time limit; `"all_mobile_left"` when every mobile agent has left, only incapacitated agents remain inside and no flow window is open; `"deadlock"` when every mobile agent inside stood still (net displacement below 0.03 m over the last 100 s) and no agent was in pre-movement, at a waiting stage or still to spawn. The run stops at once, before the time limit, unless a FED model is on and a stuck agent's dose is still rising (see below). Also in `metrics["end_reason"]` |
 | `success` | `True` only for a completed run; `run.py` then exits with status 0, and with status 2 for an incomplete run |
 | `metrics["route_switches"]` | per agent, each time step whose decision changes the agent's target (`new_exit`), or its path to an exit it holds (a row with an `old_exit`). A time step counts at most once, judged by its last row, the decision the agent acts on. The agent's first step counts only if its row names an old exit, the exit seeded at spawn. Reasons are not read (#733, #744). Each new `explore` or `wander` node counts, also moving on after reaching the previous one, so the count is not a number of reversals. Present when the route history has rows, so it can be 0 |
 | `metrics["fed_enabled"]` | `True` when the gas FED ran, `False` otherwise (CO, CO2 or O2 missing, or no `--fds-dir`). With `False` there is no `fed_max`, and a heat-only run's `fed_cumulative` column is all zero |
@@ -293,8 +293,20 @@ Four things to keep in mind:
   every 100 s, can be reported the same way.
   `evacuation_time` is the detection time, not an egress time, and
   `metrics["deadlock"]` and the manifest `outcome["deadlock"]` list the
-  stuck agents' count, the start of the window (`since_s`) and their
-  positions. A working bottleneck, with some agents still moving, never
+  stuck agents' count, the start of the window (`since_s`), their
+  positions and `ended_run`.
+  With a gas or heat FED model on, a deadlock does not end the run while
+  a stuck agent's dose is still rising, that is its latest FED update gave
+  a rate above 0 (gas or heat): the run logs the detection once and goes on,
+  so the stuck agents' dose is integrated to their incapacitation. It then
+  ends by the usual rules (`all_mobile_left`, `time_limit`) or by a later
+  deadlock check at which no stuck agent's dose rises, and `metrics["deadlock"]`
+  keeps the deadlock that ended the run, or the first one with `ended_run`
+  `False` when the run went on to another end
+  ([#988](https://github.com/PedestrianDynamics/pyFDS-Evac/issues/988)).
+  Heat FED has a positive rate at any temperature above 0 deg C, however small, so a
+  jam in a heat run does not end as a deadlock before the time limit unless every stuck
+  agent is incapacitated first. A working bottleneck, with some agents still moving, never
   fires the rule. pyFDS-Evac only reports the jam; it does not clear it
   (see [Known defects](limitations.md#known-defects)).
 - **No FED is not zero FED.** If neither FED track ran, `fed_history` is

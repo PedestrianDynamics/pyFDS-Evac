@@ -92,6 +92,15 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Changed
 
+- With a gas or heat FED model on, a deadlock no longer ends the run while
+  a stuck agent's dose is still rising (its latest FED rate is above 0).
+  The run logs the detection once and goes on, so the stuck agents'
+  incapacitation is recorded, and ends by the usual rules or by a later
+  deadlock check at which no stuck agent's dose rises. `metrics["deadlock"]`
+  gains `ended_run`; runs without a FED model, or with a zero rate, end as
+  before (#988). The `fed_incap_heat_150c` seeds 43, 44 and 47 now stop
+  100, 98 and 100 agents, as before #893.
+
 - The queue term of `w_queue > 0` counts the agents ahead of the deciding
   agent, not a global tally (#89). `N_ahead` is the agents counted at the
   exit that are strictly closer to the exit centroid (straight line) than the
