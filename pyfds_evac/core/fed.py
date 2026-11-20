@@ -3,7 +3,7 @@
 import logging
 import math
 from dataclasses import dataclass, replace
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, Any
 
 from .fds_import_people import HUMAN_SMOKE_HEIGHT_M
 
@@ -272,6 +272,9 @@ class HeatFedInputs:
     integrated_intensity_kw_m2: float | None = None
     # Upper-layer temperature, sampled only with ``regime="layer"`` (#222).
     layer_temperature_celsius: float | None = None
+    # FDS water-vapour volume fraction [mol/mol, 0-1] at the heat slice height,
+    # sampled only for ``--heat-endpoint`` when the case has the slice (#272).
+    water_vapour_fraction: float | None = None
 
 
 # ISO 13571:2012 §8.3, air with less than 10 % water vapour by volume:
@@ -359,11 +362,25 @@ HEAT_ENDPOINTS: dict[str, HeatEndpoint] = {
 # Assumption: the Handbook gives no upper temperature for Eqs. 63.45-63.47;
 # the limit is taken as the highest dry-air point of the convective tolerance
 # data, Table 63.17 (Veghte, 205 deg C, p. 2375). p. 2383 relates the laws to
-# air with less than 10 % water vapour. Humidity is not sampled, so its
-# status is reported as HEAT_HUMIDITY_STATUS instead of being flagged.
+# air with less than 10 % water vapour by volume. A sample is "ok" below the
+# limit, "humid" at or above it, and "unknown" without a water-vapour slice
+# (#272). The check is observational: the rate is not changed, as the Handbook
+# gives no humid-air law for these endpoints.
 HEAT_CONVECTIVE_VALIDITY_MAX_C = 205.0
 HEAT_HUMIDITY_STATUS = "unknown"
 HEAT_HUMIDITY_LIMIT = "< 10 % water vapour by volume (SFPE Ch. 63, p. 2383)"
+# FDS volume fractions are mol/mol (0-1); 10 % by volume is 0.10.
+HEAT_HUMIDITY_LIMIT_FRACTION = 0.10
+HEAT_WATER_VAPOUR_QUANTITY = "WATER VAPOR VOLUME FRACTION"
+
+
+def heat_humidity_status(water_vapour_fraction: float | None) -> str:
+    """Return ``ok``, ``humid`` or ``unknown`` for a sampled volume fraction."""
+    if water_vapour_fraction is None or not math.isfinite(water_vapour_fraction):
+        return HEAT_HUMIDITY_STATUS
+    if water_vapour_fraction >= HEAT_HUMIDITY_LIMIT_FRACTION:
+        return "humid"
+    return "ok"
 
 
 def heat_temperature_outside_validity(temperature_celsius: float) -> bool:
@@ -374,25 +391,66 @@ def heat_temperature_outside_validity(temperature_celsius: float) -> bool:
 
 
 def heat_endpoint_row_fields(
-    endpoint: str | None, temperature_celsius: float
+    endpoint: str | None,
+    temperature_celsius: float,
+    water_vapour_fraction: float | None = None,
 ) -> dict[str, object]:
-    """Return the FED history fields of ``--heat-endpoint``; ``{}`` without it."""
+    """Return the FED history fields of ``--heat-endpoint``; ``{}`` without it.
+
+    ``heat_water_vapour_fraction`` is the sampled mol/mol fraction; the key is
+    absent without a water-vapour slice, so such rows are as before #272.
+    """
     if endpoint is None:
         return {}
-    return {
+    fields: dict[str, object] = {
         "heat_endpoint": endpoint,
         "heat_outside_validity": heat_temperature_outside_validity(temperature_celsius),
-        "heat_humidity": HEAT_HUMIDITY_STATUS,
+        "heat_humidity": heat_humidity_status(water_vapour_fraction),
+    }
+    if water_vapour_fraction is not None:
+        fields["heat_water_vapour_fraction"] = float(water_vapour_fraction)
+    return fields
+
+
+def heat_humidity_summary(rows: list[dict[str, Any]]) -> dict[str, object]:
+    """Summarise ``heat_humidity`` over FED history rows for the manifest.
+
+    ``humidity`` is ``unknown`` when no row carries a sample, ``humid`` when
+    any does, else ``ok``.
+    """
+    statuses = [row.get("heat_humidity", HEAT_HUMIDITY_STATUS) for row in rows]
+    humid = [row for row, s in zip(rows, statuses) if s == "humid"]
+    fractions = [
+        float(row["heat_water_vapour_fraction"])
+        for row in rows
+        if "heat_water_vapour_fraction" in row
+    ]
+    overall = HEAT_HUMIDITY_STATUS
+    if humid:
+        overall = "humid"
+    elif "ok" in statuses:
+        overall = "ok"
+    return {
+        "humidity": overall,
+        "humid_rows": len(humid),
+        "humid_agents": len({row["agent_id"] for row in humid}),
+        "max_water_vapour_fraction": max(fractions) if fractions else None,
     }
 
 
-def heat_endpoint_validity() -> dict[str, object]:
-    """Return the validity range of Eqs. 63.45-63.47 for the run manifest."""
+def heat_endpoint_validity(
+    humidity: dict[str, object] | None = None,
+) -> dict[str, object]:
+    """Return the validity range of Eqs. 63.45-63.47 for the run manifest.
+
+    *humidity* is ``heat_humidity_summary``; without it the status is unknown.
+    """
     return {
         "max_temperature_c": HEAT_CONVECTIVE_VALIDITY_MAX_C,
         "max_temperature_assumed": True,
         "humidity": HEAT_HUMIDITY_STATUS,
         "humidity_limit": HEAT_HUMIDITY_LIMIT,
+        **(humidity or {}),
     }
 
 
@@ -1235,14 +1293,20 @@ class FdsHeatField:
         intensity_sampler: "SliceFieldSampler | None" = None,
         *,
         require_fds_coverage: bool = False,
+        water_vapour_sampler: "SliceFieldSampler | None" = None,
     ):
         """Wrap the TEMPERATURE and, optionally, INTEGRATED INTENSITY samplers.
+
+        *water_vapour_sampler* reads the WATER VAPOR VOLUME FRACTION slice for
+        the humidity check of ``--heat-endpoint`` (#272); it never changes
+        the temperature or the coverage rules.
 
         With *require_fds_coverage* a point outside the slices raises
         ``FdsDomainError`` instead of reading 20 C.
         """
         self._sampler = sampler
         self._intensity_sampler = intensity_sampler
+        self._water_vapour_sampler = water_vapour_sampler
         self._require_fds_coverage = require_fds_coverage
 
     def _check_outside_allowed(self, time_s: float, x, y) -> None:
@@ -1269,11 +1333,13 @@ class FdsHeatField:
         integrated_intensity: bool = False,
         allow_horizon_hold: bool = False,
         require_fds_coverage: bool = False,
+        water_vapour: bool = False,
     ) -> "FdsHeatField":
         """Load the TEMPERATURE slice from an FDS case directory.
 
         With *integrated_intensity* also the INTEGRATED INTENSITY slice
-        (#221), at the same height.
+        (#221), at the same height. With *water_vapour* also the WATER VAPOR
+        VOLUME FRACTION slice when the case has one (#272).
         """
         from .fds_sampling import load_slice_sampler
 
@@ -1294,15 +1360,31 @@ class FdsHeatField:
                 allow_horizon_hold=allow_horizon_hold,
             )
             _check_same_slice_height(sampler, intensity_sampler, fds_dir)
+        vapour_sampler = None
+        if water_vapour:
+            vapour_sampler = _load_water_vapour_sampler(
+                fds_dir, simulation, slice_height_m, allow_horizon_hold
+            )
         field = cls(
             sampler,
             intensity_sampler=intensity_sampler,
             require_fds_coverage=require_fds_coverage,
+            water_vapour_sampler=vapour_sampler,
         )
         field.fds_dir = str(fds_dir)
         return field
 
     def sample_inputs(self, time_s: float, x: float, y: float) -> HeatFedInputs:
+        """Return the heat FED inputs, with the water-vapour fraction if sampled."""
+        inputs = self._sample_temperature_inputs(time_s, x, y)
+        if self._water_vapour_sampler is None:
+            return inputs
+        fraction = _sample_or_none(self._water_vapour_sampler, time_s, x, y)
+        return replace(inputs, water_vapour_fraction=fraction)
+
+    def _sample_temperature_inputs(
+        self, time_s: float, x: float, y: float
+    ) -> HeatFedInputs:
         """Return the heat FED gas-temperature input at one time and x/y point.
 
         FDS's TEMPERATURE quantity is natively in degrees Celsius, so unlike
@@ -1325,6 +1407,25 @@ class FdsHeatField:
             temperature_celsius=temperature_celsius,
             integrated_intensity_kw_m2=intensity,
         )
+
+
+def _load_water_vapour_sampler(
+    fds_dir, simulation, slice_height_m: float, allow_horizon_hold: bool
+):
+    """Return the water-vapour slice sampler, or None when the case has none."""
+    from .fds_sampling import load_slice_sampler
+    from .fdsreader_adapter import open_fds_simulation
+
+    sim = simulation if simulation is not None else open_fds_simulation(fds_dir)
+    if not sim.slices.filter_by_quantity(HEAT_WATER_VAPOUR_QUANTITY):
+        return None
+    return load_slice_sampler(
+        fds_dir,
+        HEAT_WATER_VAPOUR_QUANTITY,
+        simulation=sim,
+        slice_height_m=slice_height_m,
+        allow_horizon_hold=allow_horizon_hold,
+    )
 
 
 def _raise_outside(require_fds_coverage: bool, sampler, time_s: float, x, y) -> None:

@@ -120,6 +120,7 @@ from .fed import (
     default_fic,
     heat_endpoint_row_fields,
     heat_flux_row_fields,
+    heat_humidity_summary,
     irritant_speed_fraction,
     sample_heat_incapacitation_threshold,
     sample_incapacitation_threshold,
@@ -2010,6 +2011,23 @@ def _recorded_free_speed(
     return float(original)
 
 
+def _report_heat_humidity(fed_history) -> dict[str, Any]:
+    """Summarise the endpoint humidity check of the FED history; warn if humid."""
+    summary = heat_humidity_summary(fed_history)
+    if summary["humid_rows"]:
+        _logger.warning(
+            "Water vapour at or above 10 %% by volume: %d sample(s), %d "
+            "agent(s), maximum fraction %.3f. The --heat-endpoint laws hold "
+            "for air with less than 10 %% water vapour (SFPE Ch. 63, p. 2383) "
+            "and overestimate the tolerance time in humid air; the dose is "
+            "unchanged (heat_humidity = humid in the FED history).",
+            summary["humid_rows"],
+            summary["humid_agents"],
+            summary["max_water_vapour_fraction"],
+        )
+    return summary
+
+
 def _report_outside(
     smoke_history, fed_history, smoke_speed_model, fed_model, heat_fed_model
 ) -> dict[str, Any]:
@@ -3805,7 +3823,9 @@ def run_scenario(
                         )
                         fed_history[-1].update(
                             heat_endpoint_row_fields(
-                                heat_endpoint, float(heat_inputs.temperature_celsius)
+                                heat_endpoint,
+                                float(heat_inputs.temperature_celsius),
+                                heat_inputs.water_vapour_fraction,
                             )
                         )
                         fed_history[-1].update(
@@ -4319,6 +4339,9 @@ def run_scenario(
                 default=0.0,
             )
 
+        if heat_endpoint is not None and heat_fed_model is not None:
+            metrics["heat_humidity"] = _report_heat_humidity(fed_history)
+
         if fds_coverage is not None:
             metrics["fds_coverage"] = fds_coverage.to_dict()
             metrics["fds_outside"] = _report_outside(
@@ -4353,6 +4376,7 @@ def run_scenario(
                     smoke_speed_model, fed_model, heat_fed_model
                 ),
                 heat_endpoint=heat_endpoint,
+                heat_humidity=metrics.get("heat_humidity"),
                 heat_fed_method=getattr(heat_fed_model, "method", None),
                 heat_flux_parameters=(
                     heat_fed_model.heat_flux_parameters()

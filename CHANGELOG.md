@@ -22,6 +22,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
+- `--heat-endpoint` checks the SFPE Ch. 63 humidity limit (p. 2383, < 10 %
+  water vapour by volume) when the FDS case has a `WATER VAPOR VOLUME
+  FRACTION` slice: `heat_humidity` reads `ok` or `humid` per FED row, with the
+  sampled `heat_water_vapour_fraction`, and `heat_validity` in the manifest
+  gains `humid_rows`, `humid_agents` and `max_water_vapour_fraction`. One
+  warning is logged when any sample is humid. Observational only: dose and
+  thresholds are unchanged; without the slice the output is as before (#272).
 - Verification of Pathfinder's two FED cases (#208), on the new page
   [Pathfinder's FED cases](docs/testing-pathfinder-fed.md): a moving occupant
   through three gas mixtures reproduces Pathfinder's hand value 0.07896 to

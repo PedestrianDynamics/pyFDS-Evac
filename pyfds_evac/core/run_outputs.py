@@ -100,7 +100,13 @@ def _write_fed_history_csv(rows, output_path: str) -> None:
         "speed_factor",
     ]
     if rows and "heat_endpoint" in rows[0]:
-        fieldnames += ["heat_endpoint", "heat_outside_validity", "heat_humidity"]
+        fieldnames += [
+            "heat_endpoint",
+            "heat_outside_validity",
+            "heat_humidity",
+        ]
+        if "heat_water_vapour_fraction" in rows[0]:
+            fieldnames.append("heat_water_vapour_fraction")
     if rows and "heat_flux_kw_m2" in rows[0]:
         fieldnames.append("heat_flux_kw_m2")
     if rows and "heat_integrated_intensity_kw_m2" in rows[0]:

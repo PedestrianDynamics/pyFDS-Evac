@@ -260,6 +260,8 @@ def _build_heat_fed_model(opts: Any, log: Logger):
         "allow_horizon_hold": _allow_hold(opts),
         "require_fds_coverage": _require_coverage(opts),
     }
+    if endpoint is not None:
+        field_kwargs["water_vapour"] = True
     if radiant_source == "integrated-intensity":
         _check_integrated_intensity_source(opts, method, inventory)
         field_kwargs["integrated_intensity"] = True

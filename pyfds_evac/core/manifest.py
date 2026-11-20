@@ -318,6 +318,7 @@ def build_manifest(
     heat_fed_method: str | None = None,
     heat_flux_parameters: dict[str, Any] | None = None,
     heat_clothing: str | None = None,
+    heat_humidity: dict[str, Any] | None = None,
     heat_fed_threshold_override: float | None = None,
     smoke_blind: bool = False,
     replay_exits: dict[str, Any] | None = None,
@@ -332,6 +333,9 @@ def build_manifest(
     ``heat_endpoint`` and ``heat_validity`` are recorded only when
     ``--heat-endpoint`` was given; ``heat_fed_method`` and
     ``heat_flux_parameters`` only with ``--heat-fed-method total-flux``.
+    ``heat_humidity`` is ``fed.heat_humidity_summary`` of the run (#272); it
+    fills ``heat_validity`` with the humidity status, humid rows and agents,
+    and the maximum water-vapour fraction.
     ``heat_clothing`` is recorded when the ISO 13571:2012 convective law is
     in use, ``heat_fed_threshold_override`` only when the heat threshold was
     set apart from the gas threshold, a departure from ISO 13571:2012 §5.4.
@@ -373,7 +377,7 @@ def build_manifest(
     }
     if heat_endpoint is not None:
         manifest["heat_endpoint"] = heat_endpoint
-        manifest["heat_validity"] = heat_endpoint_validity()
+        manifest["heat_validity"] = heat_endpoint_validity(heat_humidity)
     if heat_fed_method == "total-flux":
         manifest["heat_fed_method"] = heat_fed_method
         manifest["heat_flux_parameters"] = heat_flux_parameters
