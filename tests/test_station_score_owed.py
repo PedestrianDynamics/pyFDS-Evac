@@ -452,7 +452,7 @@ def test_band_verdict_edges():
     assert S.band_verdict(100.0, S.T5_BAND) == "pass"
     assert S.band_verdict(100.5, S.T5_BAND) == "fail"
     assert S.band_verdict(None, S.T6_BAND) == "undefined"
-    # Not crossed by the end of the data, which is past the band: a fail.
+    # Not crossed by the end of the data, which is past the band.
     assert S.band_verdict(None, S.T6_BAND, last_time=250.0) == "not reached by 250 s"
     assert S.band_verdict(None, S.T6_BAND, last_time=100.0) == "undefined"
 

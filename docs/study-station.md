@@ -262,7 +262,9 @@ history](#deviations-and-history) lists a change after a look; every look is
 in the look log. They use the same runs (seeds 4 to 23, commit `aaeda1f3`); nothing was
 re-run and nothing was tuned. The frozen `validate.py` is unchanged
 (sha256 `2313b91a…`). The scorers read the outputs with the current
-lockfile, not the freeze lockfile (`uv.lock` differs; the runs do not).
+lockfile, not the freeze lockfile (`uv.lock` differs only in pedpy 1.4.0 →
+1.5.1 and Playwright entries; jupedsim 1.4.2, fdsvismap 0.3.3 and fdsreader
+1.14.0 are as frozen; the runs do not differ).
 {{< /callout >}}
 
 | Item | Result | Registered band | Status |
@@ -371,7 +373,8 @@ passes V3 in more than 0.1 % of draws.
 
 **Raised floors.** Agents are counted as on a raised floor when they start
 inside the platform or rear-strip boxes of the deck plan (302 and 66 placed
-survivors over 20 seeds; the alcove holds none). In arm R 57.8 % of them
+survivors over 20 seeds, 367 in all: the boxes overlap by 0.15 m and one agent
+starts in both; the alcove holds none). In arm R 57.8 % of them
 reach FED 1 against 26.6 % of the others; in arm U, where nobody stops, 35.7 %
 against 23.7 %. The slice is sampled at an absolute height
 ([#365](https://github.com/PedestrianDynamics/pyFDS-Evac/issues/365)), so on
@@ -431,10 +434,12 @@ group at or after t_jam includes agents that stopped near a door.
   which agents are on a raised floor, and what "survives" means for a W
   difference. Each reading is stated above. Most were fixed in the scorer
   before its first look. These were changed or added after a look, and are
-  disclosed as such: the cell-to-node mask of V6 (above); the rule that a T6
-  or T5 value not reached by the last frame is labelled "not reached by
-  <time> s", and the list of
-  masked nodes still above 12 % oxygen, both added after the first T6 result;
+  disclosed as such: the cell-to-node mask of V6 (above); the rule for a T6
+  or T5 value not reached by the last frame, first coded as "fail" after the
+  first T6 result and relabelled "not reached by <time> s" by maintainer
+  decision (2026-11-20), and the list of masked nodes still above 12 %
+  oxygen, added after the first T6 result; the count of heat-incapacitated
+  agents, added after the first look at the agent scalars;
   the sign reading of "survives", added after the size reading had given 0.46
   to 0.50 for differences of 0.03, against the plan's 99 %; and the V5 rate of
   the window ending at t_jam, added after V5 was undefined.
