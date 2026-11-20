@@ -275,8 +275,8 @@ equations describe the effect of heat on walking speed or on route choice.
 - Wieczorek, C. J., & Dembsey, N. A. (2001). Human variability correction
   factors for use with simplified engineering tools for predicting pain
   and second degree skin burns. *Journal of Fire Protection Engineering*,
-  11(2), 88–111. ISO ref. [17] for Eqs. (7) and (8); read in full. Its own recommended
-  equations carry safety factors of 2 and 1.6 that ISO omits; see
+  11(2), 88–111. ISO ref. [17] for Eqs. (7) and (8); read in full. Its
+  own recommended equations carry safety factors of 2 and 1.6 that ISO omits; see
   [Incapacitation thresholds](/fundamentals/incapacitation-thresholds.md#radiant-pain-and-burn-times).
   [doi:10.1106/0D9U-KLP9-TG1P-XJ1B](https://doi.org/10.1106/0D9U-KLP9-TG1P-XJ1B)
 - Crane, C. (1978). *Human tolerance limit to elevated temperature: an

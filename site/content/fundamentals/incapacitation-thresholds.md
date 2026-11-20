@@ -196,9 +196,13 @@ reference skin of their Table 2 (p. 93: 32.5 °C initial temperature,
 paper states that 1.7 kW/m² is the critical flux below which no pain is
 experienced however long the exposure (p. 96). The recommended equations
 are (4) and (5); (4a) and (5a) are given "for comparative purposes" (p. 97).
-Against the full model, the simplified times differ by at most 0.1 s from
-10 kW/m² up, and are shorter at 1.7 and 2 kW/m² (by 12 % for pain and up
-to 29 % for burns at the coldest skin of the paper's range, p. 106).
+Against the full model, the simplified pain times differ by 0.08 s on
+average at 20 kW/m² and 0.1 s at 10 kW/m²; the burn times by 0.7 s (SD
+0.3 s) at 10 kW/m² and 0.1 s at 50 kW/m². At 1.7 kW/m² (pain) and
+2 kW/m² (burn) they are shorter, by 12 % and on average 29 % at the
+coldest skin of the paper's range (β = 0.83); at the reference skin or
+warmer the difference is under 0.5 s for pain and about 5 s for burns
+(p. 106).
 
 ISO 13571:2012 Eqs. (7) and (8), which cite this paper as ref. [17], are
 the equations without the safety factors: 6.9 *q*^−1.56 min is 414 s,
@@ -214,12 +218,11 @@ used in the United Kingdom, which it cites to Hymes, Boydell and Prescott
 (1996) (ref. [12]): pain at 92 (kW/m²)^4/3·s and a superficial
 second-degree burn at 210–700 (kW/m²)^4/3·s, with 113 for pain from Mudan
 and Croce (pp. 96–97). It finds the unfactored times consistent with these
-(conclusions, p. 108). We have not read ref. [12].
+(p. 97, "very consistent"; again in the conclusions, p. 108). We have not read ref. [12].
 
 Heat-tolerance variability enters the paper as ranges, not as a
 distribution. Initial skin temperature is varied over 27–38 °C and
-epidermal thickness over 16–430 µm, (Table 9, p. 103; the paper's literature
-review, pp. 98–102, supplies the data); pain receptor depth is held fixed
+epidermal thickness over 16–430 µm (Table 9, p. 103); pain receptor depth is held fixed
 for lack of data (p. 103). With β the skin temperature over 32.5 °C and
 γ the epidermal thickness over 80 µm, correction factors multiply the
 time of Eqs. (4) and (5): a quadratic in β for pain (Eq. 6, p. 104),
