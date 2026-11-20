@@ -205,8 +205,8 @@ agent is held by design (pre-movement, a waiting stage, a desired speed of
 run while it is under way instead of judging the end state. The counts of
 runs that end `deadlock` are therefore not comparable with the study's
 counts. The run then stops with `end_reason` `"deadlock"`, unless a gas or heat
-FED model is on and a stuck agent's dose is still rising: the run goes on and
-integrates the dose ([#988](https://github.com/PedestrianDynamics/pyFDS-Evac/issues/988)).
+FED model is on and a stuck agent's dose can still reach its threshold before the
+time limit: the run goes on and integrates the dose ([#988](https://github.com/PedestrianDynamics/pyFDS-Evac/issues/988)).
 pyFDS-Evac reports the jam and does not clear it. See [Reading the results](/docs/outputs.md#reading-the-results).
 
 ### Counterflow with hard journeys

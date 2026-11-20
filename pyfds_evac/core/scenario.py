@@ -1000,12 +1000,22 @@ def _mobile_positions(
     }
 
 
-def _agents_with_rising_dose(
+def _threshold_reach_s(
+    now_s: float, cumulative: float, rate_per_min: float, threshold: float
+) -> float:
+    """Time at which a dose at *rate_per_min* reaches *threshold*; inf at rate 0 (#988)."""
+    if rate_per_min <= 0.0:
+        return math.inf
+    return now_s + max(0.0, threshold - cumulative) / rate_per_min * 60.0
+
+
+def _agents_reaching_threshold(
     positions: Mapping[int, tuple[float, float]],
-    dose_rate_per_min: Mapping[int, float],
+    reach_s: Mapping[int, float],
+    t_max_s: float,
 ) -> list[int]:
-    """The stuck agents (ids of *positions*) whose latest dose rate is above 0 (#988)."""
-    return [a for a in positions if dose_rate_per_min.get(a, 0.0) > 0.0]
+    """The stuck agents (ids of *positions*) whose dose reaches its threshold by *t_max_s* (#988)."""
+    return [a for a in positions if reach_s.get(a, math.inf) <= t_max_s]
 
 
 def _deadlock_held(
@@ -2966,10 +2976,11 @@ def run_scenario(
         deadlock_detector = DeadlockDetector()
         stopped_deadlock: Deadlock | None = None
         # First deadlock of a run that went on because a stuck agent's dose
-        # was still rising (#988), and each agent's latest dose rate [1/min]
-        # (gas or heat FED, the larger).
+        # reaches its threshold before the time limit (#988), and each
+        # agent's time of reaching it at its latest rate (earlier of the gas
+        # and heat tracks that can incapacitate).
         continued_deadlock: Deadlock | None = None
-        dose_rate_per_min: dict[int, float] = {}
+        threshold_reach_s: dict[int, float] = {}
 
         while simulation.elapsed_time() < scenario.max_simulation_time:
             current_time = simulation.elapsed_time()
@@ -3046,7 +3057,11 @@ def run_scenario(
                     ),
                 )
                 rising = (
-                    _agents_with_rising_dose(mobile_positions, dose_rate_per_min)
+                    _agents_reaching_threshold(
+                        mobile_positions,
+                        threshold_reach_s,
+                        scenario.max_simulation_time,
+                    )
                     if stopped_deadlock is not None
                     else []
                 )
@@ -3055,7 +3070,8 @@ def run_scenario(
                         continued_deadlock = stopped_deadlock
                         _logger.warning(
                             "Deadlock detected at t = %.1f s: the run continues "
-                            "because the dose of %d stuck agent(s) is still rising.",
+                            "because the dose of %d stuck agent(s) reaches its "
+                            "incapacitation threshold before the time limit.",
                             current_time,
                             len(rising),
                         )
@@ -3641,9 +3657,34 @@ def run_scenario(
                         else:
                             heat_inputs = HeatFedInputs()
                             heat_rate_per_min = 0.0
-                        dose_rate_per_min[agent_id] = max(
-                            gas_rate_per_min, float(heat_rate_per_min)
-                        )
+                        reach_candidates = [math.inf]
+                        if (
+                            fed_model is not None
+                            and tenability_config is not None
+                            and tenability_config.enable_incapacitation
+                        ):
+                            reach_candidates.append(
+                                _threshold_reach_s(
+                                    current_time,
+                                    float(cumulative),
+                                    gas_rate_per_min,
+                                    _incap_threshold(agent_id),
+                                )
+                            )
+                        if (
+                            heat_fed_model is not None
+                            and tenability_config is not None
+                            and tenability_config.enable_heat_incapacitation
+                        ):
+                            reach_candidates.append(
+                                _threshold_reach_s(
+                                    current_time,
+                                    float(heat_cumulative),
+                                    float(heat_rate_per_min),
+                                    _incap_heat_threshold(agent_id),
+                                )
+                            )
+                        threshold_reach_s[agent_id] = min(reach_candidates)
 
                         fic_value = default_fic(inputs)
                         incapacitated_now = agent_id in incapacitated_agents

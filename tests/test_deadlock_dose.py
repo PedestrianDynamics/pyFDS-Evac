@@ -8,6 +8,7 @@ detector fires 100 s after that. Elsewhere the air is at ``COOL_C``: at
 the run (ISO 13571 Eq. 9), at 0 C it never rises.
 """
 
+import math
 import sys
 from pathlib import Path
 
@@ -22,7 +23,8 @@ from harness import (  # noqa: E402
 )
 
 from pyfds_evac.core.scenario import (  # noqa: E402
-    _agents_with_rising_dose,
+    _agents_reaching_threshold,
+    _threshold_reach_s,
     run_scenario,
 )
 
@@ -31,9 +33,9 @@ HOT_PATCH_C = 5000.0
 DEADLOCK_END_S = 103.0
 
 
-def _run(cool_c: float):
+def _run(cool_c: float, t_max_s: float = 500.0):
     spec = CorridorSpec(
-        length_m=12.0, width_m=0.6, num_agents=2, seed=42, max_simulation_time=500.0
+        length_m=12.0, width_m=0.6, num_agents=2, seed=42, max_simulation_time=t_max_s
     )
     scenario = corridor_scenario(spec)
     scenario.raw["exits"]["exit_far"]["coordinates"] = [
@@ -80,8 +82,15 @@ def test_a_rising_dose_keeps_the_run_going_past_the_deadlock(caplog):
         result.cleanup()
 
 
-def test_a_zero_dose_rate_still_ends_the_run_as_a_deadlock():
-    result = _run(0.0)
+@pytest.mark.parametrize(
+    ("cool_c", "t_max_s"),
+    [(20.0, 500.0), (0.0, 500.0), (COOL_C, 150.0)],
+    ids=["cool-air", "zero-rate", "threshold-after-time-limit"],
+)
+def test_a_dose_that_cannot_reach_its_threshold_ends_the_run_as_a_deadlock(
+    cool_c, t_max_s
+):
+    result = _run(cool_c, t_max_s)
     try:
         deadlock = result.metrics["deadlock"]
         assert deadlock["ended_run"] is True
@@ -93,15 +102,30 @@ def test_a_zero_dose_rate_still_ends_the_run_as_a_deadlock():
 
 
 @pytest.mark.parametrize(
-    ("rates", "expected"),
+    ("now_s", "cumulative", "rate", "threshold", "expected"),
     [
-        ({}, []),
-        ({1: 0.0, 2: 0.0}, []),
-        ({1: 0.0, 2: 0.01}, [2]),
-        ({3: 5.0}, []),
+        (100.0, 0.5, 0.0, 1.0, math.inf),
+        (100.0, 0.5, 0.3, 1.0, 200.0),
+        (100.0, 1.2, 0.3, 1.0, 100.0),
     ],
-    ids=["no-rate-yet", "all-zero", "one-rising", "other-agent"],
+    ids=["zero-rate", "half-dose-left", "already-over"],
 )
-def test_only_stuck_agents_with_a_positive_rate_count(rates, expected):
+def test_threshold_reach_time_follows_the_rate(
+    now_s, cumulative, rate, threshold, expected
+):
+    assert _threshold_reach_s(now_s, cumulative, rate, threshold) == pytest.approx(
+        expected
+    )
+
+
+@pytest.mark.parametrize(
+    ("t_max_s", "expected"),
+    [(199.9, []), (200.0, [2]), (300.0, [2])],
+    ids=["just-short", "exactly-at-limit", "ample"],
+)
+def test_only_stuck_agents_that_reach_their_threshold_by_the_limit_count(
+    t_max_s, expected
+):
     stuck = {1: (0.0, 0.0), 2: (1.0, 0.0)}
-    assert _agents_with_rising_dose(stuck, rates) == expected
+    reach = {1: math.inf, 2: 200.0, 3: 10.0}
+    assert _agents_reaching_threshold(stuck, reach, t_max_s) == expected

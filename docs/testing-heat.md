@@ -283,14 +283,14 @@ in seeds 43, 44 and 47 the last mobile agent was boxed in by incapacitated
 ones, and the run ended as `deadlock` at 715, 772 and 900 s, before that
 agent's threshold
 ([#988](https://github.com/PedestrianDynamics/pyFDS-Evac/issues/988)).
-A deadlock no longer ends a run while a stuck agent's dose is still rising.
+A deadlock no longer ends a run while a stuck agent's dose can still reach its threshold before the time limit.
 Rerun with that rule on `632a97f4` plus the change, in
 `<data>/fed_incap_heat_150c/evac_988/probabilistic_seeds/`, 985 of 1000
 stop by 999 s again, and every agent stops at the same update as in
 `evac_353` (max |Δt| = 0 s in all ten seeds). Seeds 43 and 47 end as
-`all_mobile_left` at 786 s and 910 s; seeds 44, 48 and 49 reach the time
-limit with a deadlock recorded (`ended_run` false), and the pooled check is
-D = 0.034 (p = 0.21).
+`all_mobile_left` at 786 s and 910 s. In seeds 44, 48 and 49 the agents
+still inside cannot reach their thresholds by 1000 s, so the run ends as
+`deadlock` (`ended_run` true). The pooled check is D = 0.034 (p = 0.21).
 Earlier
 figures came from runs that also passed
 `--constant-extinction 0 --no-visibility`, which ran without a visibility
