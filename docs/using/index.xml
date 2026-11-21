@@ -429,10 +429,10 @@ generalized centrifugal force models warn above 0.01 s) but not
 app. The run does not read it.&lt;/li>
 &lt;li>&lt;code>exits.&amp;lt;id&amp;gt;&lt;/code>: &lt;code>coordinates&lt;/code>, &lt;code>enable_throughput_throttling&lt;/code>,
 &lt;code>max_throughput&lt;/code>, and an optional &lt;code>sign&lt;/code>.&lt;/li>
-&lt;li>&lt;code>distributions.&amp;lt;id&amp;gt;.parameters&lt;/code>: &lt;code>number&lt;/code>, &lt;code>distribution_mode&lt;/code> and
-&lt;code>percentage&lt;/code>, the &lt;code>v0*&lt;/code> and &lt;code>radius*&lt;/code> keys, &lt;code>use_premovement&lt;/code> and the
-&lt;code>premovement_*&lt;/code> keys, &lt;code>use_flow_spawning&lt;/code> with &lt;code>flow_start_time&lt;/code> and
-&lt;code>flow_end_time&lt;/code>; and next to the parameters, &lt;code>journey_weights&lt;/code>.&lt;/li>
+&lt;li>&lt;code>distributions.&amp;lt;id&amp;gt;.parameters&lt;/code>: the spawn-area keys, listed with their
+defaults in
+&lt;a href="https://pedestriandynamics.org/pyFDS-Evac/docs/using/scenario-json/#spawn-areas-distributionsidparameters">Scenario JSON&lt;/a>;
+and next to the parameters, &lt;code>journey_weights&lt;/code>.&lt;/li>
 &lt;li>&lt;code>checkpoints.&amp;lt;id&amp;gt;&lt;/code>: &lt;code>waiting_time&lt;/code> with its distribution and spread, the
 throughput keys, &lt;code>speed_factor&lt;/code> (always 1) and an optional &lt;code>sign&lt;/code>.&lt;/li>
 &lt;li>&lt;code>zones.&amp;lt;id&amp;gt;.speed_factor&lt;/code>, and &lt;code>obstacles&lt;/code> with their heights.&lt;/li>
@@ -3182,6 +3182,12 @@ fields of the &lt;code>ScenarioResult&lt;/code> that &lt;code>run_scenario()&lt;
 &lt;td>one per agent that left&lt;/td>
 &lt;/tr>
 &lt;tr>
+&lt;td>&lt;code>agent_distributions&lt;/code> table&lt;/td>
+&lt;td>inside the SQLite&lt;/td>
+&lt;td>a distribution has a &lt;code>population&lt;/code> key&lt;/td>
+&lt;td>one per agent placed at the start&lt;/td>
+&lt;/tr>
+&lt;tr>
 &lt;td>Smoke history&lt;/td>
 &lt;td>&lt;code>--output-smoke-history CSV&lt;/code>&lt;/td>
 &lt;td>a smoke model ran (&lt;code>--fds-dir&lt;/code> with an extinction slice, or &lt;code>--constant-extinction&lt;/code>)&lt;/td>
@@ -3263,6 +3269,18 @@ untouched, so JuPedSim tools still read the file. &lt;code>heat_fed&lt;/code> si
 (&lt;code>ScenarioResult.exit_times&lt;/code>). An agent still inside at the end has no row.
 &lt;code>pyfds_evac.analysis.load_exit_times&lt;/code> reads it for the RSET
 map (&lt;a href="https://pedestriandynamics.org/pyFDS-Evac/docs/analysis/aset-rset-maps/">ASET/RSET maps&lt;/a>).&lt;/p>
+&lt;p>When at least one distribution of the scenario has a &lt;code>population&lt;/code> key in its
+&lt;code>parameters&lt;/code> (&lt;a href="https://pedestriandynamics.org/pyFDS-Evac/docs/using/scenario-json/#spawn-areas-distributionsidparameters">Scenario JSON&lt;/a>),
+the file also holds a table, &lt;code>agent_distributions(id, distribution)&lt;/code>: the key of the
+distribution each agent placed at the start came from, for example
+&lt;code>jps-distributions_0&lt;/code> (&lt;code>ScenarioResult.agent_distributions&lt;/code>). &lt;code>id&lt;/code> is the
+JuPedSim agent id, as in the trajectory. Flow-spawned agents
+(&lt;code>use_flow_spawning&lt;/code>, &lt;code>flow_schedule&lt;/code>) are not listed, so a deck that
+spawns only by flow writes an empty table. The table is written even
+then, so an empty table differs from a run without the key. The
+value of &lt;code>population&lt;/code> is not read: its presence switches the table on, and
+a run without the key leaves the file as it was. &lt;code>assets/station_fahy/validate.py&lt;/code>
+reads the table to attribute each agent to its distribution.&lt;/p>
 &lt;h2>Run manifest&lt;span class="hx-absolute -hx-mt-20" id="run-manifest">&lt;/span>
 &lt;a href="#run-manifest" class="subheading-anchor" aria-label="Permalink for this section">&lt;/a>&lt;/h2>&lt;p>The provenance record of the run. From Python it is &lt;code>result.manifest_file&lt;/code>;
 with &lt;code>--output-sqlite&lt;/code> it is copied beside the trajectory as
@@ -4259,6 +4277,8 @@ read as no parameters, so every key takes its default. The
 &lt;code>set_flow_schedule()&lt;/code> setters store an object: a string is replaced by
 the object it encodes, with all its keys, and an unreadable value by an
 empty object, before the setter&amp;rsquo;s keys are written.&lt;/p>
+&lt;p>Most scenarios set only &lt;code>number&lt;/code>, &lt;code>v0&lt;/code>, &lt;code>radius&lt;/code>, &lt;code>use_flow_spawning&lt;/code> and
+&lt;code>use_premovement&lt;/code>; &lt;a href="#examples">Examples&lt;/a> shows each.&lt;/p>
 &lt;table>
 &lt;thead>
 &lt;tr>
@@ -4279,7 +4299,13 @@ empty object, before the setter&amp;rsquo;s keys are written.&lt;/p>
 &lt;td>&lt;code>distribution_mode&lt;/code>&lt;/td>
 &lt;td>&lt;code>&amp;quot;by_number&amp;quot;&lt;/code>&lt;/td>
 &lt;td>&lt;code>by_number&lt;/code>, &lt;code>by_percentage&lt;/code>, &lt;code>fill_area&lt;/code>, &lt;code>until_full&lt;/code>&lt;/td>
-&lt;td>&lt;code>by_percentage&lt;/code> fills the polygon to &lt;code>percentage&lt;/code> (default 50) of its capacity estimate: ⌊estimate × &lt;code>percentage&lt;/code> / 100⌋ agents, at least 1. The estimate is ⌊A / (π r²) / 2⌋ for the spawn area A clipped to the walkable area and the largest agent radius r (&lt;code>radius&lt;/code>, or mean + 3 × &lt;code>radius_std&lt;/code> up to 1 m for a Gaussian radius; at least 0.1 m). &lt;code>number&lt;/code> is not read. The same count applies at the start and with &lt;code>use_flow_spawning&lt;/code>; &lt;code>--print-summary&lt;/code> shows it. &lt;code>percentage&lt;/code> is clamped to 1–100; a value that is not a number takes the default. The &lt;code>by_percentage&lt;/code> count is exact: when JuPedSim cannot seat it, the run stops with a &lt;code>SpawnCapacityError&lt;/code>, which near 100 % can happen. &lt;code>fill_area&lt;/code> and &lt;code>until_full&lt;/code> take the same count, with &lt;code>percentage&lt;/code> defaulting to 100, as an upper bound: at the start they place as many agents as fit up to it, the run prints &lt;code>Distribution '&amp;lt;id&amp;gt;': fill_area placed N of at most M agents&lt;/code>, and the result (&lt;code>ScenarioResult.fill_placement&lt;/code>, the closing summary line) records it; &lt;code>--print-summary&lt;/code> shows &lt;code>up to M agents&lt;/code>, and &lt;code>--export-only&lt;/code> does not report it as over-full. With or without journeys, every exact count is placed before any fill mode, whatever the deck order, and the fill modes share what is left.&lt;/td>
+&lt;td>Any other string is read as &lt;code>by_number&lt;/code>, without a message. &lt;code>by_percentage&lt;/code> fills the polygon to &lt;code>percentage&lt;/code> of its capacity estimate: ⌊estimate × &lt;code>percentage&lt;/code> / 100⌋ agents, at least 1. The estimate is ⌊A / (π r²) / 2⌋ for the spawn area A clipped to the walkable area and the largest agent radius r (&lt;code>radius&lt;/code>, or mean + 3 × &lt;code>radius_std&lt;/code> up to 1 m for a Gaussian radius; at least 0.1 m). &lt;code>number&lt;/code> is not read. The same count applies at the start and with &lt;code>use_flow_spawning&lt;/code>; &lt;code>--print-summary&lt;/code> shows it. The &lt;code>by_percentage&lt;/code> count is exact: when JuPedSim cannot seat it, the run stops with a &lt;code>SpawnCapacityError&lt;/code>, which near 100 % can happen. &lt;code>fill_area&lt;/code> and &lt;code>until_full&lt;/code> take the same count as an upper bound: at the start they place as many agents as fit up to it, the run prints &lt;code>Distribution '&amp;lt;id&amp;gt;': fill_area placed N of at most M agents&lt;/code>, and the result (&lt;code>ScenarioResult.fill_placement&lt;/code>, the closing summary line) records it; &lt;code>--print-summary&lt;/code> shows &lt;code>up to M agents&lt;/code>, and &lt;code>--export-only&lt;/code> does not report it as over-full. With or without journeys, every exact count is placed before any fill mode, whatever the deck order, and the fill modes share what is left.&lt;/td>
+&lt;/tr>
+&lt;tr>
+&lt;td>&lt;code>percentage&lt;/code>&lt;/td>
+&lt;td>50 (&lt;code>by_percentage&lt;/code>), 100 (&lt;code>fill_area&lt;/code>, &lt;code>until_full&lt;/code>)&lt;/td>
+&lt;td>whole percent, clamped to 1–100&lt;/td>
+&lt;td>Share of the capacity estimate that the percentage modes use (see &lt;code>distribution_mode&lt;/code>). The value is read as &lt;code>int(float(value))&lt;/code>; a value that is not a number takes the default, without a message. Not read with &lt;code>by_number&lt;/code>.&lt;/td>
 &lt;/tr>
 &lt;tr>
 &lt;td>&lt;code>v0&lt;/code>&lt;/td>
@@ -4291,13 +4317,13 @@ empty object, before the setter&amp;rsquo;s keys are written.&lt;/p>
 &lt;td>&lt;code>v0_distribution&lt;/code>&lt;/td>
 &lt;td>&lt;code>&amp;quot;constant&amp;quot;&lt;/code>&lt;/td>
 &lt;td>&lt;code>constant&lt;/code>, &lt;code>gaussian&lt;/code>&lt;/td>
-&lt;td>&lt;code>gaussian&lt;/code> draws per agent with &lt;code>v0_std&lt;/code>; draws are clipped to [0.1, 5.0] m/s.&lt;/td>
+&lt;td>&lt;code>gaussian&lt;/code> draws per agent with &lt;code>v0_std&lt;/code>; draws are clipped to [0.1, 5.0] m/s. Any other string, such as &lt;code>&amp;quot;normal&amp;quot;&lt;/code>, gives the constant &lt;code>v0&lt;/code>, without a message. Only agents placed at the start are drawn; flow-spawned agents take &lt;code>v0&lt;/code>.&lt;/td>
 &lt;/tr>
 &lt;tr>
 &lt;td>&lt;code>v0_std&lt;/code>&lt;/td>
 &lt;td>none&lt;/td>
-&lt;td>—&lt;/td>
-&lt;td>Spread of the Gaussian draw.&lt;/td>
+&lt;td>not checked; draws clipped to [0.1, 5.0] m/s&lt;/td>
+&lt;td>Spread of the Gaussian draw. A &lt;code>v0_std&lt;/code> of 0 or &lt;code>null&lt;/code> gives the constant &lt;code>v0&lt;/code>. A negative value stops the run with numpy&amp;rsquo;s &lt;code>ValueError: scale &amp;lt; 0&lt;/code>, and a string with a &lt;code>TypeError&lt;/code> or &lt;code>ValueError&lt;/code>; neither names the distribution.&lt;/td>
 &lt;/tr>
 &lt;tr>
 &lt;td>&lt;code>radius&lt;/code>&lt;/td>
@@ -4309,31 +4335,31 @@ empty object, before the setter&amp;rsquo;s keys are written.&lt;/p>
 &lt;td>&lt;code>radius_distribution&lt;/code>&lt;/td>
 &lt;td>&lt;code>&amp;quot;constant&amp;quot;&lt;/code>&lt;/td>
 &lt;td>&lt;code>constant&lt;/code>, &lt;code>gaussian&lt;/code>&lt;/td>
-&lt;td>&lt;code>gaussian&lt;/code> draws per agent with &lt;code>radius_std&lt;/code>, clipped to [0.1 m, b], where b = min(max(&lt;code>radius&lt;/code> + 3 × &lt;code>radius_std&lt;/code>, 0.1), 1.0) m is the radius placement spaces agents for. Only agents placed at the start are drawn; flow-spawned agents take &lt;code>radius&lt;/code>.&lt;/td>
+&lt;td>&lt;code>gaussian&lt;/code> draws per agent with &lt;code>radius_std&lt;/code>; any other string gives the constant &lt;code>radius&lt;/code>, without a message. The draws are clipped to [0.1 m, b], where b = min(max(&lt;code>radius&lt;/code> + 3 × &lt;code>radius_std&lt;/code>, 0.1), 1.0) m is the radius placement spaces agents for. Only agents placed at the start are drawn; flow-spawned agents take &lt;code>radius&lt;/code>.&lt;/td>
 &lt;/tr>
 &lt;tr>
 &lt;td>&lt;code>radius_std&lt;/code>&lt;/td>
 &lt;td>none&lt;/td>
-&lt;td>—&lt;/td>
-&lt;td>Spread of the Gaussian draw.&lt;/td>
+&lt;td>not checked; draws clipped to [0.1 m, b] (see &lt;code>radius_distribution&lt;/code>)&lt;/td>
+&lt;td>Spread of the Gaussian draw. A &lt;code>radius_std&lt;/code> of 0 or &lt;code>null&lt;/code> gives the constant &lt;code>radius&lt;/code>. A negative or string value fails as for &lt;code>v0_std&lt;/code>.&lt;/td>
 &lt;/tr>
 &lt;tr>
 &lt;td>&lt;code>use_premovement&lt;/code>&lt;/td>
 &lt;td>constant 10 s when no pre-movement key is set, with a warning&lt;/td>
 &lt;td>&lt;code>true&lt;/code>, &lt;code>false&lt;/code>&lt;/td>
-&lt;td>Delay before the agent starts moving. Setting any pre-movement key, including &lt;code>use_premovement: false&lt;/code>, turns the default off.&lt;/td>
+&lt;td>Delay before the agent starts moving. Setting any pre-movement key, including &lt;code>use_premovement: false&lt;/code>, turns the default off. A &lt;code>premovement_*&lt;/code> key such as &lt;code>premovement_param_a&lt;/code> without &lt;code>use_premovement: true&lt;/code> therefore gives no delay at all, without a message: the key removes the 10 s default and &lt;code>use_premovement&lt;/code> reads as &lt;code>false&lt;/code>. Not applied to flow-spawned agents.&lt;/td>
 &lt;/tr>
 &lt;tr>
 &lt;td>&lt;code>premovement_distribution&lt;/code>&lt;/td>
 &lt;td>&lt;code>&amp;quot;gamma&amp;quot;&lt;/code>&lt;/td>
 &lt;td>&lt;code>gamma&lt;/code>, &lt;code>lognormal&lt;/code>, &lt;code>weibull&lt;/code>, &lt;code>uniform&lt;/code>, &lt;code>constant&lt;/code>&lt;/td>
-&lt;td>Distribution of the delay.&lt;/td>
+&lt;td>Distribution of the delay. Another value stops the run with a &lt;code>ValueError&lt;/code> when the delays are drawn.&lt;/td>
 &lt;/tr>
 &lt;tr>
 &lt;td>&lt;code>premovement_param_a&lt;/code>, &lt;code>premovement_param_b&lt;/code>&lt;/td>
 &lt;td>the preset of the distribution&lt;/td>
-&lt;td>—&lt;/td>
-&lt;td>Override the preset; the presets and their sources are in &lt;a href="https://pedestriandynamics.org/pyFDS-Evac/docs/getting-started/coming-from-fds-evac/#pre-movement-parameters">Coming from FDS+Evac&lt;/a>.&lt;/td>
+&lt;td>not range-checked&lt;/td>
+&lt;td>Override the preset. Set both for the override to take effect; &lt;code>constant&lt;/code> needs only &lt;code>premovement_param_a&lt;/code>. The two values mean different things per distribution; the meanings, presets and sources are in &lt;a href="https://pedestriandynamics.org/pyFDS-Evac/docs/getting-started/coming-from-fds-evac/#pre-movement-parameters">Coming from FDS+Evac&lt;/a>.&lt;/td>
 &lt;/tr>
 &lt;tr>
 &lt;td>&lt;code>premovement_preset&lt;/code>&lt;/td>
@@ -4344,7 +4370,7 @@ empty object, before the setter&amp;rsquo;s keys are written.&lt;/p>
 &lt;tr>
 &lt;td>&lt;code>premovement_seed&lt;/code>&lt;/td>
 &lt;td>none&lt;/td>
-&lt;td>—&lt;/td>
+&lt;td>not checked&lt;/td>
 &lt;td>Separate seed for the pre-movement draw. When set, the pre-movement times are the same for every run seed.&lt;/td>
 &lt;/tr>
 &lt;tr>
@@ -4356,13 +4382,13 @@ empty object, before the setter&amp;rsquo;s keys are written.&lt;/p>
 &lt;tr>
 &lt;td>&lt;code>use_flow_spawning&lt;/code>&lt;/td>
 &lt;td>&lt;code>false&lt;/code>&lt;/td>
-&lt;td>—&lt;/td>
-&lt;td>Add agents over time instead of at the start (no pre-movement then).&lt;/td>
+&lt;td>truthiness, not type-checked&lt;/td>
+&lt;td>Add agents over time instead of at the start (no pre-movement then). See &lt;a href="#flow-spawned-agents">Flow-spawned agents&lt;/a>.&lt;/td>
 &lt;/tr>
 &lt;tr>
 &lt;td>&lt;code>flow_start_time&lt;/code>, &lt;code>flow_end_time&lt;/code>&lt;/td>
 &lt;td>0 s, 10 s&lt;/td>
-&lt;td>—&lt;/td>
+&lt;td>not checked; the run uses start = max(0, &lt;code>flow_start_time&lt;/code>) and end = max(start + 0.1, &lt;code>flow_end_time&lt;/code>)&lt;/td>
 &lt;td>Window of flow spawning. A flow agent keeps twice the larger radius from every agent already in the run; while no position in the area is that free, it waits, and one still waiting when the window closes does not enter (&lt;code>agents_not_spawned&lt;/code>); a run whose building then empties ends there (&lt;code>end_reason&lt;/code> &lt;code>flows_closed&lt;/code>). Besides that spacing, only a position JuPedSim refuses (too close to an agent or a wall, or outside the walkable area) makes the agent wait; any other error while building a flow agent, such as no valid entry stage, no exit or exit journey, or an invalid agent parameter, stops the run with an error naming the distribution, its source and the position, and is not counted in &lt;code>agents_not_spawned&lt;/code>.&lt;/td>
 &lt;/tr>
 &lt;tr>
@@ -4381,7 +4407,7 @@ empty object, before the setter&amp;rsquo;s keys are written.&lt;/p>
 &lt;td>&lt;code>familiarity&lt;/code>&lt;/td>
 &lt;td>&lt;code>&amp;quot;full&amp;quot;&lt;/code>&lt;/td>
 &lt;td>&lt;code>full&lt;/code>, &lt;code>discovery&lt;/code>, a probability in [0, 1], or an object &lt;code>{exit_id: p}&lt;/code>&lt;/td>
-&lt;td>What the agents know of the exits at the start; see &lt;a href="https://pedestriandynamics.org/pyFDS-Evac/models/wayfinding/">Models › Wayfinding&lt;/a>. The object form makes each listed exit known with probability p, drawn once per agent in the order of &lt;code>exits&lt;/code>; an unlisted exit is unknown, and an empty object is &lt;code>discovery&lt;/code>. The agents then learn as under &lt;code>discovery&lt;/code>, also when every p is 1. An id that is not in &lt;code>exits&lt;/code>, or a p outside [0, 1] or not a number, stops the run.&lt;/td>
+&lt;td>What the agents know of the exits at the start; see &lt;a href="https://pedestriandynamics.org/pyFDS-Evac/models/wayfinding/">Models › Wayfinding&lt;/a>. The object form makes each listed exit known with probability p, drawn once per agent in the order of &lt;code>exits&lt;/code>; an unlisted exit is unknown, and an empty object is &lt;code>discovery&lt;/code>. The agents then learn as under &lt;code>discovery&lt;/code>, also when every p is 1. An id that is not in &lt;code>exits&lt;/code>, or a p outside [0, 1] or not a number, stops the run. Any other string, including &lt;code>&amp;quot;0.5&amp;quot;&lt;/code> and &lt;code>&amp;quot;Full&amp;quot;&lt;/code>, stops the run with a &lt;code>ValueError&lt;/code>. &lt;code>true&lt;/code> is accepted as 1.0, although the object form rejects booleans.&lt;/td>
 &lt;/tr>
 &lt;tr>
 &lt;td>&lt;code>entrance&lt;/code>&lt;/td>
@@ -4394,6 +4420,18 @@ empty object, before the setter&amp;rsquo;s keys are written.&lt;/p>
 &lt;td>&lt;code>&amp;quot;default_route&amp;quot;&lt;/code>&lt;/td>
 &lt;td>&lt;code>default_route&lt;/code>, &lt;code>explore&lt;/code>, &lt;code>return&lt;/code>, &lt;code>stay&lt;/code>&lt;/td>
 &lt;td>What an agent does while no exit is reachable in its map. &lt;code>default_route&lt;/code> (the FDS+Evac counterpart) follows the journey, or without one the nearest exit on foot, and flags leaving by an exit not in the map. &lt;code>explore&lt;/code>, &lt;code>return&lt;/code> and &lt;code>stay&lt;/code> need rerouting and are refused with &lt;code>--smoke-blind&lt;/code>; see &lt;a href="https://pedestriandynamics.org/pyFDS-Evac/models/wayfinding/#2-the-knowledge-contract">Models › Wayfinding §2.4&lt;/a>.&lt;/td>
+&lt;/tr>
+&lt;tr>
+&lt;td>&lt;code>population&lt;/code>&lt;/td>
+&lt;td>none&lt;/td>
+&lt;td>any value&lt;/td>
+&lt;td>A free label. When at least one distribution has the key, the run writes the table &lt;code>agent_distributions&lt;/code> into the trajectory SQLite (&lt;a href="https://pedestriandynamics.org/pyFDS-Evac/docs/using/outputs/#trajectory-sqlite">Outputs&lt;/a>). The value is not read, so any value switches the table on. The &lt;code>station_fahy&lt;/code> and &lt;code>station_nist&lt;/code> decks use it.&lt;/td>
+&lt;/tr>
+&lt;tr>
+&lt;td>&lt;code>coordinates&lt;/code> (beside &lt;code>parameters&lt;/code>, not inside)&lt;/td>
+&lt;td>required&lt;/td>
+&lt;td>a polygon, as a list of corners&lt;/td>
+&lt;td>The spawn area. The set-up without journeys leaves out an area with fewer than three corners. &lt;code>journey_weights&lt;/code> also sits beside &lt;code>parameters&lt;/code>; see &lt;a href="#journeys-journeys_v2">Journeys&lt;/a>.&lt;/td>
 &lt;/tr>
 &lt;/tbody>
 &lt;/table>
@@ -4422,6 +4460,108 @@ win instead
 (&lt;a href="https://github.com/PedestrianDynamics/pyFDS-Evac/issues/586" target="_blank" rel="noopener">#586&lt;/a>).&lt;/p>
 &lt;p>While an agent waits out its pre-movement time, the smoke update skips it, so
 it starts at its full clear-air speed.&lt;/p>
+&lt;h3>Flow-spawned agents&lt;span class="hx-absolute -hx-mt-20" id="flow-spawned-agents">&lt;/span>
+&lt;a href="#flow-spawned-agents" class="subheading-anchor" aria-label="Permalink for this section">&lt;/a>&lt;/h3>&lt;p>Agents added with &lt;code>use_flow_spawning&lt;/code> or &lt;code>flow_schedule&lt;/code> read these keys:
+&lt;code>number&lt;/code> (the total over the window), &lt;code>distribution_mode&lt;/code> and &lt;code>percentage&lt;/code>
+(the count), &lt;code>radius&lt;/code>, &lt;code>v0&lt;/code>, &lt;code>familiarity&lt;/code>, &lt;code>entrance&lt;/code> and &lt;code>no_known_exit&lt;/code>.
+They do not read &lt;code>v0_distribution&lt;/code>, &lt;code>v0_std&lt;/code>, &lt;code>radius_distribution&lt;/code> or
+&lt;code>radius_std&lt;/code>: a flow agent takes &lt;code>v0&lt;/code> and &lt;code>radius&lt;/code> as written. They have no
+pre-movement, so every &lt;code>premovement_*&lt;/code> key is ignored for them. The
+three knowledge keys reach a flow agent only when it has a routed path.
+Agents from &lt;code>initial_number&lt;/code> are placed at the start and read every key.&lt;/p>
+&lt;h3>Examples&lt;span class="hx-absolute -hx-mt-20" id="examples">&lt;/span>
+&lt;a href="#examples" class="subheading-anchor" aria-label="Permalink for this section">&lt;/a>&lt;/h3>&lt;p>Minimal: only the agent count. The agents get &lt;code>v0&lt;/code> 1.25 m/s and &lt;code>radius&lt;/code>
+0.2 m, and the run warns that it applied the default 10 s pre-movement.&lt;/p>
+&lt;div class="hextra-code-block hx-relative hx-mt-6 first:hx-mt-0 hx-group/code">
+&lt;div>&lt;div class="highlight">&lt;pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;">&lt;code class="language-json" data-lang="json">&lt;span style="display:flex;">&lt;span>&lt;span style="color:#e6db74">&amp;#34;parameters&amp;#34;&lt;/span>&lt;span style="color:#960050;background-color:#1e0010">:&lt;/span> {&lt;span style="color:#f92672">&amp;#34;number&amp;#34;&lt;/span>: &lt;span style="color:#ae81ff">20&lt;/span>}&lt;/span>&lt;/span>&lt;/code>&lt;/pre>&lt;/div>&lt;/div>&lt;div class="hextra-code-copy-btn-container hx-opacity-0 hx-transition group-hover/code:hx-opacity-100 hx-flex hx-gap-1 hx-absolute hx-m-[11px] hx-right-0 hx-top-0">
+&lt;button
+class="hextra-code-copy-btn hx-group/copybtn hx-transition-all active:hx-opacity-50 hx-bg-primary-700/5 hx-border hx-border-black/5 hx-text-gray-600 hover:hx-text-gray-900 hx-rounded-md hx-p-1.5 dark:hx-bg-primary-300/10 dark:hx-border-white/10 dark:hx-text-gray-400 dark:hover:hx-text-gray-50"
+title="Copy code"
+>
+&lt;div class="copy-icon group-[.copied]/copybtn:hx-hidden hx-pointer-events-none hx-h-4 hx-w-4">&lt;/div>
+&lt;div class="success-icon hx-hidden group-[.copied]/copybtn:hx-block hx-pointer-events-none hx-h-4 hx-w-4">&lt;/div>
+&lt;/button>
+&lt;/div>
+&lt;/div>
+&lt;p>Flow spawning, 30 agents over the first 60 s:&lt;/p>
+&lt;div class="hextra-code-block hx-relative hx-mt-6 first:hx-mt-0 hx-group/code">
+&lt;div>&lt;div class="highlight">&lt;pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;">&lt;code class="language-json" data-lang="json">&lt;span style="display:flex;">&lt;span>&lt;span style="color:#e6db74">&amp;#34;parameters&amp;#34;&lt;/span>&lt;span style="color:#960050;background-color:#1e0010">:&lt;/span> {&lt;span style="color:#f92672">&amp;#34;number&amp;#34;&lt;/span>: &lt;span style="color:#ae81ff">30&lt;/span>, &lt;span style="color:#f92672">&amp;#34;use_flow_spawning&amp;#34;&lt;/span>: &lt;span style="color:#66d9ef">true&lt;/span>,
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#f92672">&amp;#34;flow_start_time&amp;#34;&lt;/span>: &lt;span style="color:#ae81ff">0&lt;/span>, &lt;span style="color:#f92672">&amp;#34;flow_end_time&amp;#34;&lt;/span>: &lt;span style="color:#ae81ff">60&lt;/span>}&lt;/span>&lt;/span>&lt;/code>&lt;/pre>&lt;/div>&lt;/div>&lt;div class="hextra-code-copy-btn-container hx-opacity-0 hx-transition group-hover/code:hx-opacity-100 hx-flex hx-gap-1 hx-absolute hx-m-[11px] hx-right-0 hx-top-0">
+&lt;button
+class="hextra-code-copy-btn hx-group/copybtn hx-transition-all active:hx-opacity-50 hx-bg-primary-700/5 hx-border hx-border-black/5 hx-text-gray-600 hover:hx-text-gray-900 hx-rounded-md hx-p-1.5 dark:hx-bg-primary-300/10 dark:hx-border-white/10 dark:hx-text-gray-400 dark:hover:hx-text-gray-50"
+title="Copy code"
+>
+&lt;div class="copy-icon group-[.copied]/copybtn:hx-hidden hx-pointer-events-none hx-h-4 hx-w-4">&lt;/div>
+&lt;div class="success-icon hx-hidden group-[.copied]/copybtn:hx-block hx-pointer-events-none hx-h-4 hx-w-4">&lt;/div>
+&lt;/button>
+&lt;/div>
+&lt;/div>
+&lt;p>The same with a schedule, 5 agents at the start and 10 agents in each of
+two windows:&lt;/p>
+&lt;div class="hextra-code-block hx-relative hx-mt-6 first:hx-mt-0 hx-group/code">
+&lt;div>&lt;div class="highlight">&lt;pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;">&lt;code class="language-json" data-lang="json">&lt;span style="display:flex;">&lt;span>&lt;span style="color:#e6db74">&amp;#34;parameters&amp;#34;&lt;/span>&lt;span style="color:#960050;background-color:#1e0010">:&lt;/span> {&lt;span style="color:#f92672">&amp;#34;initial_number&amp;#34;&lt;/span>: &lt;span style="color:#ae81ff">5&lt;/span>,
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#f92672">&amp;#34;flow_schedule&amp;#34;&lt;/span>: [
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> {&lt;span style="color:#f92672">&amp;#34;flow_start_time&amp;#34;&lt;/span>: &lt;span style="color:#ae81ff">0&lt;/span>, &lt;span style="color:#f92672">&amp;#34;flow_end_time&amp;#34;&lt;/span>: &lt;span style="color:#ae81ff">30&lt;/span>, &lt;span style="color:#f92672">&amp;#34;number&amp;#34;&lt;/span>: &lt;span style="color:#ae81ff">10&lt;/span>},
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> {&lt;span style="color:#f92672">&amp;#34;flow_start_time&amp;#34;&lt;/span>: &lt;span style="color:#ae81ff">60&lt;/span>, &lt;span style="color:#f92672">&amp;#34;flow_end_time&amp;#34;&lt;/span>: &lt;span style="color:#ae81ff">90&lt;/span>, &lt;span style="color:#f92672">&amp;#34;number&amp;#34;&lt;/span>: &lt;span style="color:#ae81ff">10&lt;/span>}]}&lt;/span>&lt;/span>&lt;/code>&lt;/pre>&lt;/div>&lt;/div>&lt;div class="hextra-code-copy-btn-container hx-opacity-0 hx-transition group-hover/code:hx-opacity-100 hx-flex hx-gap-1 hx-absolute hx-m-[11px] hx-right-0 hx-top-0">
+&lt;button
+class="hextra-code-copy-btn hx-group/copybtn hx-transition-all active:hx-opacity-50 hx-bg-primary-700/5 hx-border hx-border-black/5 hx-text-gray-600 hover:hx-text-gray-900 hx-rounded-md hx-p-1.5 dark:hx-bg-primary-300/10 dark:hx-border-white/10 dark:hx-text-gray-400 dark:hover:hx-text-gray-50"
+title="Copy code"
+>
+&lt;div class="copy-icon group-[.copied]/copybtn:hx-hidden hx-pointer-events-none hx-h-4 hx-w-4">&lt;/div>
+&lt;div class="success-icon hx-hidden group-[.copied]/copybtn:hx-block hx-pointer-events-none hx-h-4 hx-w-4">&lt;/div>
+&lt;/button>
+&lt;/div>
+&lt;/div>
+&lt;p>A lognormal pre-movement time with a 60 s detection offset. The two
+parameters are the lognormal preset (Lovreglio et al., 2019, Table 3,
+Business Cluster 1; see
+&lt;a href="https://pedestriandynamics.org/pyFDS-Evac/docs/getting-started/coming-from-fds-evac/#pre-movement-parameters">Coming from FDS+Evac&lt;/a>);
+its median pre-movement time is about 98 s (e^4.586) before the 60 s
+offset. &lt;code>premovement_offset_s&lt;/code> needs &lt;code>use_premovement: true&lt;/code>:&lt;/p>
+&lt;div class="hextra-code-block hx-relative hx-mt-6 first:hx-mt-0 hx-group/code">
+&lt;div>&lt;div class="highlight">&lt;pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;">&lt;code class="language-json" data-lang="json">&lt;span style="display:flex;">&lt;span>&lt;span style="color:#e6db74">&amp;#34;parameters&amp;#34;&lt;/span>&lt;span style="color:#960050;background-color:#1e0010">:&lt;/span> {&lt;span style="color:#f92672">&amp;#34;number&amp;#34;&lt;/span>: &lt;span style="color:#ae81ff">20&lt;/span>, &lt;span style="color:#f92672">&amp;#34;use_premovement&amp;#34;&lt;/span>: &lt;span style="color:#66d9ef">true&lt;/span>,
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#f92672">&amp;#34;premovement_distribution&amp;#34;&lt;/span>: &lt;span style="color:#e6db74">&amp;#34;lognormal&amp;#34;&lt;/span>,
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#f92672">&amp;#34;premovement_param_a&amp;#34;&lt;/span>: &lt;span style="color:#ae81ff">4.586&lt;/span>, &lt;span style="color:#f92672">&amp;#34;premovement_param_b&amp;#34;&lt;/span>: &lt;span style="color:#ae81ff">0.967&lt;/span>,
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#f92672">&amp;#34;premovement_offset_s&amp;#34;&lt;/span>: &lt;span style="color:#ae81ff">60&lt;/span>}&lt;/span>&lt;/span>&lt;/code>&lt;/pre>&lt;/div>&lt;/div>&lt;div class="hextra-code-copy-btn-container hx-opacity-0 hx-transition group-hover/code:hx-opacity-100 hx-flex hx-gap-1 hx-absolute hx-m-[11px] hx-right-0 hx-top-0">
+&lt;button
+class="hextra-code-copy-btn hx-group/copybtn hx-transition-all active:hx-opacity-50 hx-bg-primary-700/5 hx-border hx-border-black/5 hx-text-gray-600 hover:hx-text-gray-900 hx-rounded-md hx-p-1.5 dark:hx-bg-primary-300/10 dark:hx-border-white/10 dark:hx-text-gray-400 dark:hover:hx-text-gray-50"
+title="Copy code"
+>
+&lt;div class="copy-icon group-[.copied]/copybtn:hx-hidden hx-pointer-events-none hx-h-4 hx-w-4">&lt;/div>
+&lt;div class="success-icon hx-hidden group-[.copied]/copybtn:hx-block hx-pointer-events-none hx-h-4 hx-w-4">&lt;/div>
+&lt;/button>
+&lt;/div>
+&lt;/div>
+&lt;p>Agents that know no exit at the start and explore; &lt;code>explore&lt;/code> needs
+rerouting and is refused with &lt;code>--smoke-blind&lt;/code>:&lt;/p>
+&lt;div class="hextra-code-block hx-relative hx-mt-6 first:hx-mt-0 hx-group/code">
+&lt;div>&lt;div class="highlight">&lt;pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;">&lt;code class="language-json" data-lang="json">&lt;span style="display:flex;">&lt;span>&lt;span style="color:#e6db74">&amp;#34;parameters&amp;#34;&lt;/span>&lt;span style="color:#960050;background-color:#1e0010">:&lt;/span> {&lt;span style="color:#f92672">&amp;#34;number&amp;#34;&lt;/span>: &lt;span style="color:#ae81ff">10&lt;/span>, &lt;span style="color:#f92672">&amp;#34;familiarity&amp;#34;&lt;/span>: &lt;span style="color:#e6db74">&amp;#34;discovery&amp;#34;&lt;/span>,
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#f92672">&amp;#34;no_known_exit&amp;#34;&lt;/span>: &lt;span style="color:#e6db74">&amp;#34;explore&amp;#34;&lt;/span>}&lt;/span>&lt;/span>&lt;/code>&lt;/pre>&lt;/div>&lt;/div>&lt;div class="hextra-code-copy-btn-container hx-opacity-0 hx-transition group-hover/code:hx-opacity-100 hx-flex hx-gap-1 hx-absolute hx-m-[11px] hx-right-0 hx-top-0">
+&lt;button
+class="hextra-code-copy-btn hx-group/copybtn hx-transition-all active:hx-opacity-50 hx-bg-primary-700/5 hx-border hx-border-black/5 hx-text-gray-600 hover:hx-text-gray-900 hx-rounded-md hx-p-1.5 dark:hx-bg-primary-300/10 dark:hx-border-white/10 dark:hx-text-gray-400 dark:hover:hx-text-gray-50"
+title="Copy code"
+>
+&lt;div class="copy-icon group-[.copied]/copybtn:hx-hidden hx-pointer-events-none hx-h-4 hx-w-4">&lt;/div>
+&lt;div class="success-icon hx-hidden group-[.copied]/copybtn:hx-block hx-pointer-events-none hx-h-4 hx-w-4">&lt;/div>
+&lt;/button>
+&lt;/div>
+&lt;/div>
+&lt;h2>Keys the run does not read&lt;span class="hx-absolute -hx-mt-20" id="keys-the-run-does-not-read">&lt;/span>
+&lt;a href="#keys-the-run-does-not-read" class="subheading-anchor" aria-label="Permalink for this section">&lt;/a>&lt;/h2>&lt;p>The loader does not check &lt;code>parameters&lt;/code> against a list of keys. A key that
+the run does not know is dropped without a message: &lt;code>{&amp;quot;numbr&amp;quot;: 5}&lt;/code> leaves
+&lt;code>number&lt;/code> at 10. The same holds for the &lt;code>routing&lt;/code> block, where only the
+removed keys in &lt;code>REMOVED_ROUTING_KEYS&lt;/code> are refused. A misspelled key
+therefore changes nothing, with one exception: any key starting with
+&lt;code>premovement_&lt;/code> counts as a pre-movement setting and turns the 10 s default
+off, so &lt;code>premovement_typo&lt;/code> removes the delay without a message.&lt;/p>
+&lt;ul>
+&lt;li>&lt;code>fahy_row&lt;/code> and &lt;code>fahy_class&lt;/code> are study labels. The package ignores them;
+only the scripts in &lt;code>assets/station_fahy/&lt;/code> and &lt;code>assets/station_nist/&lt;/code> read
+them.&lt;/li>
+&lt;li>&lt;code>queues&lt;/code>, &lt;code>waiting_sets&lt;/code>, &lt;code>obstacles&lt;/code>, &lt;code>background_image&lt;/code> and
+&lt;code>project_version&lt;/code> at the top level are not read by the run.&lt;/li>
+&lt;li>&lt;code>type&lt;/code> in a distribution has no reader in &lt;code>pyfds_evac/core&lt;/code>.&lt;/li>
+&lt;/ul>
 &lt;h2>Exits: &lt;code>exits.&amp;lt;id&amp;gt;&lt;/code>&lt;span class="hx-absolute -hx-mt-20" id="exits-exitsid">&lt;/span>
 &lt;a href="#exits-exitsid" class="subheading-anchor" aria-label="Permalink for this section">&lt;/a>&lt;/h2>&lt;table>
 &lt;thead>
@@ -4733,9 +4873,7 @@ always uses the Lund law with the defaults on
 &lt;a href="https://pedestriandynamics.org/pyFDS-Evac/models/smoke-speed/#parameters">Models › Smoke speed&lt;/a>;&lt;/li>
 &lt;li>&lt;code>RerouteConfig.exit_switch_anchor&lt;/code>, which, when set,
 overrides the &lt;code>routing&lt;/code> key &lt;code>exit_switch_anchor&lt;/code> for that run.&lt;/li>
-&lt;/ul>
-&lt;p>Tracking issue for this reference:
-&lt;a href="https://github.com/PedestrianDynamics/pyFDS-Evac/issues/119" target="_blank" rel="noopener">#119&lt;/a>.&lt;/p></description></item><item><title>Web GUI</title><link>https://pedestriandynamics.org/pyFDS-Evac/docs/using/web-gui/</link><pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate><guid>https://pedestriandynamics.org/pyFDS-Evac/docs/using/web-gui/</guid><description>
+&lt;/ul></description></item><item><title>Web GUI</title><link>https://pedestriandynamics.org/pyFDS-Evac/docs/using/web-gui/</link><pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate><guid>https://pedestriandynamics.org/pyFDS-Evac/docs/using/web-gui/</guid><description>
 &lt;p>An optional local web app that runs the same model as the &lt;code>pyfds-evac&lt;/code>
 command (&lt;code>run.py&lt;/code>) behind a form: pick a scenario, set the options, run it,
 watch the progress, and look at the results. It is for exploring a scenario;

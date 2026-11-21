@@ -207,9 +207,10 @@ signs can be read from the spawn area&amp;rsquo;s routing point (the same point 
 everyone spawning there).&lt;/li>
 &lt;li>&lt;strong>A number between 0 and 1&lt;/strong>: each exit is known from the start with that
 probability, so a crowd can be a mixture rather than two groups.&lt;/li>
-&lt;li>&lt;strong>&lt;code>entrance&lt;/code>&lt;/strong>: names one exit that is also known from the start, such as the
-door the agent came in by. It must be an exit reachable from the spawn area;
-otherwise it is ignored without a warning.&lt;/li>
+&lt;li>&lt;strong>&lt;code>entrance&lt;/code>&lt;/strong>: names an exit, or a list of exits, that are also known from
+the start, such as the door the agent came in by. An id that is not in
+&lt;code>exits&lt;/code> stops the run. An exit that no route from the spawn area reaches is
+reported as a warning.&lt;/li>
 &lt;/ul>
 &lt;p>After that, the map grows only when the agent can read a sign (a run with
 visibility switched off lets it learn by contact instead). A sign is
@@ -640,9 +641,10 @@ and an exit never becomes more attractive because others use it. See
 &lt;a href="https://github.com/PedestrianDynamics/pyFDS-Evac/issues/78" target="_blank" rel="noopener">issue #78&lt;/a>.
 The pre-registered Station comparison with survivor exit-use data failed
 its gates; see the &lt;a href="https://pedestriandynamics.org/pyFDS-Evac/docs/studies/study-station/">Station study&lt;/a>.&lt;/p>
-&lt;p>&lt;strong>Perception-limited route choice.&lt;/strong> A discovery agent knows only the exits
-its familiarity, &lt;code>entrance&lt;/code> or a legible sign gave it, but it prices the routes to them with the smoke
-sampled along the whole route, including stretches it has never seen
+&lt;p>&lt;strong>Route choice is not perception-limited.&lt;/strong> A discovery agent knows only
+the exits its familiarity, &lt;code>entrance&lt;/code> or a legible sign gave it, but it
+prices the routes to them with the smoke sampled along the whole route,
+including stretches it has never seen
 (&lt;a href="https://github.com/PedestrianDynamics/pyFDS-Evac/issues/125" target="_blank" rel="noopener">issue #125&lt;/a>).
 By default (&lt;code>routing.anticipate&lt;/code> = true, &lt;code>routing.foresight_horizon_s&lt;/code>
 unbounded), the path to each exit is found from the agent&amp;rsquo;s position on the
@@ -651,10 +653,14 @@ and each point of that path is then priced with the smoke that the
 finished FDS run holds for the time the agent would arrive there (#650). Knowledge limits which
 routes an agent ranks, and only fully familiar agents know the whole graph;
 it does not limit the smoke those routes are priced with. The route choice of
-a discovery agent is therefore not limited by what it has perceived.&lt;/p>
+a discovery agent is therefore not limited by what it has perceived: it is
+the choice of an evacuee who knows the smoke on every route in its map, approximately (the arrival clock
+uses the unimpeded speed and the path is searched on the smoke at decision
+time). With a visibility
+model, map growth is perception-limited
+(&lt;a href="https://pedestriandynamics.org/pyFDS-Evac/models/wayfinding/#deviations-from-the-literature">Wayfinding&lt;/a>).&lt;/p>
 &lt;p>&lt;strong>Route choice.&lt;/strong> Route choice has open limitations: switching can oscillate
-where two routes cross in cost (&lt;a href="https://github.com/PedestrianDynamics/pyFDS-Evac/issues/124" target="_blank" rel="noopener">#124&lt;/a>), routes are priced with smoke the agent
-cannot perceive (&lt;a href="https://github.com/PedestrianDynamics/pyFDS-Evac/issues/125" target="_blank" rel="noopener">#125&lt;/a>), an exit is priced on its searched path (the least-smoky one under the gate), and on up to two more only after that one is refused (&lt;a href="https://github.com/PedestrianDynamics/pyFDS-Evac/issues/185" target="_blank" rel="noopener">#185&lt;/a>), a real optical-depth
+where two routes cross in cost (&lt;a href="https://github.com/PedestrianDynamics/pyFDS-Evac/issues/124" target="_blank" rel="noopener">#124&lt;/a>), an exit is priced on its searched path (the least-smoky one under the gate), and on up to two more only after that one is refused (&lt;a href="https://github.com/PedestrianDynamics/pyFDS-Evac/issues/185" target="_blank" rel="noopener">#185&lt;/a>), a real optical-depth
 difference inside the anchor&amp;rsquo;s deadband can keep the current exit ranked first, so the anchor is never asked (&lt;a href="https://github.com/PedestrianDynamics/pyFDS-Evac/issues/187" target="_blank" rel="noopener">#187&lt;/a>; round-off is a tie since &lt;a href="https://github.com/PedestrianDynamics/pyFDS-Evac/issues/452" target="_blank" rel="noopener">#452&lt;/a>).
 Under either cost model, smoke on the current route never bypasses the
 exit-switch anchor as a lethal FED does: however dense it is, the agent

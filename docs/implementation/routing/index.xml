@@ -1539,8 +1539,8 @@ tilt is against the L2 bee line specifically; against the L1 norm FDS+Evac uses
 for non-visible doors (&lt;code>:16796&lt;/code>) it vanishes on this deck, because both
 corridors are axis-aligned and the L1 distance equals the polyline exactly. The
 sign and size of the bias on other geometries have not been measured.&lt;/p>
-&lt;h3>Route choice is an optimality bound, not a perception-limited model&lt;span class="hx-absolute -hx-mt-20" id="route-choice-is-an-optimality-bound-not-a-perception-limited-model">&lt;/span>
-&lt;a href="#route-choice-is-an-optimality-bound-not-a-perception-limited-model" class="subheading-anchor" aria-label="Permalink for this section">&lt;/a>&lt;/h3>&lt;p>Issue &lt;a href="https://github.com/PedestrianDynamics/pyFDS-Evac/issues/125" target="_blank" rel="noopener">#125&lt;/a>. Two assumptions
+&lt;h3>Route choice uses global smoke knowledge, not a perception-limited model&lt;span class="hx-absolute -hx-mt-20" id="route-choice-uses-global-smoke-knowledge-not-a-perception-limited-model">&lt;/span>
+&lt;a href="#route-choice-uses-global-smoke-knowledge-not-a-perception-limited-model" class="subheading-anchor" aria-label="Permalink for this section">&lt;/a>&lt;/h3>&lt;p>Issue &lt;a href="https://github.com/PedestrianDynamics/pyFDS-Evac/issues/125" target="_blank" rel="noopener">#125&lt;/a>. Two assumptions
 apply to the same agent on the same tick and point in opposite directions:&lt;/p>
 &lt;ul>
 &lt;li>&lt;strong>The cognitive map assumes the agent does not know the building.&lt;/strong> A
@@ -1556,23 +1556,25 @@ that have not happened yet. The extinction sampler is global; the cognitive
 map never touches it.&lt;/li>
 &lt;/ul>
 &lt;p>These are different kinds of knowledge — topology versus state — so it is not a
-formal contradiction. It is still not a coherent position, and it is sharpest
-exactly where the discovery tier&amp;rsquo;s modelling is most careful.&lt;/p>
+formal contradiction. It is still an unequal treatment of the two kinds of
+knowledge, and it is sharpest exactly where the discovery tier&amp;rsquo;s modelling
+is most careful.&lt;/p>
 &lt;p>&lt;strong>What this affects.&lt;/strong> &lt;em>Not&lt;/em> map growth: what an agent learns and when runs
-through &lt;code>VisibilityModel&lt;/code> alone, so results about map expansion, exploration
+through &lt;code>VisibilityModel&lt;/code> when the run has one, so results about map expansion, exploration
 order, wander behaviour and the lost-exit failure mode stand. What it undercuts
 is any claim that a &lt;strong>discovery agent&amp;rsquo;s route choice&lt;/strong> is perception-limited. It
 is not.&lt;/p>
-&lt;p>&lt;strong>So name what the model is.&lt;/strong> Route choice here is an &lt;strong>optimality bound&lt;/strong>:
+&lt;p>&lt;strong>So name what the model is.&lt;/strong> Route choice here uses &lt;strong>global smoke knowledge&lt;/strong>:
 what an evacuee with perfect knowledge of the smoke field would choose &lt;em>over the
 part of the building it happens to know&lt;/em>. Not &amp;ldquo;what a perfectly informed
 evacuee would choose&amp;rdquo; — the topology restriction is real and still binds. That
 bound is a legitimate and useful thing to publish, and the discovery tier
 remains a perception-limited model of &lt;em>wayfinding&lt;/em>; but the two are different
 claims and only one of them is about smoke.&lt;/p>
-&lt;p>Nothing is fixed here. &lt;code>foresight_horizon_s&lt;/code> is the one lever already shipped
-that bounds half of it (the temporal half); it defaults to &lt;code>inf&lt;/code>. #125 records
-the three options and evaluates none.&lt;/p>
+&lt;p>&lt;strong>Decision (2026-11-21, #125): accept and label.&lt;/strong> &lt;code>tau&lt;/code> stays in the ranking
+and the engine is unchanged. &lt;code>foresight_horizon_s&lt;/code> is the one lever already
+shipped that bounds half of it (the temporal half); it defaults to &lt;code>inf&lt;/code>.
+See &lt;a href="https://pedestriandynamics.org/pyFDS-Evac/models/routing/#limitations">Models › Routing, Limitations&lt;/a>.&lt;/p>
 &lt;h3>One asymmetry favours the exit the agent already walks to&lt;span class="hx-absolute -hx-mt-20" id="one-asymmetry-favours-the-exit-the-agent-already-walks-to">&lt;/span>
 &lt;a href="#one-asymmetry-favours-the-exit-the-agent-already-walks-to" class="subheading-anchor" aria-label="Permalink for this section">&lt;/a>&lt;/h3>&lt;p>Every exit is refused above the same &lt;code>tau_max&lt;/code>. &lt;code>tau_return_margin&lt;/code> (0.8),
 which held a rival to &lt;code>tau_max * 0.8&lt;/code> = 4.8, was removed in #187: it was
@@ -2146,7 +2148,7 @@ out by 130.8 s (&lt;code>golden_rerouting.py&lt;/code> at &lt;code>867cedab&lt;/
 the crossover itself is not modelled away.&lt;/li>
 &lt;li>&lt;strong>&lt;a href="https://github.com/PedestrianDynamics/pyFDS-Evac/issues/125" target="_blank" rel="noopener">#125&lt;/a> — route
 choice is not perception-limited.&lt;/strong> See
-&lt;a href="#route-choice-is-an-optimality-bound-not-a-perception-limited-model">Route choice is an optimality bound&lt;/a>.
+&lt;a href="#route-choice-uses-global-smoke-knowledge-not-a-perception-limited-model">Route choice uses global smoke knowledge&lt;/a>.
 It bounds what the discovery tier can be said to demonstrate about route
 choice; it does not touch map growth.&lt;/li>
 &lt;/ul>
