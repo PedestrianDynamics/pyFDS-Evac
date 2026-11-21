@@ -120,8 +120,12 @@ def discard_result(result: Any) -> None:
     cleanup = getattr(result, "cleanup", None)
     if cleanup is None:
         return
-    with contextlib.suppress(OSError):
+    try:
         cleanup()
+    except OSError:
+        logging.getLogger(__name__).warning(
+            "Could not delete a temporary run file", exc_info=True
+        )
 
 
 @functools.cache

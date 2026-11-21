@@ -4,6 +4,11 @@ import io
 import pathlib
 import re
 import shutil
+import signal
+import socket
+import subprocess
+import sys
+import time
 import zipfile
 from types import SimpleNamespace
 
@@ -1402,6 +1407,79 @@ def test_artifact_preview_lines_are_rewritable(client):
         assert f'data-suffix="{suffix}"' in r.text
     assert "artifact-preview" in r.text
     assert "outputBase()" in r.text  # the script reads the folder box
+
+
+_SERVER_SCRIPT = """
+import sys, uvicorn
+from pyfds_evac.webapp import app as app_mod
+
+marker, port = sys.argv[1], int(sys.argv[2])
+app_mod.manager.shutdown = lambda timeout=None: open(marker, "w").close()
+uvicorn.run(app_mod.app, host="127.0.0.1", port=port, log_level="warning")
+"""
+
+
+@pytest.mark.skipif(sys.platform == "win32", reason="POSIX signals")
+@pytest.mark.parametrize("sig", [signal.SIGTERM, signal.SIGINT])
+def test_server_stop_by_signal_discards_the_run_files(tmp_path, sig):
+    """#319: SIGTERM skips atexit; the lifespan shutdown must still run."""
+    with socket.socket() as probe:
+        probe.bind(("127.0.0.1", 0))
+        port = probe.getsockname()[1]
+    marker = tmp_path / "shutdown"
+    proc = subprocess.Popen(
+        [sys.executable, "-c", _SERVER_SCRIPT, str(marker), str(port)]
+    )
+    try:
+        deadline = time.monotonic() + 30
+        while time.monotonic() < deadline:
+            try:
+                socket.create_connection(("127.0.0.1", port), timeout=0.5).close()
+                break
+            except OSError:
+                time.sleep(0.2)
+        else:
+            pytest.fail("server did not start")
+        proc.send_signal(sig)
+        proc.wait(timeout=30)
+    finally:
+        if proc.poll() is None:
+            proc.kill()
+    assert marker.exists()
+
+
+def test_discard_result_logs_a_failed_deletion_and_continues(caplog):
+    from pyfds_evac.webapp.runner import discard_result
+
+    def locked():
+        raise PermissionError("locked")
+
+    with caplog.at_level("WARNING"):
+        discard_result(SimpleNamespace(cleanup=locked))
+    assert "Could not delete a temporary run file" in caplog.text
+
+
+def test_cleanup_removes_the_manifest_when_the_sqlite_stays(tmp_path, monkeypatch):
+    import os
+
+    from pyfds_evac.core.scenario import ScenarioResult
+
+    sqlite = tmp_path / "a.sqlite"
+    manifest = tmp_path / "a.json"
+    sqlite.write_text("x")
+    manifest.write_text("x")
+    real = os.unlink
+
+    def unlink(path):
+        if str(path) == str(sqlite):
+            raise PermissionError("locked")
+        real(path)
+
+    monkeypatch.setattr(os, "unlink", unlink)
+    result = SimpleNamespace(sqlite_file=str(sqlite), manifest_file=str(manifest))
+    with pytest.raises(PermissionError):
+        ScenarioResult.cleanup(result)
+    assert sqlite.exists() and not manifest.exists()
 
 
 def test_output_files_are_labelled_as_fixed_by_the_gui(client):

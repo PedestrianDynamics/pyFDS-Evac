@@ -83,10 +83,22 @@ _KATEX = (
     ),
 )
 
+
 # No MonsterUI/UIKit – custom theme only
+async def _lifespan(_app):
+    """Discard a run's temporary files when the server stops.
+
+    Uvicorn re-raises SIGTERM after its graceful shutdown, which skips
+    ``atexit``; the lifespan shutdown runs before that.
+    """
+    yield
+    await asyncio.to_thread(manager.shutdown, _EXIT_WAIT_S)
+
+
 app, rt = fast_app(
     hdrs=(*theme.headers(), _HTMX_SSE, _PLOTLY_CDN, *_KATEX),
     pico=False,
+    lifespan=_lifespan,
 )
 manager = RunManager()
 # How long server exit waits for an active run to stop.
