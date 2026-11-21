@@ -7,6 +7,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.9.0] - 2026-11-21
+
 ### Upgrading
 
 - AnticipationVelocityModel runs use a wall buffer of 0.0 m, where JuPedSim's
@@ -24,6 +26,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
+- `assets/schroeder2015_route/a047_cvm2_h40/` is a sensitivity fire for
+  the Schröder 2015 route study: the main fire with the NZ C/VM2
+  pre-flashover growth and species (0.0469 kW/s², soot 0.07, CO 0.04
+  kg/kg), capped at 1.5 MW like the study fires. Its FDS run is in
+  `fds-evac-data/schroeder2015-route/a047_cvm2_h40/`; Room 3 stays below
+  280 °C, so no post-flashover yields are needed. Evacuation runs on it
+  are #1013 (#419).
 - `assets/station_fahy/score_owed.py` scores the Station study's owed
   pre-registration items beside the frozen `validate.py`: the V4 NIST
   construct, V5, V6 (HRR, T5, T6), survival of W differences under Fahy
@@ -186,6 +195,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Changed
 
+- The heat page states the limit of the hot-layer term: with a descending
+  layer every layer-base choice reads the radiant flux 40–50 % low against
+  FDS radiometers, and the radiometer source is the pointer (#274; no code
+  change).
+- `assets/Haspel/README.md` presents Haspel as a demonstration case with no
+  reference result; the PathFinder comparison is dropped, because that
+  student project is unpublished and cannot be cited (#230).
 - The Schröder study scripts and `scripts/docs/first_fds_case_aset.py` are
   thin wrappers over `pyfds_evac.analysis` (#997); their own FED formulas and
   left-sum doses are gone. Figures are unchanged. Dose crossings now use the
