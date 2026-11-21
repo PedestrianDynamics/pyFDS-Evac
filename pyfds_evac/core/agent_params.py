@@ -20,9 +20,12 @@ share (#390).
 from __future__ import annotations
 
 import json
+import logging
 import math
 from collections.abc import Iterator
 from typing import Any
+
+_logger = logging.getLogger(__name__)
 
 SPEED_KEY_ALIASES = (
     ("desired_speed", "v0"),
@@ -101,6 +104,126 @@ def check_speed_aliases(raw: Any) -> None:
     """
     for dist_id, _, params in _alias_parameters(raw):
         _check_speed_pairs(params, dist_id)
+
+
+KNOWN_PARAMETER_KEYS = frozenset(
+    {
+        # _spawn_params and the readers of cognitive_map and the views
+        "number",
+        "radius",
+        "v0",
+        "use_flow_spawning",
+        "flow_start_time",
+        "flow_end_time",
+        "flow_schedule",
+        "initial_number",
+        "use_premovement",
+        "premovement_distribution",
+        "premovement_param_a",
+        "premovement_param_b",
+        "premovement_seed",
+        "premovement_preset",
+        "premovement_offset_s",
+        "radius_distribution",
+        "radius_std",
+        "v0_distribution",
+        "v0_std",
+        "distribution_mode",
+        "percentage",
+        "familiarity",
+        "entrance",
+        "no_known_exit",
+        # aliases of the v0 keys
+        "desired_speed",
+        "desired_speed_distribution",
+        "desired_speed_std",
+        # study labels that travel with the area and are never read as inputs
+        "population",
+        "fahy_row",
+        "fahy_class",
+    }
+)
+"""The ``distributions.*.parameters`` keys the code reads or allows (#1033)."""
+
+_DISTRIBUTION_ENUMS = {
+    "v0_distribution": ("constant", "gaussian"),
+    "desired_speed_distribution": ("constant", "gaussian"),
+    "radius_distribution": ("constant", "gaussian"),
+    "distribution_mode": ("by_number", "by_percentage", "fill_area", "until_full"),
+}
+_STD_KEYS = ("v0_std", "desired_speed_std", "radius_std")
+
+
+def _distribution_parameters(data: Any) -> Iterator[tuple[str, dict[str, Any]]]:
+    """Yield ``(dist_id, params)`` of each distribution whose parameters parse."""
+    distributions = data.get("distributions") if isinstance(data, dict) else None
+    if not isinstance(distributions, dict):
+        return
+    for dist_id, dist_data in distributions.items():
+        if not isinstance(dist_data, dict):
+            continue
+        params = parameters_as_dict(dist_data.get("parameters"))
+        if params is not None:
+            yield dist_id, params
+
+
+def _check_enum_value(dist_id: str, key: str, value: Any) -> None:
+    """Raise ValueError when *key* holds a value the run does not act on."""
+    allowed = _DISTRIBUTION_ENUMS[key]
+    if isinstance(value, str) and value in allowed:
+        return
+    raise ValueError(
+        f"Distribution {dist_id!r}: {key} {value!r} is not supported; "
+        f"allowed values: {', '.join(allowed)}"
+    )
+
+
+def _check_std_value(dist_id: str, key: str, value: Any) -> None:
+    """Raise ValueError when *key* is not null or a finite number >= 0."""
+    if value is None:
+        return
+    is_number = isinstance(value, (int, float)) and not isinstance(value, bool)
+    if is_number and math.isfinite(value) and value >= 0:
+        return
+    raise ValueError(
+        f"Distribution {dist_id!r}: {key} must be a finite number >= 0 or "
+        f"null, got {value!r}"
+    )
+
+
+def check_distribution_values(raw: Any) -> None:
+    """Raise ValueError for the first distribution value the run cannot act on.
+
+    An unknown ``v0_distribution``, ``radius_distribution`` or
+    ``distribution_mode``, or a ``v0_std`` / ``radius_std`` (and the
+    ``desired_speed*`` aliases) that is not null or a finite number >= 0.
+    The error names the distribution. ``raw`` is not modified.
+    """
+    for dist_id, params in _distribution_parameters(raw):
+        for key in _DISTRIBUTION_ENUMS:
+            if key in params:
+                _check_enum_value(dist_id, key, params[key])
+        for key in _STD_KEYS:
+            if key in params:
+                _check_std_value(dist_id, key, params[key])
+
+
+def warn_unknown_parameter_keys(raw: Any) -> None:
+    """Log one warning per distribution and unknown ``parameters`` key (#1033).
+
+    An unknown key is dropped by the set-up, so a misspelling such as
+    ``numbr`` runs with the default. Not an error: the deck still loads.
+    """
+    for dist_id, params in _distribution_parameters(raw):
+        for key in params:
+            if key in KNOWN_PARAMETER_KEYS:
+                continue
+            _logger.warning(
+                "Distribution '%s': unknown parameters key %r is ignored; "
+                "check the spelling against the scenario-json reference",
+                dist_id,
+                key,
+            )
 
 
 def normalize_distribution_speed_aliases(data: Any) -> None:
