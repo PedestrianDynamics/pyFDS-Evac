@@ -102,6 +102,8 @@ class RunSpec:
     agents_incapacitated: int | None = None
     incapacitation_modelled: bool | None = None
     error: str | None = None
+    # The submitted form's text values, so a reload can refill the form.
+    form: Mapping[str, str] | None = None
 
     def namespace(self) -> argparse.Namespace:
         """A fresh, independent Namespace of the recorded options."""
@@ -139,6 +141,7 @@ def make_run_spec(
     scenario_name: str,
     scenario_path: str,
     started_at: str | None = None,
+    form: Mapping[str, Any] | None = None,
 ) -> RunSpec:
     """Freeze the resolved options of a run about to be submitted.
 
@@ -158,7 +161,16 @@ def make_run_spec(
         git_dirty=dirty,
         expected_seed=seed if seed is not None else getattr(scenario, "seed", None),
         time_limit=getattr(scenario, "max_simulation_time", None),
+        form=_frozen_form(form),
     )
+
+
+def _frozen_form(form: Mapping[str, Any] | None) -> Mapping[str, str] | None:
+    """Read-only copy of the text values of *form* (uploads are left out)."""
+    if form is None:
+        return None
+    text = {k: v for k, v in form.items() if isinstance(v, str)}
+    return MappingProxyType(text)
 
 
 def _finished_spec(

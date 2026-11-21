@@ -809,6 +809,41 @@ _A11Y_JS = """
 """
 
 
+_RESTORE_FORM_JS = """
+(function restoreRunForm(values) {
+  var form = document.getElementById('run-form');
+  if (!form) return;
+  Object.keys(values).forEach(function (name) {
+    var els = Array.prototype.filter.call(
+      form.elements, function (e) { return e.name === name; });
+    var box = els.filter(function (e) { return e.type === 'checkbox'; })[0];
+    var el = box || els[els.length - 1];
+    if (!el || el.type === 'file') return;
+    var was = box ? String(box.checked) : el.value;
+    if (box) box.checked = values[name] === 'on'; else el.value = values[name];
+    if (was !== (box ? String(box.checked) : el.value))
+      el.dispatchEvent(new Event('change', {bubbles: true}));
+  });
+})(__VALUES__);
+"""
+
+
+def _restore_form_script():
+    """Script that refills the form from the settled run, or nothing.
+
+    A reload renders the form with its defaults while the panel shows the
+    server's results, so without this the run would read as changed.
+    """
+    with manager.snapshot():
+        spec = manager.spec
+    if spec is None or spec.outcome not in ("completed", "incomplete"):
+        return ()
+    if not spec.form:
+        return ()
+    values = json.dumps(dict(spec.form)).replace("<", "\\u003c")
+    return (Script(_RESTORE_FORM_JS.replace("__VALUES__", values)),)
+
+
 @rt("/")
 def index():
     grid = Div(
@@ -847,6 +882,7 @@ def index():
         Script(_RUN_BTN_JS),
         Script(_UPLOAD_JS),
         Script(_A11Y_JS),
+        *_restore_form_script(),
     )
 
 
@@ -1245,6 +1281,7 @@ async def post(request: Request):
             scenario_name,
             str(params.scenario_path(scenario_name)),
             started_at=started_at,
+            form=form,
         )
         # The run is built from the snapshot, not from the handler's Namespace,
         # so what runs is exactly what the snapshot (and its export) records.
