@@ -170,6 +170,9 @@ read as no parameters, so every key takes its default. The
 the object it encodes, with all its keys, and an unreadable value by an
 empty object, before the setter's keys are written.
 
+Most scenarios set only `number`, `v0`, `radius`, `use_flow_spawning` and
+`use_premovement`; [Examples](#examples) shows each.
+
 | Key | Default | Range | Effect |
 |---|---|---|---|
 | `number` | `simulationParams.number`, else 10 | ≥ 0 | Agents placed at the start by number, or added over the window with `use_flow_spawning`. Not read, and not checked, in the percentage modes. No value is taken from another spawn area. |
@@ -177,13 +180,13 @@ empty object, before the setter's keys are written.
 | `percentage` | 50 (`by_percentage`), 100 (`fill_area`, `until_full`) | whole percent, clamped to 1–100 | Share of the capacity estimate that the percentage modes use (see `distribution_mode`). The value is read as `int(float(value))`; a value that is not a number takes the default, without a message. Not read with `by_number`. |
 | `v0` | `simulationParams.v0`, else 1.25 m/s | finite, ≥ 0 | Clear-air walking speed, for every movement model (FDS+Evac `VEL_MEAN`; 1.2 before). Every smoke, irritant and zone factor multiplies this value. |
 | `v0_distribution` | `"constant"` | `constant`, `gaussian` | `gaussian` draws per agent with `v0_std`; draws are clipped to [0.1, 5.0] m/s. Any other string, such as `"normal"`, gives the constant `v0`, without a message. Only agents placed at the start are drawn; flow-spawned agents take `v0`. |
-| `v0_std` | none | not checked; draws clipped to [0.1, 5.0] m/s | Spread of the Gaussian draw. A `v0_std` of 0 or `null` gives the constant `v0`. A negative value stops the run with numpy's `ValueError: scale < 0`, and a string with a `TypeError`; neither names the distribution. |
+| `v0_std` | none | not checked; draws clipped to [0.1, 5.0] m/s | Spread of the Gaussian draw. A `v0_std` of 0 or `null` gives the constant `v0`. A negative value stops the run with numpy's `ValueError: scale < 0`, and a string with a `TypeError` or `ValueError`; neither names the distribution. |
 | `radius` | `simulationParams.radius`, else 0.2 m | finite, > 0 | Body radius: packing, spawn spacing, and the `radius + 0.5` m arrival distance at a checkpoint (an agent also arrives when its centre is inside the checkpoint polygon). An agent leaves at an exit when its centre enters the exit polygon or comes within 0.03 m of it. |
 | `radius_distribution` | `"constant"` | `constant`, `gaussian` | `gaussian` draws per agent with `radius_std`; any other string gives the constant `radius`, without a message. The draws are clipped to [0.1 m, b], where b = min(max(`radius` + 3 × `radius_std`, 0.1), 1.0) m is the radius placement spaces agents for. Only agents placed at the start are drawn; flow-spawned agents take `radius`. |
 | `radius_std` | none | not checked; draws clipped to [0.1 m, b] (see `radius_distribution`) | Spread of the Gaussian draw. A `radius_std` of 0 or `null` gives the constant `radius`. A negative or string value fails as for `v0_std`. |
 | `use_premovement` | constant 10 s when no pre-movement key is set, with a warning | `true`, `false` | Delay before the agent starts moving. Setting any pre-movement key, including `use_premovement: false`, turns the default off. A `premovement_*` key such as `premovement_param_a` without `use_premovement: true` therefore gives no delay at all, without a message: the key removes the 10 s default and `use_premovement` reads as `false`. Not applied to flow-spawned agents. |
 | `premovement_distribution` | `"gamma"` | `gamma`, `lognormal`, `weibull`, `uniform`, `constant` | Distribution of the delay. Another value stops the run with a `ValueError` when the delays are drawn. |
-| `premovement_param_a`, `premovement_param_b` | the preset of the distribution | not range-checked | Override the preset. Set both for the override to take effect; `constant` needs only `premovement_param_a`. The two values mean different things per distribution (gamma: shape and scale [s]; lognormal: mean and standard deviation of ln *t*; Weibull: scale [s] and shape; uniform: lower and upper bound [s]; constant: delay [s]). The presets and their sources are in [Coming from FDS+Evac](coming-from-fds-evac.md#pre-movement-parameters). |
+| `premovement_param_a`, `premovement_param_b` | the preset of the distribution | not range-checked | Override the preset. Set both for the override to take effect; `constant` needs only `premovement_param_a`. The two values mean different things per distribution; the meanings, presets and sources are in [Coming from FDS+Evac](coming-from-fds-evac.md#pre-movement-parameters). |
 | `premovement_preset` | none | one of the 16 `cvm2_*` names | A constant pre-travel time from C/VM2 Table 3.3 ([list](coming-from-fds-evac.md#cvm2-table-33-presets)). Cannot be combined with `premovement_distribution`, `premovement_param_a/b` or `use_premovement: false`. `premovement_offset_s` adds detection and notification. |
 | `premovement_seed` | none | not checked | Separate seed for the pre-movement draw. When set, the pre-movement times are the same for every run seed. |
 | `premovement_offset_s` | none | ≥ 0 s | A fixed delay added to every agent's drawn pre-movement time, so nobody starts earlier. It stands for FDS+Evac's detection time, and it is also the way to let the fire develop before the alarm (Pathfinder's time offset for FDS results): the FDS clock is not shifted, agents are in the building from ignition, and while they wait the smoke update skips them, so they accrue no dose (see [Spawn areas](#spawn-areas-distributionsidparameters)). `pyfds-evac init` writes it. It needs `use_premovement: true`, and without it the run stops with a `ValueError`. Applies with and without `journeys`; ignored with flow spawning. |
@@ -234,21 +237,7 @@ They do not read `v0_distribution`, `v0_std`, `radius_distribution` or
 `radius_std`: a flow agent takes `v0` and `radius` as written. They have no
 pre-movement, so every `premovement_*` key is ignored for them. The
 three knowledge keys reach a flow agent only when it has a routed path.
-
-### Keys the run does not read
-
-The loader does not check `parameters` against a list of keys. A key that
-the run does not know is dropped without a message: `{"numbr": 5}` leaves
-`number` at 10. The same holds for the `routing` block, where only the
-removed keys in `REMOVED_ROUTING_KEYS` are refused. A misspelled key
-therefore changes nothing.
-
-- `fahy_row` and `fahy_class` are study labels. The package ignores them;
-  only the scripts in `assets/station_fahy/` and `assets/station_nist/` read
-  them.
-- `queues`, `waiting_sets`, `obstacles`, `background_image` and
-  `project_version` at the top level are not read by the run.
-- `type` in a distribution has no reader in `pyfds_evac/core`.
+Agents from `initial_number` are placed at the start and read every key.
 
 ### Examples
 
@@ -280,7 +269,8 @@ A lognormal pre-movement time with a 60 s detection offset. The two
 parameters are the lognormal preset (Lovreglio et al., 2019, Table 3,
 Business Cluster 1; see
 [Coming from FDS+Evac](coming-from-fds-evac.md#pre-movement-parameters));
-`premovement_offset_s` needs `use_premovement: true`:
+its median pre-movement time is about 98 s (e^4.586) before the 60 s
+offset. `premovement_offset_s` needs `use_premovement: true`:
 
 ```json
 "parameters": {"number": 20, "use_premovement": true,
@@ -296,6 +286,21 @@ rerouting and is refused with `--smoke-blind`:
 "parameters": {"number": 10, "familiarity": "discovery",
                "entrance": "jps-exits_0", "no_known_exit": "explore"}
 ```
+
+## Keys the run does not read
+
+The loader does not check `parameters` against a list of keys. A key that
+the run does not know is dropped without a message: `{"numbr": 5}` leaves
+`number` at 10. The same holds for the `routing` block, where only the
+removed keys in `REMOVED_ROUTING_KEYS` are refused. A misspelled key
+therefore changes nothing.
+
+- `fahy_row` and `fahy_class` are study labels. The package ignores them;
+  only the scripts in `assets/station_fahy/` and `assets/station_nist/` read
+  them.
+- `queues`, `waiting_sets`, `obstacles`, `background_image` and
+  `project_version` at the top level are not read by the run.
+- `type` in a distribution has no reader in `pyfds_evac/core`.
 
 ## Exits: `exits.<id>`
 

@@ -108,35 +108,39 @@ DEFAULTS = [
     # scenario-json: spawn-area defaults
     (
         SCENARIO_JSON,
-        "| `number` | `simulationParams.number`, else 10",
+        "| `number` | `simulationParams.number`, else 10 |",
         lambda: DEFAULT_SPAWN_PARAMS["number"],
     ),
     (
         SCENARIO_JSON,
-        "| `radius` | `simulationParams.radius`, else 0.2",
+        "| `radius` | `simulationParams.radius`, else 0.2 m |",
         lambda: DEFAULT_SPAWN_PARAMS["radius"],
     ),
     (
         SCENARIO_JSON,
-        "| `v0` | `simulationParams.v0`, else 1.25",
+        "| `v0` | `simulationParams.v0`, else 1.25 m/s |",
         lambda: DEFAULT_SPAWN_PARAMS["v0"],
     ),
     (
         SCENARIO_JSON,
-        "| `percentage` | 50",
+        "| `percentage` | 50 (`by_percentage`)",
         lambda: _get_distribution_percentage({"distribution_mode": "by_percentage"}),
     ),
     (
         SCENARIO_JSON,
-        "| `percentage` | 50 (`by_percentage`), 100",
+        "| `percentage` | 50 (`by_percentage`), 100 (`fill_area`",
         lambda: _get_distribution_percentage({"distribution_mode": "fill_area"}),
     ),
     (
         SCENARIO_JSON,
-        "| `flow_start_time`, `flow_end_time` | 0 s, 10",
+        "| `flow_start_time`, `flow_end_time` | 0 s, 10 s |",
         lambda: _spawn_params({}, DEFAULT_SPAWN_PARAMS)["flow_end_time"],
     ),
-    (SCENARIO_JSON, "| `use_premovement` | constant 10", lambda: DEFAULT_PREMOVEMENT_S),
+    (
+        SCENARIO_JSON,
+        "| `use_premovement` | constant 10 s when",
+        lambda: DEFAULT_PREMOVEMENT_S,
+    ),
     # smoke-speed: SmokeSpeedConfig fields
     (SMOKE, "| `alpha` | `0.706` |", lambda: SmokeSpeedConfig().alpha),
     (SMOKE, "| `beta` | `-0.057` |", lambda: SmokeSpeedConfig().beta),
