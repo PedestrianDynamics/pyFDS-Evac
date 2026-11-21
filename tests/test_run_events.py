@@ -27,6 +27,7 @@ import pytest
 from pyfds_evac import cli
 from pyfds_evac.config import PARAMETERS, effective_configuration, events
 from pyfds_evac.config.parameters import (
+    _SECTIONED_ADVANCED,
     GUI_HIDDEN,
     GUI_SECTIONS,
     TIER_ADVANCED,
@@ -223,6 +224,7 @@ def test_applicability_covers_every_run_option():
 
 def test_common_tier_is_the_gui_sections():
     sections = {dest for _title, dests in GUI_SECTIONS for dest in dests}
+    sections -= _SECTIONED_ADVANCED
     common = {p.dest for p in PARAMETERS if p.tier == TIER_COMMON}
     assert common == sections
     advanced = {p.dest for p in PARAMETERS if p.tier == TIER_ADVANCED}

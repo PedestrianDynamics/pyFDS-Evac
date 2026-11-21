@@ -624,6 +624,9 @@ PARAMETERS: tuple[Parameter, ...] = (
         action="store_true",
         default=False,
         python="run_scenario(vis_model=VisibilityModel.clear_air(...))",
+        gui_help=(
+            "Build the clear-air sign-visibility map even when every agent starts knowing the building; there it changes nothing. Decks with discovery agents get it without asking. Cannot be combined with No visibility or an FDS directory."
+        ),
     ),
     Parameter(
         "no_visibility",
@@ -636,6 +639,9 @@ PARAMETERS: tuple[Parameter, ...] = (
         default=False,
         python="run_scenario(vis_model=None)",
         python_default=True,
+        gui_help=(
+            "Turn sign visibility off: agents learn each neighbouring node by contact. Faster, and not a fire scenario."
+        ),
     ),
     Parameter(
         "vis_cell_size",
@@ -649,6 +655,9 @@ PARAMETERS: tuple[Parameter, ...] = (
         unit="m",
         python="VisibilityModel.clear_air(cell_size_m=)",
         checked="> 0, when the clear-air model is built",
+        gui_help=(
+            "Cell size of the clear-air visibility grid. Keep it below the thinnest wall that must block sight."
+        ),
     ),
     Parameter(
         "max_sign_distance",
@@ -662,6 +671,9 @@ PARAMETERS: tuple[Parameter, ...] = (
         unit="m",
         python="VisibilityModel(max_sign_distance_m=)",
         checked="finite > 0, when a visibility model is built",
+        gui_help=(
+            "Farthest distance from which a sign can be read, even in clear air. A sign's own max_distance overrides it."
+        ),
     ),
     Parameter(
         "disable_tenability",
@@ -816,6 +828,9 @@ PARAMETERS: tuple[Parameter, ...] = (
         "(default there: fatal)",
         choices=tuple(HEAT_ENDPOINTS),
         python=f"{_HEAT_MODEL}.endpoint",
+        gui_help=(
+            "Convective method: blank uses the ISO 13571 law chosen by Heat clothing, otherwise an SFPE endpoint (tolerance, injury, fatal) at which heat FED = 1. Total-flux method: the endpoint selects the dose D, blank means fatal."
+        ),
     ),
     Parameter(
         "heat_fed_method",
@@ -832,6 +847,9 @@ PARAMETERS: tuple[Parameter, ...] = (
         choices=HEAT_FED_METHODS,
         default=HEAT_FED_METHOD,
         python=f"{_HEAT_MODEL}.method",
+        gui_help=(
+            "convective (default) uses the ISO or SFPE hot-air law; total-flux uses the skin heat flux of SFPE Eq. 63.49 and the radiant and layer settings below."
+        ),
     ),
     Parameter(
         "heat_emissivity",
@@ -844,6 +862,9 @@ PARAMETERS: tuple[Parameter, ...] = (
         default=DEFAULT_HEAT_EMISSIVITY,
         python=f"{_HEAT_MODEL}.emissivity",
         checked="[0, 1], when the heat model is built",
+        gui_help=(
+            "Emissivity of the gas at the head, 0 to 1. Used only with the total-flux method, the gas radiant source and the smoke regime; an assumption."
+        ),
     ),
     Parameter(
         "heat_convective_coefficient",
@@ -858,6 +879,9 @@ PARAMETERS: tuple[Parameter, ...] = (
         unit="W/m²/K",
         python=f"{_HEAT_MODEL}.convective_coefficient",
         checked="finite >= 0, when the heat model is built",
+        gui_help=(
+            "Convective heat transfer coefficient h. Total-flux method only; an assumption."
+        ),
     ),
     Parameter(
         "heat_skin_temperature",
@@ -871,6 +895,7 @@ PARAMETERS: tuple[Parameter, ...] = (
         unit="°C",
         python=f"{_HEAT_MODEL}.skin_temperature_celsius",
         checked="finite, when the heat model is built",
+        gui_help=("Fixed skin temperature. Total-flux method only; an assumption."),
     ),
     Parameter(
         "heat_radiant_source",
@@ -888,6 +913,9 @@ PARAMETERS: tuple[Parameter, ...] = (
         choices=HEAT_RADIANT_SOURCES,
         default=HEAT_RADIANT_SOURCE,
         python=f"{_HEAT_MODEL}.radiant_source",
+        gui_help=(
+            "Radiant term of the total-flux method: gas (default), integrated-intensity (needs the u factor) or radiometer (needs the orientation)."
+        ),
     ),
     Parameter(
         "heat_u_factor",
@@ -901,6 +929,9 @@ PARAMETERS: tuple[Parameter, ...] = (
         type=_u_factor,
         python=f"{_HEAT_MODEL}.u_factor",
         checked="[0.25, 1], at parse",
+        gui_help=(
+            "Factor f from 0.25 to 1 applied to the FDS integrated intensity. Required with the integrated-intensity source; no default."
+        ),
     ),
     Parameter(
         "heat_radiometer_orientation",
@@ -913,6 +944,9 @@ PARAMETERS: tuple[Parameter, ...] = (
         type=_orientation,
         python=f"{_HEAT_MODEL}.radiometer_orientation",
         checked="x,y,z, at parse",
+        gui_help=(
+            "Direction x,y,z the radiometer plate faces, for example 0,0,1 for up. Required with the radiometer source; no default."
+        ),
     ),
     Parameter(
         "heat_regime",
@@ -930,6 +964,9 @@ PARAMETERS: tuple[Parameter, ...] = (
         choices=HEAT_FLUX_REGIMES,
         default=HEAT_REGIME,
         python=f"{_HEAT_MODEL}.regime",
+        gui_help=(
+            "Where the head is, total-flux method only: smoke (default) or layer (clear air below a hot layer; needs the three layer settings). With the integrated-intensity or radiometer source the layer term is not added."
+        ),
     ),
     Parameter(
         "heat_layer_height",
@@ -941,6 +978,9 @@ PARAMETERS: tuple[Parameter, ...] = (
         unit="m",
         python=f"{_HEAT_MODEL}.layer_height_m, layer FdsHeatField",
         checked="finite, with --enable-heat-fed and --heat-regime layer",
+        gui_help=(
+            "Height of the TEMPERATURE slice read as the hot layer. Required with the layer regime; no default."
+        ),
     ),
     Parameter(
         "heat_view_factor",
@@ -952,6 +992,9 @@ PARAMETERS: tuple[Parameter, ...] = (
         type=float,
         python=f"{_HEAT_MODEL}.view_factor",
         checked="[0, 1], when the heat model is built",
+        gui_help=(
+            "View factor from the skin to the layer, 0 to 1. Required with the layer regime; no default."
+        ),
     ),
     Parameter(
         "heat_layer_emissivity",
@@ -962,6 +1005,9 @@ PARAMETERS: tuple[Parameter, ...] = (
         type=float,
         python=f"{_HEAT_MODEL}.layer_emissivity",
         checked="[0, 1], when the heat model is built",
+        gui_help=(
+            "Emissivity of the hot layer, 0 to 1. Required with the layer regime; no default."
+        ),
     ),
     Parameter(
         "heat_fed_threshold",
@@ -1092,8 +1138,34 @@ GUI_SECTIONS: tuple[tuple[str, tuple[str, ...]], ...] = (
             "heat_fed_threshold",
         ),
     ),
+    (
+        "Heat exposure",
+        (
+            "heat_endpoint",
+            "heat_fed_method",
+            "heat_emissivity",
+            "heat_convective_coefficient",
+            "heat_skin_temperature",
+            "heat_radiant_source",
+            "heat_u_factor",
+            "heat_radiometer_orientation",
+            "heat_regime",
+            "heat_layer_height",
+            "heat_view_factor",
+            "heat_layer_emissivity",
+        ),
+    ),
     ("Rerouting", ("enable_rerouting", "reroute_interval", "replay_exits")),
-    ("Visibility", ("vis_cache",)),
+    (
+        "Visibility",
+        (
+            "vis_cache",
+            "clear_air_visibility",
+            "no_visibility",
+            "vis_cell_size",
+            "max_sign_distance",
+        ),
+    ),
     (
         "Output files",
         (
@@ -1118,8 +1190,24 @@ TIER_ADVANCED = "advanced"
 #: The tiers of :attr:`Parameter.tier`: common options follow the GUI's
 #: sections, advanced ones are the rest (maintainer decision, #485).
 TIERS: tuple[str, ...] = (TIER_COMMON, TIER_ADVANCED)
-_COMMON: frozenset[str] = frozenset(
-    dest for _title, dests in GUI_SECTIONS for dest in dests
+#: Options the GUI shows in a collapsed section that stay advanced.
+_SECTIONED_ADVANCED: frozenset[str] = frozenset(
+    {
+        "clear_air_visibility",
+        "no_visibility",
+        "vis_cell_size",
+        "max_sign_distance",
+    }
+    | {
+        dest
+        for title, dests in GUI_SECTIONS
+        if title == "Heat exposure"
+        for dest in dests
+    }
+)
+_COMMON: frozenset[str] = (
+    frozenset(dest for _title, dests in GUI_SECTIONS for dest in dests)
+    - _SECTIONED_ADVANCED
 )
 
 #: Flags the GUI form does not show.
@@ -1148,4 +1236,9 @@ GUI_UNIT_LABELS: tuple[str, ...] = (
     "smoke_slice_height",
     "reroute_interval",
     "o2_threshold_percent",
+    "vis_cell_size",
+    "max_sign_distance",
+    "heat_convective_coefficient",
+    "heat_skin_temperature",
+    "heat_layer_height",
 )

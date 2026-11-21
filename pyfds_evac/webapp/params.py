@@ -20,6 +20,7 @@ from fasthtml.common import (
     NotStr,
     Optgroup,
     Option,
+    P,
     Select,
     Span,
 )
@@ -78,7 +79,15 @@ _FIELD = "display:flex;flex-direction:column;gap:6px"
 _GROTESK = "font-family:'Space Grotesk',sans-serif"
 _MONO = "font-family:'JetBrains Mono',monospace"
 
-_GROUP_ACCENT = ["#F4C430", "#FF8A3D", "#E01E37", "#C81D4E", "#F4C430", "#FFB020"]
+_GROUP_ACCENT = [
+    "#F4C430",
+    "#FF8A3D",
+    "#E01E37",
+    "#E8590C",
+    "#C81D4E",
+    "#F4C430",
+    "#FFB020",
+]
 
 # Sections, hidden flags, units and help come from the configuration model;
 # the form keeps no option metadata of its own.
@@ -622,11 +631,33 @@ def _field(action: argparse.Action) -> Any:
     )
 
 
+#: One-line notes under a section's summary, keyed by section title.
+_SECTION_INTRO = {
+    "Heat exposure": (
+        "Used only when 'Enable heat fed' is on and the FDS folder has a "
+        "temperature slice."
+    ),
+}
+
+
 def _details_block(
     title: str, accent: str, fields: list[Any], open_: bool = False
 ) -> NotStr:
+    intro = _SECTION_INTRO.get(title)
+    note = (
+        [
+            P(
+                intro,
+                cls="section-intro",
+                style="margin:0;font-size:12px;color:var(--ink-faint)",
+            )
+        ]
+        if intro
+        else []
+    )
     body = to_xml(
         Div(
+            *note,
             *fields,
             style="display:flex;flex-direction:column;gap:13px;padding:14px 4px 4px",
         )

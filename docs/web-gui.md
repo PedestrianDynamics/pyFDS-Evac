@@ -212,26 +212,28 @@ header, previews the current form settings instead. See
 The form is built from the `run.py` parser, so every option has a field.
 Choice fields with no parser default show "default": for `heat_clothing` that
 means clothed, ISO 13571 Eq. (9), and a blank `heat_fed_threshold` follows
-`fed_threshold`
-([#311](https://github.com/PedestrianDynamics/pyFDS-Evac/issues/311)). The fields are grouped:
+`fed_threshold`. The fields are grouped:
 
 | Group | Fields |
 |---|---|
 | Core | scenario (pick or upload), seed (0 to 2**32 - 1); a blank seed uses the scenario's `baseSeed`, as `run.py` does, and 42 if the scenario sets none ([Usage](usage.md)) |
-| Smoke | `fds_dir` (with a folder browser), `constant_extinction`, `smoke_update_interval`, `smoke_slice_height` |
+| Smoke | `fds_dir` (with a folder browser), `constant_extinction`, `smoke_update_interval`, `smoke_slice_height`, `allow_fds_horizon_hold`, `require_fds_coverage`, `smoke_blind` |
 | FED & Tenability | `disable_tenability`, `incapacitation_mode`, `susceptibility_sigma`, `enable_fic_speed`, `fed_threshold`, `o2_threshold_percent`, `fed_activity_level`, `enable_heat_fed`, `heat_incapacitation_mode`, `heat_susceptibility_sigma`, `heat_clothing`, `heat_fed_threshold` |
-| Rerouting | `enable_rerouting`, `reroute_interval` |
-| Visibility | `vis_cache`; blank means no cache |
+| Heat exposure (collapsed) | the options of the heat dose beyond the five above, used only with `enable_heat_fed`: `heat_endpoint` (blank: the law of `heat_clothing`), `heat_fed_method` (`convective`), `heat_emissivity`, `heat_convective_coefficient` (W/m²/K), `heat_skin_temperature` (°C), `heat_radiant_source` (`gas`), `heat_u_factor`, `heat_radiometer_orientation`, `heat_regime` (`smoke`), `heat_layer_height` (m), `heat_view_factor`, `heat_layer_emissivity`. Defaults are the model's; a blank field without one is unset. The run validates the combination and warns about a setting that the chosen method does not use |
+| Rerouting | `enable_rerouting`, `reroute_interval`, `replay_exits` |
+| Visibility (collapsed) | `vis_cache` (blank means no cache), `clear_air_visibility`, `no_visibility`, `vis_cell_size` (m), `max_sign_distance` (m) |
 | Output files | **Output folder**; the SQLite with its run manifest, the five CSVs and the scenario bundle (`<run folder>/bundle`) are written to the run's folder (see [Output folders](#output-folders)) |
-| Other (collapsed) | every remaining option: `clear_air_visibility`, `no_visibility`, `vis_cell_size`, `max_sign_distance`, and the heat options `heat_endpoint`, `heat_fed_method`, `heat_emissivity`, `heat_convective_coefficient`, `heat_skin_temperature`, `heat_radiant_source`, `heat_u_factor`, `heat_regime`, `heat_layer_height`, `heat_view_factor`, `heat_layer_emissivity` |
+| Other (collapsed) | every remaining option: `debug`, `results_only` (the **Results only** button) |
 
-Four `run.py` options have no field: `--print-summary`, `--export-only`,
-`--inspect-fds` and `--cleanup`. Options with a fixed set of values are
-dropdowns. The option meanings and defaults are on [Usage](usage.md).
-
-The flags under "Other" are not yet next to the group they belong to
-([#311](https://github.com/PedestrianDynamics/pyFDS-Evac/issues/311),
-[#270](https://github.com/PedestrianDynamics/pyFDS-Evac/issues/270)).
+These `run.py` options have no field and stay at their defaults in every GUI
+run: `print_summary`, `export_only`, `inspect_fds` and `cleanup` (off), the
+exposure summary with `output_fed_summary` (not written), `summary_fed_low`
+(0.3), `summary_fed_high` (1.0), `summary_visibility_c` (3.0) and
+`summary_visibility_limit_m` (10 m), and the two CSVs
+`output_pre_evacuation_times` and `output_knowledge_history` (not written), and `show_config`. The
+GUI refuses a post that carries one of them. Options with a fixed set of
+values are dropdowns. The option meanings and defaults are on
+[Usage](usage.md).
 
 ## Runs
 

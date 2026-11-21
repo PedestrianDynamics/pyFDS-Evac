@@ -3869,3 +3869,92 @@ def test_incapacitation_preview_axis_grows_with_the_median():
     js = app_mod._TENABILITY_JS
     assert "var fedMax = Math.max(1.8, 2 * median)" in js
     assert "/ 1.8" not in js
+
+
+class TestFireOptionSections:
+    """#311: visibility and heat options sit in their own groups, with units."""
+
+    HEAT = (
+        "heat_endpoint",
+        "heat_fed_method",
+        "heat_emissivity",
+        "heat_convective_coefficient",
+        "heat_skin_temperature",
+        "heat_radiant_source",
+        "heat_u_factor",
+        "heat_radiometer_orientation",
+        "heat_regime",
+        "heat_layer_height",
+        "heat_view_factor",
+        "heat_layer_emissivity",
+    )
+    VISIBILITY = (
+        "vis_cache",
+        "clear_air_visibility",
+        "no_visibility",
+        "vis_cell_size",
+        "max_sign_distance",
+    )
+
+    @staticmethod
+    def _sections():
+        from fasthtml.common import to_xml
+
+        from pyfds_evac.webapp.params import build_form
+
+        html = to_xml(build_form("/run"))
+        found = {}
+        for block in html.split("<details")[1:]:
+            title = re.search(r"<span[^>]*>([^<]+)</span>", block).group(1)
+            found[title] = set(re.findall(r'name="(\w+)"', block))
+        return found, html
+
+    def test_options_sit_in_their_groups(self):
+        sections, _ = self._sections()
+        assert set(self.HEAT) <= sections["Heat exposure"]
+        assert set(self.VISIBILITY) <= sections["Visibility"]
+        assert "enable_heat_fed" in sections["FED & Tenability"]
+        assert not set(self.HEAT + self.VISIBILITY) & sections.get("Other", set())
+
+    def test_heat_section_says_when_it_applies(self):
+        _, html = self._sections()
+        block = html.split("<details")[
+            ["Heat exposure" in b for b in html.split("<details")].index(True)
+        ]
+        assert "Used only when 'Enable heat fed' is on" in block
+        assert "Used only when Enable heat FED" not in html.replace(block, "")
+
+    def test_units_and_help_are_shown_without_flag_syntax(self):
+        _, html = self._sections()
+        for dest, unit in (
+            ("max_sign_distance", "(m)"),
+            ("heat_skin_temperature", "(°C)"),
+            ("heat_convective_coefficient", "(W/m²/K)"),
+        ):
+            label = re.search(rf'<label[^>]*for="{dest}"[^>]*>(.*?)</label>', html)
+            assert unit in label.group(1).replace(" ", ""), dest
+        for dest in self.HEAT + self.VISIBILITY:
+            tip = re.search(rf'id="tip-{dest}">([^<]*)<', html)
+            assert tip and "--" not in tip.group(1), dest
+
+    def test_tiers_stay_advanced(self):
+        from pyfds_evac.config.parameters import parameter
+
+        for dest in self.HEAT + self.VISIBILITY[1:]:
+            assert parameter(dest).tier == "advanced", dest
+        assert parameter("vis_cache").tier == "common"
+
+    def test_hidden_and_grouped_options_are_recorded_in_the_docs(self):
+        docs = (pathlib.Path(__file__).parents[1] / "docs" / "web-gui.md").read_text()
+        for dest in sorted(_rt_hidden() - {"help"}):
+            assert f"`{dest}`" in docs, dest
+        for dest in self.HEAT + self.VISIBILITY:
+            assert f"`{dest}`" in docs, dest
+
+    def test_every_rendered_field_is_in_the_docs_table(self):
+        docs = (pathlib.Path(__file__).parents[1] / "docs" / "web-gui.md").read_text()
+        sections, _ = self._sections()
+        for title, names in sections.items():
+            for dest in sorted(names - {"scenario", "seed", "output_base"}):
+                assert f"`{dest}`" in docs, (title, dest)
+        assert "`show_config`" in docs
