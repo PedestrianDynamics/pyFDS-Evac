@@ -4550,14 +4550,31 @@ title="Copy code"
 &lt;/div>
 &lt;/div>
 &lt;h2>Keys the run does not read&lt;span class="hx-absolute -hx-mt-20" id="keys-the-run-does-not-read">&lt;/span>
-&lt;a href="#keys-the-run-does-not-read" class="subheading-anchor" aria-label="Permalink for this section">&lt;/a>&lt;/h2>&lt;p>A key in &lt;code>parameters&lt;/code> or &lt;code>routing&lt;/code> that the run does not read is dropped:
-&lt;code>{&amp;quot;numbr&amp;quot;: 5}&lt;/code> leaves &lt;code>number&lt;/code> at 10. The loader logs one warning per
-distribution and key, or per &lt;code>routing&lt;/code> key, naming it, and goes on; it is
-not an error. The keys in &lt;code>REMOVED_ROUTING_KEYS&lt;/code> are still refused. A
-misspelled key therefore changes nothing, with one exception: any key
-starting with &lt;code>premovement_&lt;/code> counts as a pre-movement setting and turns the
-10 s default off, so &lt;code>premovement_typo&lt;/code> removes the delay, with the
-warning as the only message.&lt;/p>
+&lt;a href="#keys-the-run-does-not-read" class="subheading-anchor" aria-label="Permalink for this section">&lt;/a>&lt;/h2>&lt;p>A key that the run does not read is dropped: &lt;code>{&amp;quot;numbr&amp;quot;: 5}&lt;/code> in
+&lt;code>parameters&lt;/code> leaves &lt;code>number&lt;/code> at 10. The loader logs one warning per key,
+naming it and where it is, and goes on; it is not an error. It checks
+four places: the keys of &lt;code>distributions.*.parameters&lt;/code>, of &lt;code>routing&lt;/code>, of
+&lt;code>simulationParams&lt;/code>, and the top level of the file. Keys that the
+JuPedSim web app writes and this package does not read
+(&lt;code>project_version&lt;/code>, &lt;code>obstacles&lt;/code>, &lt;code>queues&lt;/code>, &lt;code>waiting_sets&lt;/code> and
+&lt;code>background_image&lt;/code> at the top level; &lt;code>T&lt;/code>, &lt;code>s0&lt;/code> and &lt;code>time_gap&lt;/code> in
+&lt;code>simulationParams&lt;/code>) do not warn.&lt;/p>
+&lt;p>Nothing else is checked, so a misspelled key there gives no message:&lt;/p>
+&lt;ul>
+&lt;li>the entries of &lt;code>exits&lt;/code>, &lt;code>checkpoints&lt;/code>, &lt;code>waypoints&lt;/code> and &lt;code>zones&lt;/code>,
+including the &lt;code>sign&lt;/code> of an exit, checkpoint or waypoint;&lt;/li>
+&lt;li>the journeys (&lt;code>journeys&lt;/code>, &lt;code>journeys_v2&lt;/code>, &lt;code>transitions&lt;/code>,
+&lt;code>waypoint_routing&lt;/code>);&lt;/li>
+&lt;li>the keys of &lt;code>config&lt;/code> other than &lt;code>simulation_settings&lt;/code>, and of
+&lt;code>config.simulation_settings&lt;/code> other than &lt;code>simulationParams&lt;/code>: a
+misspelled &lt;code>baseSeed&lt;/code> there runs with the default seed 42, without a
+warning.&lt;/li>
+&lt;/ul>
+&lt;p>The keys in &lt;code>REMOVED_ROUTING_KEYS&lt;/code> are still refused. A misspelled key
+therefore changes nothing, with one exception: any key starting with
+&lt;code>premovement_&lt;/code> counts as a pre-movement setting and turns the 10 s
+default off, so &lt;code>premovement_typo&lt;/code> removes the delay, with the warning
+as the only message.&lt;/p>
 &lt;ul>
 &lt;li>&lt;code>fahy_row&lt;/code>, &lt;code>fahy_class&lt;/code> and &lt;code>population&lt;/code> are allowed without a
 warning. The run does not read &lt;code>fahy_row&lt;/code> and &lt;code>fahy_class&lt;/code>; only the
