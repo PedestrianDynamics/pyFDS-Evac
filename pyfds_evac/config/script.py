@@ -85,6 +85,8 @@ def _abs_path(value: Any) -> str | None:
 def _output_name(key: str, value: Any) -> str | None:
     """The file name an output option keeps in the script, or None."""
     name = pathlib.PurePath(str(value)).name if value else ""
+    if value and name in ("", ".."):
+        raise ExportError(f"{key}: {value!r} has an empty or '..' output name")
     if key == "output_sqlite":
         return name or _DEFAULT_SQLITE
     return name or None
@@ -93,10 +95,19 @@ def _output_name(key: str, value: Any) -> str | None:
 def export_options(opts: Mapping[str, Any], seed: Any) -> dict[str, Any]:
     """The non-path options the script passes, in a stable order."""
     options = {"seed": seed}
+    owners: dict[str, str] = {}
     for key in sorted(opts):
         if key in _PATH_KEYS or key == "seed" or key in _COMMAND_ONLY:
             continue
         options[key] = _output_name(key, opts[key]) if key in OUTPUT_KEYS else opts[key]
+        name = options[key] if key in OUTPUT_KEYS else None
+        if name is None:
+            continue
+        if name in owners:
+            raise ExportError(
+                f"{owners[name]} and {key} share the output name {name!r}"
+            )
+        owners[name] = key
     return options
 
 

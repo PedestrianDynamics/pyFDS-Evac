@@ -107,3 +107,26 @@ def test_the_script_sqlite_has_the_side_tables(runs):
     expected = {"agent_scalars", "agent_exits", "agent_distributions"}
     assert expected <= _tables(gui_dir / name)
     assert _tables(script_dir / name) == _tables(gui_dir / name)
+
+
+@pytest.mark.parametrize(
+    "opts",
+    [
+        {"output_fed_history": "/a/x.csv", "output_smoke_history": "/b/x.csv"},
+        {"output_sqlite": "/a/x.csv", "output_fed_history": "/b/x.csv"},
+    ],
+)
+def test_export_options_refuses_shared_output_name(opts):
+    from pyfds_evac.config.script import ExportError, export_options
+
+    with pytest.raises(ExportError, match="x.csv") as err:
+        export_options(opts, 1)
+    assert all(key in str(err.value) for key in opts)
+
+
+@pytest.mark.parametrize("name", [".", "..", "/", "a/.."])
+def test_export_options_refuses_empty_or_parent_output_name(name):
+    from pyfds_evac.config.script import ExportError, export_options
+
+    with pytest.raises(ExportError, match="export_app_bundle"):
+        export_options({"export_app_bundle": name}, 1)

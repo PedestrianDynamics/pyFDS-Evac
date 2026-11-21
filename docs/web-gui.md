@@ -442,9 +442,6 @@ and will not exist elsewhere.
   key includes the resolved FDS directory (`_make_meta` in
   `pyfds_evac/core/visibility.py`), so a changed `FDS_DIR` or setting makes
   the script rebuild the map and rewrite that file.
-- **Fewer output files.** The script writes the trajectory SQLite and its
-  manifest, not the GUI's CSV histories or app bundle
-  ([#328](https://github.com/PedestrianDynamics/pyFDS-Evac/issues/328)).
 
 ### Preview and run code
 
@@ -590,11 +587,11 @@ scenario sets none ([Usage](usage.md)).
   `blind_spawn_discovery`.
 {{< /details >}}
 
-{{< details title="What the script leaves out, and why" closed="true" >}}
+{{< details title="What the script does differently, and why" closed="true" >}}
 - **Where the output files go.** The output options (`output_sqlite`,
   the CSV histories, `export_app_bundle`) keep only their file names in
   `OPTIONS`; the script writes them into `OUTPUT_DIR`, never into the GUI
-  run's folder
+  run's folder, and writes the same output files the GUI run wrote
   ([#328](https://github.com/PedestrianDynamics/pyFDS-Evac/issues/328)).
   Route-cost history collection stays on (`collect_route_cost_history`), as
   in the GUI.

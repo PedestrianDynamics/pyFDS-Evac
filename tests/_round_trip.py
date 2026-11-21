@@ -92,6 +92,7 @@ def hidden() -> set[str]:
 
 def output_name(key: str, value) -> str | None:
     """The file name the script keeps for output option *key* set to *value*."""
+    # Independent of script._output_name on purpose, so the test can catch drift.
     from pathlib import PurePath
 
     name = PurePath(str(value)).name if value else ""
