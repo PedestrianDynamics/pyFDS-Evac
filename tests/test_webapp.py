@@ -2724,6 +2724,50 @@ class TestTerminalStates:
         assert client.post("/form-state", data={**form, "seed": "12"}).text == ""
 
 
+class TestReloadRestoresTheForm:
+    """#347: after a reload the form shows the settled run's settings."""
+
+    FORM = {"scenario": "ISO-table21", "seed": "11"}
+
+    def _settle(self, client):
+        client.post("/run", data=self.FORM, headers=_HX)
+        _stream_until_terminal(client)
+
+    def test_page_restores_the_submitted_form(self, client):
+        self._settle(client)
+        try:
+            page = client.get("/").text
+            assert "restoreRunForm" in page
+            assert '"seed": "11"' in page
+            assert '"scenario": "ISO-table21"' in page
+        finally:
+            _drop_temp_trajectory()
+            client.post("/clear")
+
+    def test_no_restore_without_a_settled_run(self, client):
+        client.post("/clear")
+        assert "restoreRunForm" not in client.get("/").text
+
+    def test_restored_form_is_not_flagged_as_changed(self, client):
+        self._settle(client)
+        try:
+            assert manager.spec.form["seed"] == "11"
+            same = client.post("/form-state", data=manager.spec.form).text
+            assert "Settings changed" not in same
+        finally:
+            _drop_temp_trajectory()
+            client.post("/clear")
+
+    def test_snapshot_form_is_immutable(self, client):
+        self._settle(client)
+        try:
+            with pytest.raises(TypeError):
+                manager.spec.form["seed"] = "12"
+        finally:
+            _drop_temp_trajectory()
+            client.post("/clear")
+
+
 class TestResultSummary:
     """#321: the finished panel states the outcome in words, then numbers."""
 
