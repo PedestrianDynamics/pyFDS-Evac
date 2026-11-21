@@ -3965,9 +3965,10 @@ file. If only the heat FED ran, the FED history exists and its
 &lt;code>fed_cumulative&lt;/code> column is all zero. Check &lt;code>metrics[&amp;quot;fed_enabled&amp;quot;]&lt;/code>, or the
 &lt;code>FED is disabled&lt;/code> warning
 (&lt;a href="https://github.com/PedestrianDynamics/pyFDS-Evac/issues/137" target="_blank" rel="noopener">#137&lt;/a>).&lt;/li>
-&lt;li>&lt;strong>The progress line counts planned agents.&lt;/strong> With flow spawning it can show
-more agents than the final summary, which counts those actually spawned
-(&lt;a href="https://github.com/PedestrianDynamics/pyFDS-Evac/issues/279" target="_blank" rel="noopener">#279&lt;/a>).&lt;/li>
+&lt;li>&lt;strong>The progress line counts planned agents.&lt;/strong> With flow spawning it names
+its denominator, &lt;code>Evacuated 142/200 planned&lt;/code>, and can show more agents
+than the final summary, which counts those actually spawned. Runs
+without flow sources print &lt;code>Evacuated 1/1&lt;/code>.&lt;/li>
 &lt;/ul></description></item><item><title>Scenario JSON</title><link>https://pedestriandynamics.org/pyFDS-Evac/docs/using/scenario-json/</link><pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate><guid>https://pedestriandynamics.org/pyFDS-Evac/docs/using/scenario-json/</guid><description>
 &lt;p>A scenario is a &lt;code>config.json&lt;/code> plus a &lt;code>geometry.wkt&lt;/code> walkable area, in a
 directory or a ZIP. This page lists the JSON keys that change a result, with
