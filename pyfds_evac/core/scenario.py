@@ -52,6 +52,7 @@ from .agent_params import (
     max_agent_radius,
     parameters_as_dict,
     warn_unknown_parameter_keys,
+    warn_unknown_scenario_keys,
 )
 from .agent_seed import (
     INITIAL_ORIGIN,
@@ -2010,6 +2011,7 @@ def load_scenario(path: str) -> Scenario:
     preference_nodes(data)
     check_distribution_values(data)
     warn_unknown_parameter_keys(data)
+    warn_unknown_scenario_keys(data)
     warn_unknown_routing_keys(data.get("routing"))
 
     sim_settings = data.get("config", {}).get("simulation_settings", {})
