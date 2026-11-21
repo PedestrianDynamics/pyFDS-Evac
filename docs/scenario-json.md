@@ -293,14 +293,32 @@ rerouting and is refused with `--smoke-blind`:
 
 ## Keys the run does not read
 
-A key in `parameters` or `routing` that the run does not read is dropped:
-`{"numbr": 5}` leaves `number` at 10. The loader logs one warning per
-distribution and key, or per `routing` key, naming it, and goes on; it is
-not an error. The keys in `REMOVED_ROUTING_KEYS` are still refused. A
-misspelled key therefore changes nothing, with one exception: any key
-starting with `premovement_` counts as a pre-movement setting and turns the
-10 s default off, so `premovement_typo` removes the delay, with the
-warning as the only message.
+A key that the run does not read is dropped: `{"numbr": 5}` in
+`parameters` leaves `number` at 10. The loader logs one warning per key,
+naming it and where it is, and goes on; it is not an error. It checks
+four places: the keys of `distributions.*.parameters`, of `routing`, of
+`simulationParams`, and the top level of the file. Keys that the
+JuPedSim web app writes and this package does not read
+(`project_version`, `obstacles`, `queues`, `waiting_sets` and
+`background_image` at the top level; `T`, `s0` and `time_gap` in
+`simulationParams`) do not warn.
+
+Nothing else is checked, so a misspelled key there gives no message:
+
+- the entries of `exits`, `checkpoints`, `waypoints` and `zones`,
+  including the `sign` of an exit, checkpoint or waypoint;
+- the journeys (`journeys`, `journeys_v2`, `transitions`,
+  `waypoint_routing`);
+- the keys of `config` other than `simulation_settings`, and of
+  `config.simulation_settings` other than `simulationParams`: a
+  misspelled `baseSeed` there runs with the default seed 42, without a
+  warning.
+
+The keys in `REMOVED_ROUTING_KEYS` are still refused. A misspelled key
+therefore changes nothing, with one exception: any key starting with
+`premovement_` counts as a pre-movement setting and turns the 10 s
+default off, so `premovement_typo` removes the delay, with the warning
+as the only message.
 
 - `fahy_row`, `fahy_class` and `population` are allowed without a
   warning. The run does not read `fahy_row` and `fahy_class`; only the
