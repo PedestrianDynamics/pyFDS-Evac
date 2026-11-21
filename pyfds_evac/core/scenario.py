@@ -2148,6 +2148,9 @@ def run_scenario(
     # An explicit cost config bypasses from_routing_params, so a removed
     # routing key is checked here whatever the overrides (#187).
     check_removed_routing_keys(scenario.raw.get("routing"))
+    # set_agent_params checks only some values; a deck edited through the API
+    # is checked here as a loaded one is (#1033).
+    check_distribution_values(scenario.raw)
     seed = seed if seed is not None else scenario.seed
     if seed_out_of_range(seed):
         raise ValueError(messages.seed_out_of_range(seed))
