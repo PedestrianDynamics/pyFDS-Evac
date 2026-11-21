@@ -592,9 +592,24 @@ Exit throughput throttling has no general test yet
   brought this down to 17 switches and 8 reversals, 5 within 2 s; the
   oscillation is reduced, not removed. Each switch follows the switching
   rule on correct prices.
-- Routes are priced with smoke the agent cannot perceive, including stretches
-  it has never seen
+- **Route choice uses global smoke knowledge, also for discovery agents**
   ([#125](https://github.com/PedestrianDynamics/pyFDS-Evac/issues/125)).
+  The route cost reads the smoke field, with no perception test. For every
+  exit the agent knows, `tau`, travel time and projected FED are measured
+  over the whole remaining route, from the agent's position to the exit
+  (`_measure_route`), including stretches the agent has never seen. With
+  `anticipate` (default `true`, `foresight_horizon_s` = `inf`) each sample
+  is read at the time the agent would reach it, up to the last FDS frame,
+  and `run.py` repeats the choice every 1 s (a `RerouteConfig()` built in
+  Python every 10 s). The ranking is therefore close to the choice of an
+  evacuee who knows the smoke on every route in its map, now and on
+  arrival; it is not an optimum: the arrival clock uses the unimpeded speed,
+  the path is searched on the smoke at decision time, the candidate
+  paths are limited and the switching rule can keep a worse exit. It makes no statement about what an occupant perceives of
+  the smoke. Which exits and routes a discovery agent knows is limited by
+  perception
+  ([Wayfinding](/models/wayfinding.md#deviations-from-the-literature)).
+  `tau` stays in the ranking on this reading.
 - An exit is priced on its searched path (the least-smoky one under the gate),
   and on up to two more only after that one is refused
   ([#185](https://github.com/PedestrianDynamics/pyFDS-Evac/issues/185)).

@@ -362,8 +362,11 @@ movie.
   sampling height; it would need them before a smoke variant is run.
 - **Route choice is not perception-limited.** Among the exits it knows, a
   discovery agent prices smoke over legs it has never seen
-  ([#125](https://github.com/PedestrianDynamics/pyFDS-Evac/issues/125)).
-  In clear air this changes nothing here.
+  ([#125](https://github.com/PedestrianDynamics/pyFDS-Evac/issues/125)),
+  so its choice among known exits uses global smoke knowledge
+  ([Wayfinding](/models/wayfinding.md#deviations-from-the-literature)).
+  Map growth, which this page checks, goes through the sign-legibility
+  test. In clear air this changes nothing here.
 - **Labels.** `routes.csv` records an agent's first exit as `initial`. A
   later change of exit is labelled by its cause; in clear air that is
   `learned_exit` or `shorter_path`, not `smoke_reroute`

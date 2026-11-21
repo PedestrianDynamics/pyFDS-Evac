@@ -280,7 +280,7 @@ for non-visible doors (`:16796`) it vanishes on this deck, because both
 corridors are axis-aligned and the L1 distance equals the polyline exactly. The
 sign and size of the bias on other geometries have not been measured.
 
-### Route choice is an optimality bound, not a perception-limited model
+### Route choice uses global smoke knowledge, not a perception-limited model
 
 Issue [#125](https://github.com/PedestrianDynamics/pyFDS-Evac/issues/125). Two assumptions
 apply to the same agent on the same tick and point in opposite directions:
@@ -298,16 +298,17 @@ apply to the same agent on the same tick and point in opposite directions:
   map never touches it.
 
 These are different kinds of knowledge — topology versus state — so it is not a
-formal contradiction. It is still not a coherent position, and it is sharpest
-exactly where the discovery tier's modelling is most careful.
+formal contradiction. It is still an unequal treatment of the two kinds of
+knowledge, and it is sharpest exactly where the discovery tier's modelling
+is most careful.
 
 **What this affects.** *Not* map growth: what an agent learns and when runs
-through `VisibilityModel` alone, so results about map expansion, exploration
+through `VisibilityModel` when the run has one, so results about map expansion, exploration
 order, wander behaviour and the lost-exit failure mode stand. What it undercuts
 is any claim that a **discovery agent's route choice** is perception-limited. It
 is not.
 
-**So name what the model is.** Route choice here is an **optimality bound**:
+**So name what the model is.** Route choice here uses **global smoke knowledge**:
 what an evacuee with perfect knowledge of the smoke field would choose *over the
 part of the building it happens to know*. Not "what a perfectly informed
 evacuee would choose" — the topology restriction is real and still binds. That
@@ -315,9 +316,10 @@ bound is a legitimate and useful thing to publish, and the discovery tier
 remains a perception-limited model of *wayfinding*; but the two are different
 claims and only one of them is about smoke.
 
-Nothing is fixed here. `foresight_horizon_s` is the one lever already shipped
-that bounds half of it (the temporal half); it defaults to `inf`. #125 records
-the three options and evaluates none.
+**Decision (2026-11-21, #125): accept and label.** `tau` stays in the ranking
+and the engine is unchanged. `foresight_horizon_s` is the one lever already
+shipped that bounds half of it (the temporal half); it defaults to `inf`.
+See [Models › Routing, Limitations](/models/routing.md#limitations).
 
 ### One asymmetry favours the exit the agent already walks to
 
@@ -736,7 +738,7 @@ it alone.
   the crossover itself is not modelled away.
 - **[#125](https://github.com/PedestrianDynamics/pyFDS-Evac/issues/125) — route
   choice is not perception-limited.** See
-  [Route choice is an optimality bound](#route-choice-is-an-optimality-bound-not-a-perception-limited-model).
+  [Route choice uses global smoke knowledge](#route-choice-uses-global-smoke-knowledge-not-a-perception-limited-model).
   It bounds what the discovery tier can be said to demonstrate about route
   choice; it does not touch map growth.
 
