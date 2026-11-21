@@ -24,7 +24,7 @@ from dataclasses import dataclass, field
 from typing import Any, NamedTuple
 
 from . import messages
-from .parameters import is_set_value, option, parameter
+from .parameters import is_set_value, option, parameter, seed_out_of_range
 
 GAS_SLICES = ("co", "co2", "o2")
 
@@ -216,11 +216,14 @@ class ConfigIssue:
 
 
 def check_options(opts: Any) -> list[ConfigIssue]:
-    """The option conflicts ``validate_opts`` rejects (D25, D26, D19), in order.
+    """The option errors ``validate_opts`` rejects (D25, D26, D19, D34), in order.
 
     ``validate_opts`` raises the first; front ends may show them all.
     """
     issues: list[ConfigIssue] = []
+    seed = option(opts, "seed")
+    if seed_out_of_range(seed):
+        issues.append(ConfigIssue("D34", "seed", messages.seed_out_of_range(seed), "F"))
     if option(opts, "vis_cache") and not option(opts, "enable_rerouting"):
         issues.append(
             ConfigIssue("D25", "vis_cache", messages.VIS_CACHE_NEEDS_REROUTING, "F")

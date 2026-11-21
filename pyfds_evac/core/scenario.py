@@ -37,6 +37,7 @@ from shapely import wkt
 from shapely.geometry import Polygon
 
 from pyfds_evac.config import messages
+from pyfds_evac.config.parameters import seed_out_of_range
 
 if TYPE_CHECKING:
     from .plan_view import FrameRecorder
@@ -2142,6 +2143,8 @@ def run_scenario(
     # routing key is checked here whatever the overrides (#187).
     check_removed_routing_keys(scenario.raw.get("routing"))
     seed = seed if seed is not None else scenario.seed
+    if seed_out_of_range(seed):
+        raise ValueError(messages.seed_out_of_range(seed))
     if reroute_config is not None and reroute_config.cost_config is None:
         reroute_config = replace(
             reroute_config,
