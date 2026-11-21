@@ -2884,6 +2884,26 @@ def test_webapp_sources_compile_without_escape_warnings():
     assert r"!/^([\/~]|[A-Za-z]:\/)/.test(typed)" in _AUTOFILL_JS
 
 
+def test_trajectory_speed_buttons_expose_state_beyond_colour(monkeypatch):
+    """Exactly one speed button is pressed, in markup, text and script (#549)."""
+    from fasthtml.common import to_xml
+
+    from pyfds_evac.webapp import theme, trajviz
+
+    monkeypatch.setattr(trajviz, "_payload", lambda *a, **k: {"hasFed": False})
+    html = to_xml(trajviz.trajectory_component(None, None))
+    buttons = re.findall(r"<button[^>]*\bspeed-btn\b[^>]*>", html)
+    assert len(buttons) == 5
+    pressed = [b for b in buttons if 'aria-pressed="true"' in b]
+    assert len(pressed) == 1 and 'data-speed="1"' in pressed[0]
+    assert all('aria-pressed="false"' in b for b in buttons if b not in pressed)
+    # A check mark in the text, as the mode buttons do, not only the fill.
+    assert '.speed-btn[aria-pressed="true"]::before' in theme._CSS
+    # The script keeps the attribute in step with the class.
+    assert "setAttribute('aria-pressed', String(b === btn))" in trajviz._JS
+    assert "b.setAttribute('aria-pressed', 'false')" in trajviz._JS
+
+
 def test_trajectory_custom_speed_is_a_decimal_text_input():
     """The custom speed shows a point, not the OS region's comma (#493)."""
     from pyfds_evac.webapp import trajviz
