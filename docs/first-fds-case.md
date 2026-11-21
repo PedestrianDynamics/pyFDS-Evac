@@ -474,7 +474,12 @@ later, and a cell that never loses sight cannot be told apart from one
 that loses it at 300 s. Heat is
 not included in either panel. The map form follows Schröder et al. (2020);
 [ASET-RSET maps after Schröder et al. (2020)](study-schroeder2020.md) re-runs
-their demonstration case.*
+their demonstration case. Panel (a) differs from the paper's ASET map in
+three ways: a cell takes the one slice node inside it that lies nearest its
+centre, not all data points inside the cell (§2.2.3, Eq. 2); the time step
+is 1 s, not 10 s; and
+a cell that never fails stays "not by 300 s", where the paper fills the map
+with the end time (§2.2.4).*
 
 Panel (b) measures wayfinding: it shows when the signs stop guiding.
 This is consistent with section 5, where 138 of the 150 agents never learned
@@ -527,7 +532,8 @@ at t = 0 and gets out, with RSET mapped cell by cell, see
 
 **The exit times rest on walking speeds far outside the data.** The default
 speed law comes from Frantzich and Nilsson's experiments, which covered
-*K* = 1.9–7.4 1/m. Purser's fit to Jin's data covers *K* ≈ 0.30–1.27 1/m
+*K* ≈ 1.9–7.4 1/m (read from Fig. 14 of their report). Purser's fit to
+Jin's data covers *K* ≈ 0.30–1.27 1/m
 (see [walking speed in smoke](/fundamentals/walking-speed.md)). In this run
 the median *K* at the agents is 20.3 1/m, a visibility of about 0.15 m with
 *C* = 3. 94 % of the agent-seconds lie above 7.4 1/m, and 87 % sit at the
