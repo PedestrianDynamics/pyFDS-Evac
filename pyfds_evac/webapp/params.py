@@ -78,7 +78,15 @@ _FIELD = "display:flex;flex-direction:column;gap:6px"
 _GROTESK = "font-family:'Space Grotesk',sans-serif"
 _MONO = "font-family:'JetBrains Mono',monospace"
 
-_GROUP_ACCENT = ["#F4C430", "#FF8A3D", "#E01E37", "#C81D4E", "#F4C430", "#FFB020"]
+_GROUP_ACCENT = [
+    "#F4C430",
+    "#FF8A3D",
+    "#E01E37",
+    "#E8590C",
+    "#C81D4E",
+    "#F4C430",
+    "#FFB020",
+]
 
 # Sections, hidden flags, units and help come from the configuration model;
 # the form keeps no option metadata of its own.
