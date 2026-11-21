@@ -137,7 +137,8 @@ KNOWN_PARAMETER_KEYS = frozenset(
         "desired_speed",
         "desired_speed_distribution",
         "desired_speed_std",
-        # study labels that travel with the area and are never read as inputs
+        # allowed without a warning: fahy_row and fahy_class are not read by
+        # the run; population switches on the agent_distributions table
         "population",
         "fahy_row",
         "fahy_class",
@@ -188,12 +189,24 @@ def _check_std_value(dist_id: str, key: str, value: Any) -> None:
     if value is None:
         return
     is_number = isinstance(value, (int, float)) and not isinstance(value, bool)
-    if is_number and math.isfinite(value) and value >= 0:
+    # An int is finite; math.isfinite would overflow on a huge one.
+    finite = isinstance(value, int) or (is_number and math.isfinite(value))
+    if is_number and finite and value >= 0:
         return
     raise ValueError(
         f"Distribution {dist_id!r}: {key} must be a finite number >= 0 or "
         f"null, got {value!r}"
     )
+
+
+def _check_params(dist_id: str, params: dict[str, Any]) -> None:
+    """Raise ValueError for the first enum or std value of *params* the run rejects."""
+    for key in _DISTRIBUTION_ENUMS:
+        if key in params:
+            _check_enum_value(dist_id, key, params[key])
+    for key in _STD_KEYS:
+        if key in params:
+            _check_std_value(dist_id, key, params[key])
 
 
 def check_distribution_values(raw: Any) -> None:
@@ -205,12 +218,20 @@ def check_distribution_values(raw: Any) -> None:
     The error names the distribution. ``raw`` is not modified.
     """
     for dist_id, params in _distribution_parameters(raw):
-        for key in _DISTRIBUTION_ENUMS:
-            if key in params:
-                _check_enum_value(dist_id, key, params[key])
-        for key in _STD_KEYS:
-            if key in params:
-                _check_std_value(dist_id, key, params[key])
+        _check_params(dist_id, params)
+
+
+def _warn_params(dist_id: str, params: dict[str, Any]) -> None:
+    """Log a warning for each key of *params* that is not a known key."""
+    for key in params:
+        if key in KNOWN_PARAMETER_KEYS:
+            continue
+        _logger.warning(
+            "Distribution '%s': unknown parameters key %r is ignored; "
+            "check the spelling against the scenario-json reference",
+            dist_id,
+            key,
+        )
 
 
 def warn_unknown_parameter_keys(raw: Any) -> None:
@@ -220,15 +241,7 @@ def warn_unknown_parameter_keys(raw: Any) -> None:
     ``numbr`` runs with the default. Not an error: the deck still loads.
     """
     for dist_id, params in _distribution_parameters(raw):
-        for key in params:
-            if key in KNOWN_PARAMETER_KEYS:
-                continue
-            _logger.warning(
-                "Distribution '%s': unknown parameters key %r is ignored; "
-                "check the spelling against the scenario-json reference",
-                dist_id,
-                key,
-            )
+        _warn_params(dist_id, params)
 
 
 KNOWN_TOP_LEVEL_KEYS = frozenset(

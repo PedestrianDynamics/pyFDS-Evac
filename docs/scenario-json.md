@@ -303,10 +303,11 @@ starting with `premovement_` counts as a pre-movement setting and turns the
 10 s default off, so `premovement_typo` removes the delay, with the
 warning as the only message.
 
-- `fahy_row` and `fahy_class` are study labels, like `population`. The
-  package ignores them without a warning;
-  only the scripts in `assets/station_fahy/` and `assets/station_nist/` read
-  them.
+- `fahy_row`, `fahy_class` and `population` are allowed without a
+  warning. The run does not read `fahy_row` and `fahy_class`; only the
+  scripts in `assets/station_fahy/` and `assets/station_nist/` do.
+  `population` switches on the `agent_distributions` table (see
+  `population` above).
 - `queues`, `waiting_sets`, `obstacles`, `background_image` and
   `project_version` at the top level are not read by the run.
 - `type` in a distribution has no reader in `pyfds_evac/core`.

@@ -108,6 +108,37 @@ def test_scenario_issue_reports_a_bad_value(tmp_path):
     assert issue is not None and "'d1'" in issue.message
 
 
+@pytest.mark.parametrize("key", ["v0_std", "radius_std"])
+def test_huge_int_std_is_a_named_error_not_an_overflow(tmp_path, key):
+    with pytest.raises(ValueError, match=f"'d1'.*{key}"):
+        _load(tmp_path, {key: -(10**400)})
+    scenario = _load(tmp_path, {"number": 3})
+    scenario.raw["distributions"]["d1"]["parameters"][key] = -(10**400)
+    issue = scenario_issue(scenario.raw)
+    assert issue is not None and "'d1'" in issue.message
+
+
+def test_a_huge_positive_int_std_is_accepted(tmp_path):
+    _load(tmp_path, {"v0_distribution": "gaussian", "v0_std": 10**400})
+
+
+@pytest.mark.parametrize(
+    ("key", "value"),
+    [
+        ("radius_distribution", "normal"),
+        ("distribution_mode", "by_count"),
+        ("radius_std", -0.1),
+    ],
+)
+def test_run_scenario_rejects_a_value_set_through_the_api(tmp_path, key, value):
+    from pyfds_evac.core.scenario import run_scenario
+
+    scenario = _load(tmp_path, {"number": 3})
+    scenario.set_agent_params("d1", **{key: value})
+    with pytest.raises(ValueError, match=f"'d1'.*{key}"):
+        run_scenario(scenario)
+
+
 def test_unknown_routing_key_warns_and_names_it(tmp_path, caplog):
     with caplog.at_level(logging.WARNING, logger="pyfds_evac"):
         _load(tmp_path, {"number": 3}, routing={"w_smok": 2.0, "w_smoke": 1.0})
