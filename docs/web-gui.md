@@ -414,14 +414,14 @@ After the model's own progress and log lines, the script ends with
 
 ```text
 Simulation finished in 34.87 s (30/30 evacuated).
-Trajectory SQLite: /…/pyfds_evac_blind_spawn_discovery_run1_20260929T182009Z_output/trajectory.sqlite
+Trajectory SQLite: /…/pyfds_evac_blind_spawn_discovery_run1_20260929T182009Z_output/blind_spawn_discovery.sqlite
 ```
 
 The run is complete, so the script exits with status 0. An incomplete run
 exits with status 2, as `run.py` does.
 The folder `pyfds_evac_blind_spawn_discovery_run1_20260929T182009Z_output`, created in the
-folder you ran the script from, holds `trajectory.sqlite` and
-`trajectory.manifest.json`.
+folder you ran the script from, holds the files of the GUI run under the same
+names: the trajectory SQLite with its manifest, the CSV histories and `bundle/`.
 {{< /checkpoint >}}
 
 On another machine, copy the scenario folder and the FDS results as well: the
@@ -442,9 +442,6 @@ and will not exist elsewhere.
   key includes the resolved FDS directory (`_make_meta` in
   `pyfds_evac/core/visibility.py`), so a changed `FDS_DIR` or setting makes
   the script rebuild the map and rewrite that file.
-- **Fewer output files.** The script writes the trajectory SQLite and its
-  manifest, not the GUI's CSV histories or app bundle
-  ([#328](https://github.com/PedestrianDynamics/pyFDS-Evac/issues/328)).
 
 ### Preview and run code
 
@@ -507,9 +504,11 @@ marked.
    script then calls `load_scenario`, `build_run_kwargs`
    (`pyfds_evac/core/run_config.py`) and `run_scenario`. There is no second
    option mapping, so the script cannot drift from the GUI.
-5. **After the run.** A finished or stopped message. The trajectory SQLite is
-   copied to `OUTPUT_DIR/trajectory.sqlite` with its manifest, and
-   `result.cleanup()` removes the temporary copies `run_scenario` wrote.
+5. **After the run.** A finished or stopped message. The script calls
+   `apply_outputs` (`pyfds_evac.core.run_outputs`), as the GUI and the CLI do:
+   the trajectory SQLite with its manifest and side tables, the CSV histories
+   and the app bundle are written into `OUTPUT_DIR` under the names of the GUI
+   run's files, and `result.cleanup()` removes the temporary copies `run_scenario` wrote.
 6. **CLI-only keys.** `cleanup`, `export_only`, `inspect_fds` and
    `print_summary` appear in `OPTIONS`, but `build_run_kwargs` ignores them.
    `'cleanup': False` next to `result.cleanup()` is expected, not a bug.
@@ -588,14 +587,11 @@ scenario sets none ([Usage](usage.md)).
   `blind_spawn_discovery`.
 {{< /details >}}
 
-{{< details title="What the script leaves out, and why" closed="true" >}}
-- **The GUI's CSV histories and app bundle.** The smoke, FED, route,
-  route-cost and exit histories and the bundle are written by `apply_outputs` in
-  `pyfds_evac.core.run_outputs`, which the exported script does not call yet. Their keys
-  (`output_smoke_history`, `output_fed_history`, `output_route_history`,
-  `output_route_cost_history`, `output_exit_history`, `output_sqlite`,
-  `export_app_bundle`) are set
-  to `None`
+{{< details title="What the script does differently, and why" closed="true" >}}
+- **Where the output files go.** The output options (`output_sqlite`,
+  the CSV histories, `export_app_bundle`) keep only their file names in
+  `OPTIONS`; the script writes them into `OUTPUT_DIR`, never into the GUI
+  run's folder, and writes the same output files the GUI run wrote
   ([#328](https://github.com/PedestrianDynamics/pyFDS-Evac/issues/328)).
   Route-cost history collection stays on (`collect_route_cost_history`), as
   in the GUI.

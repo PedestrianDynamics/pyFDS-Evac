@@ -31,7 +31,7 @@ from pyfds_evac.config.frontend import execution_outcome
 # pyfds_evac.config.python_script; the names stay importable from here.
 from pyfds_evac.config.script import (  # noqa: F401
     _PATH_KEYS,
-    OMITTED_OUTPUT_KEYS,
+    OUTPUT_KEYS,
     ExportError,
     _abs_path,
     _body,
@@ -74,10 +74,9 @@ def _header(lines: list[str], version: Any, commit: Any, dirty: Any) -> list[str
         "# not included. Copy them to the other machine and edit PATHS below.",
         "# Results can differ from the GUI run, even with the same seed, with",
         "# other versions or on other platforms.",
-        "# Omitted: the GUI's output files (CSV histories, app bundle), whose",
-        "# writer lives in run.py outside the package, and the progress callback,",
-        "# which only drives the GUI. The trajectory and its manifest are copied",
-        "# to OUTPUT_DIR.",
+        "# Omitted: the progress callback, which only drives the GUI. The output",
+        "# files (trajectory SQLite, manifest, CSV histories, app bundle) are",
+        "# written to OUTPUT_DIR by pyfds_evac.core.run_outputs.apply_outputs.",
     ]
 
 

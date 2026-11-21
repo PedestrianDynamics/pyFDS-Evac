@@ -20,6 +20,7 @@ from _round_trip import PROFILE_B as _RT_B
 from _round_trip import ZERO as _RT_ZERO
 from _round_trip import argv, script_literals
 from _round_trip import hidden as _rt_hidden
+from _round_trip import output_name as _rt_output_name
 from _round_trip import shown as _rt_shown
 from starlette.testclient import TestClient
 
@@ -1854,7 +1855,7 @@ class TestEquivalentPython:
         from pathlib import Path
 
         from pyfds_evac.webapp.app import _resolve_form
-        from pyfds_evac.webapp.pyexport import OMITTED_OUTPUT_KEYS
+        from pyfds_evac.webapp.pyexport import OUTPUT_KEYS
 
         form = {
             "scenario": "t_junction",
@@ -1876,8 +1877,8 @@ class TestEquivalentPython:
         rebuilt.update(replay_exits=lit["REPLAY_EXITS"])
         assert set(rebuilt) | {"scenario"} == set(expected)
         for key, value in rebuilt.items():
-            if key in OMITTED_OUTPUT_KEYS:
-                assert value is None, key
+            if key in OUTPUT_KEYS:
+                assert value == _rt_output_name(key, expected[key]), key
             elif key in ("fds_dir", "vis_cache"):
                 assert value == str(Path(expected[key]).resolve()), key
             else:
@@ -2122,7 +2123,7 @@ def test_exported_script_reproduces_the_gui_run(
     expected_exit = 0 if gui_metrics["status"] == "completed" else 2
     assert int(exit_line[len("EXIT") :]) == expected_exit
     (output,) = tmp_path.glob(f"pyfds_evac_{scenario}_run1_*Z_output")
-    assert (output / "trajectory.sqlite").is_file()
+    assert (output / f"{scenario}.sqlite").is_file()
 
 
 class TestRunOutcome:
@@ -2960,7 +2961,7 @@ def _rt_same_path(a, b):
 def _rt_check_script(lit, expected, seed):
     """The script's PATHS and OPTIONS against the resolved options."""
     from pyfds_evac.config.parameters import default
-    from pyfds_evac.webapp.pyexport import _PATH_KEYS, OMITTED_OUTPUT_KEYS
+    from pyfds_evac.webapp.pyexport import _PATH_KEYS, OUTPUT_KEYS
 
     rebuilt = dict(lit["OPTIONS"])
     rebuilt.update({k: lit[k.upper()] for k in _PATH_KEYS if k != "scenario"})
@@ -2968,8 +2969,8 @@ def _rt_check_script(lit, expected, seed):
     got = rebuilt.pop("seed")
     assert got == seed and (got is None) == (seed is None)  # 0 is not None
     for key, value in rebuilt.items():
-        if key in OMITTED_OUTPUT_KEYS:
-            assert value is None, key
+        if key in OUTPUT_KEYS:
+            assert value == _rt_output_name(key, expected[key]), key
         elif key in _RT_PATHS and value is not None:
             assert _rt_same_path(value, expected[key]), key
         else:

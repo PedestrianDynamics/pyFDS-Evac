@@ -1445,13 +1445,11 @@ def _pyexport_notes(version, scenario_name: str, scenario_path: str) -> list:
             Summary("Details: what the GUI adds or leaves out"),
             P(
                 "Included: route-cost history collection, as the GUI keeps it. "
-                "The trajectory SQLite and its manifest are copied to OUTPUT_DIR."
+                "The output files (trajectory SQLite with its manifest, CSV "
+                "histories, app bundle) are written to OUTPUT_DIR by "
+                "apply_outputs, with the names of this run's files."
             ),
-            P(
-                "Omitted: the live progress callback, which only drives the GUI, "
-                "and the GUI's CSV histories and app bundle. Their writer lives "
-                "in run.py, outside the installed package."
-            ),
+            P("Omitted: the live progress callback, which only drives the GUI."),
         ),
     ]
     return notes
@@ -1535,9 +1533,7 @@ def _pyexport_panel(
 
 def _script_inputs(opts) -> dict:
     """The options the exported script uses: all but the GUI's output files."""
-    return {
-        k: v for k, v in dict(opts).items() if k not in pyexport.OMITTED_OUTPUT_KEYS
-    }
+    return {k: v for k, v in dict(opts).items() if k not in pyexport.OUTPUT_KEYS}
 
 
 def _form_vs_run(form: dict, spec) -> tuple[bool, Exception | None]:
