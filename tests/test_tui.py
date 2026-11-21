@@ -2197,10 +2197,10 @@ def _rt_check_command(command: str, ns: argparse.Namespace) -> None:
 
 def _rt_check_script(code: str, ns: argparse.Namespace, seed) -> None:
     """run.py's PATHS and OPTIONS against *ns*; *seed* is the one expected."""
-    from _round_trip import PATHS, hidden, same_path, script_literals
+    from _round_trip import PATHS, hidden, output_name, same_path, script_literals
 
     from pyfds_evac.config.parameters import default
-    from pyfds_evac.config.script import _PATH_KEYS, OMITTED_OUTPUT_KEYS
+    from pyfds_evac.config.script import _PATH_KEYS, OUTPUT_KEYS
 
     lit = script_literals(code)
     rebuilt = dict(lit["OPTIONS"])
@@ -2210,8 +2210,8 @@ def _rt_check_script(code: str, ns: argparse.Namespace, seed) -> None:
     got = rebuilt.pop("seed")
     assert got == seed and (got is None) == (seed is None)  # 0 is not None
     for key, value in rebuilt.items():
-        if key in OMITTED_OUTPUT_KEYS:
-            assert value is None, key
+        if key in OUTPUT_KEYS:
+            assert value == output_name(key, expected[key]), key
         elif key in (*PATHS, "scenario") and value is not None:
             assert same_path(value, expected[key]), key
         else:

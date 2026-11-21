@@ -29,18 +29,22 @@ _COMMAND_ONLY = frozenset(p.dest for p in PARAMETERS if not p.run_option)
 _PATH_KEYS = ("scenario", "fds_dir", "vis_cache", "replay_exits")
 
 # Output files the CLI and the GUI write through apply_outputs. The script
-# does not write them; the keys are set to None (build_run_kwargs reads only
-# output_route_cost_history, and collect_route_cost_history keeps that
-# history on).
-OMITTED_OUTPUT_KEYS = (
+# keeps each file's name and writes it into OUTPUT_DIR, never into the folder
+# a front end chose. The trajectory SQLite is always written, as
+# trajectory.sqlite when the options name none.
+OUTPUT_KEYS = (
     "output_sqlite",
     "output_smoke_history",
     "output_fed_history",
+    "output_fed_summary",
     "output_route_history",
     "output_route_cost_history",
     "output_exit_history",
+    "output_knowledge_history",
+    "output_pre_evacuation_times",
     "export_app_bundle",
 )
+_DEFAULT_SQLITE = "trajectory.sqlite"
 
 _PLAIN = re.compile(r"[\w.+:@/-]*")
 
@@ -78,13 +82,21 @@ def _abs_path(value: Any) -> str | None:
     return str(pathlib.Path(str(value)).expanduser().resolve())
 
 
+def _output_name(key: str, value: Any) -> str | None:
+    """The file name an output option keeps in the script, or None."""
+    name = pathlib.PurePath(str(value)).name if value else ""
+    if key == "output_sqlite":
+        return name or _DEFAULT_SQLITE
+    return name or None
+
+
 def export_options(opts: Mapping[str, Any], seed: Any) -> dict[str, Any]:
     """The non-path options the script passes, in a stable order."""
     options = {"seed": seed}
     for key in sorted(opts):
         if key in _PATH_KEYS or key == "seed" or key in _COMMAND_ONLY:
             continue
-        options[key] = None if key in OMITTED_OUTPUT_KEYS else opts[key]
+        options[key] = _output_name(key, opts[key]) if key in OUTPUT_KEYS else opts[key]
     return options
 
 
@@ -99,19 +111,17 @@ def _body(
         "",
         "import argparse",
         "import pathlib",
-        "import shutil",
         "import sys",
         "",
         "from pyfds_evac.config.frontend import stop_reason_phrase",
         "from pyfds_evac.core import load_scenario, run_scenario",
-        "from pyfds_evac.core.agent_scalars import write_agent_exits",
-        "from pyfds_evac.core.manifest import manifest_path_for",
-        "from pyfds_evac.core.run_outputs import write_agent_distributions",
         "from pyfds_evac.core.run_config import build_run_kwargs",
+        "from pyfds_evac.core.run_outputs import apply_outputs",
         "",
         "# PATHS: from the computer that made this script; edit on another machine.",
         *(f"{key.upper()} = {_literal(key, paths[key])}" for key in _PATH_KEYS),
         "# A new folder: the script never writes into a front end's run folder.",
+        "# Output options hold file names; they are written inside OUTPUT_DIR.",
         f"OUTPUT_DIR = pathlib.Path({_literal('output_dir', output_dir)})",
         "",
         "# Settings: the resolved configuration passed to build_run_kwargs.",
@@ -127,6 +137,12 @@ def _body(
         "    **OPTIONS,",
         *(f"    {key}={key.upper()}," for key in _PATH_KEYS),
         ")",
+        "",
+        "OUTPUT_KEYS = " + repr(OUTPUT_KEYS),
+        "for key in OUTPUT_KEYS:",
+        "    name = getattr(opts, key)",
+        "    if name:",
+        "        setattr(opts, key, str(OUTPUT_DIR / name))",
         "",
         "scenario = load_scenario(SCENARIO)",
         "run_kwargs = build_run_kwargs(scenario, opts, log=print)",
@@ -159,14 +175,11 @@ def _body(
         "    )",
         "",
         "OUTPUT_DIR.mkdir(parents=True, exist_ok=True)",
-        "if result.sqlite_file:",
-        '    trajectory = OUTPUT_DIR / "trajectory.sqlite"',
-        "    shutil.copy2(result.sqlite_file, trajectory)",
-        "    write_agent_exits(trajectory, result.exit_times)",
-        "    write_agent_distributions(trajectory, scenario, result)",
-        '    print(f"Trajectory SQLite: {trajectory.resolve()}")',
-        "    if result.manifest_file:",
-        "        shutil.copy2(result.manifest_file, manifest_path_for(trajectory))",
+        "# The writers of the CLI and the front ends: CSV histories, the app bundle,",
+        "# and the trajectory SQLite with its manifest and side tables",
+        "# (agent_scalars, agent_exits, agent_distributions).",
+        "for artifact in apply_outputs(result, scenario, opts, log=print):",
+        "    print(artifact)",
         "result.cleanup()  # remove the temporary copies run_scenario wrote",
         "if not result.success:",
         "    sys.exit(2)",
@@ -184,8 +197,8 @@ def python_script(
     """The script that runs *opts* through the Python API.
 
     *opts* has the attributes of the ``pyfds-evac`` options; its paths are
-    resolved to absolute paths. Output files other than the trajectory and
-    its manifest are not written (see :data:`OMITTED_OUTPUT_KEYS`).
+    resolved to absolute paths. Output files (:data:`OUTPUT_KEYS`) keep their
+    names and are written into ``output_dir``.
     """
     values = vars(opts) if not isinstance(opts, Mapping) else dict(opts)
     paths = {key: _abs_path(values.get(key)) for key in _PATH_KEYS}

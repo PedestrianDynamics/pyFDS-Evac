@@ -78,9 +78,9 @@ LAYER = ("heat_regime", *ALT)
 def shown() -> set[str]:
     """Run options a front end shows and the user sets (not output paths)."""
     from pyfds_evac.config.parameters import GUI_HIDDEN, RUN_OPTIONS
-    from pyfds_evac.config.script import OMITTED_OUTPUT_KEYS
+    from pyfds_evac.config.script import OUTPUT_KEYS
 
-    return set(RUN_OPTIONS) - GUI_HIDDEN - set(OMITTED_OUTPUT_KEYS) - {"scenario"}
+    return set(RUN_OPTIONS) - GUI_HIDDEN - set(OUTPUT_KEYS) - {"scenario"}
 
 
 def hidden() -> set[str]:
@@ -88,6 +88,14 @@ def hidden() -> set[str]:
     from pyfds_evac.config.parameters import GUI_HIDDEN, RUN_OPTIONS
 
     return set(RUN_OPTIONS) & GUI_HIDDEN
+
+
+def output_name(key: str, value) -> str | None:
+    """The file name the script keeps for output option *key* set to *value*."""
+    from pathlib import PurePath
+
+    name = PurePath(str(value)).name if value else ""
+    return name or ("trajectory.sqlite" if key == "output_sqlite" else None)
 
 
 def script_literals(code: str) -> dict:
