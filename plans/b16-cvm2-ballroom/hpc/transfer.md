@@ -5,6 +5,57 @@ reachable and there is no FDS on the machine where the scripts were
 written. Stop at the first failed check. Do not submit anything
 (`--go`) without your own go-ahead.
 
+## Deck decisions to confirm before any run
+
+Copied from `../README.md` ("Open choices named in #808" and "Further
+choices"); none is resolved here.
+
+- Door coordinates: y 11.5 and 41.5 m, east and west (Confirm).
+- Fuel for `&REAC`: CH2.686O0.592 (Confirm).
+- Fire mesh 0.25 m (**Confirm**): D*/dx 5.7, burner top 0.5 m, 2.0 m doors.
+- MPI split: 21 meshes.
+- West doors: exits to safety, no foyer (**Confirm**).
+- Door state: open from t = 0 (**Confirm**); the example keeps them
+  closed until the evacuation.
+- Free speed 1.2 m/s constant (**Confirm**).
+- Body size: `DIA_MEAN` 0.51 m constant, `init` maps it to radius 0.15 m
+  (**Confirm**).
+- Relaxation time: Adult default, uniform 0.8-1.2 s (Confirm).
+- Evacuation grid 0.25 m (Confirm).
+- Second grid 0.5 m, phase 1 only (Confirm).
+- `FAC_DOOR_QUEUE`: default 1.3, not switched off; proposed ten more
+  phase 3 runs with 0 beside pyFDS-Evac `w_queue` 0; whether 0 also needs
+  a new phase 1 is unverified (**Confirm**).
+- `FED_DOOR_CRIT=-1000.0`, the default of the code that runs; -100 is the
+  documented value (**Confirm**).
+- `HUMAN_SMOKE_HEIGHT` 2.0 m is a cell face; which cell FDS+Evac reads
+  there (1.75-2.0 or 2.0-2.25 m) could not be determined (**Confirm**) or
+  move both to a cell centre.
+
+## The workflow (FDS 6.7.7, Evac 2.6.1)
+
+Fire and evacuation never run together, and all three phases share
+CHID `cvm2_ballroom`:
+
+1. Phase 1 `cvm2_ballroom_evac.fds` (`EVACUATION_INITIALIZATION`):
+   evacuation mesh only, serial. Writes `.eff` and `.xyz`.
+2. Phase 2 `cvm2_ballroom_evac_fed.fds` (`EVACUATION_WRITE_FED`): fire
+   meshes only, MPI (21). Needs the phase 1 `.xyz`. Writes the slices and
+   `.fed`.
+3. Phase 3 `cvm2_ballroom_evac_mc.fds` (`EVACUATION_MC_MODE`):
+   evacuation only, serial, reads `.eff` and `.fed`. Run ten times. It
+   writes `cvm2_ballroom_evmc.csv`, overwritten by every run, so each
+   repeat has its own directory.
+
+Run directories under `$PROJECT/$USER/fds-evac-runs/cvm2-ballroom/`:
+`phase1`, `phase2` (gets `.xyz` copied from `phase1`), `rep01`..`rep10`
+(each gets `.eff` from `phase1` and `.fed` from `phase2`). Optional:
+`fire-test` (stand-alone `cvm2_ballroom_fire.fds`) and `evac-dx050`
+(phase 1 on the 0.5 m grid, CHID `cvm2_ballroom_dx050`).
+
+pyFDS-Evac must read the slices of `phase2`, not those of `fire-test`:
+an evacuation run cannot use a fire run without evacuation meshes.
+
 The existing FDS 6.10.1 build is not touched: FDS 6.7.7 lives in
 `$PROJECT/$USER/fds-6.7.7`, runs in `$PROJECT/$USER/fds-evac-runs/cvm2-ballroom/`,
 and no shell profile is edited.
@@ -43,10 +94,16 @@ Binary: `Build/mpi_gnu_linux_64/fds_mpi_gnu_linux_64`.
 | Partition (`dc-cpu` is a guess) | `#SBATCH --partition` in both `.sbatch`; `--partition` of the submit script | `sinfo -s`; check max wall time and cores per node (`NMPI` must fit one node, `--nodes=1`) |
 | `srun --mpi=` plugin | env `SRUN_MPI` (empty = site default) | `srun --mpi=list`; set e.g. `export SRUN_MPI=pspmix` only if plain `srun` fails |
 | Outbound access from login node to github.com | setup step 1 | else clone on the laptop and rsync the whole directory incl. `.git` to `$PROJECT/$USER/fds-6.7.7` |
-| Evac meshes and MPI ranks | the evac deck | guide §8.1: how the evacuation mesh is attached to a rank when `NMPI` equals the number of fire meshes (`MPI_PROCESS` on the evac `&MESH`) |
-| Files read by `EVACUATION_MC_MODE` | `rsync --exclude` list in `run_ballroom.sbatch` | guide §9.2; the copy keeps everything except slices, boundary, 3D, particle data, `.out`, `_evac.csv` |
-| Seed of an MC repeat | the MC deck | guide §8: confirm repeats differ (compare `_evac.csv` of run01 and run02) |
-| Wall times (`--wall-*`, defaults 2 h, 24 h, 12 h) | submit script | guesses; measure with the smoke test and the fire-only test |
+| Files phase 3 needs in its directory | `imports` in `submit_ballroom.sh` (`.eff`, `.fed`) | README says `.eff` and `.fed`; to confirm on the first repeat (does it also want `.xyz`?) |
+| `_evmc.csv` contents and `_evmc_info.out` | `rep01/` | first repeat: is it what `pyfds-evac` and the analysis expect |
+| Repeats differ | `rep*/cvm2_ballroom_evmc.csv` | seed = wall clock; `fetch_ballroom.sh` compares sha256, and also compare the start times in each `run_record.txt` (millisecond) |
+| Devices and fire slices skipped silently in phases 1 and 3 | `.out` of phase 1 and 3 | README "Keywords" |
+| `EVACUATION=.TRUE.` holes open the visibility mesh | Smokeview, phase 1 | README "Keywords" |
+| `&EXIT` behind a wall hole works | phase 1 `.out`, Smokeview | README "Keywords" |
+| 1,000 agents placed at 1.0 persons/m2 in one attempt | phase 1 `.out` | README "Keywords" |
+| Fuel warning ("not predefined") and yields | phase 2 `.out` | README "Keywords" |
+| Phase 1 sanity before phase 2 | Smokeview | flow fields toward all four exits, no agent outside the walls, all agents placed |
+| Wall times (`--wall-p1`, `--wall-p2`, `--wall-p3`, `--wall-fire`, `--wall-dx050`) | submit script | phase 2 default 8 h from the README estimate (about 65 core-hours, 3 h on 21 processes, range 35-130 core-hours); phase 1 (1 h), phase 3 (2 h), dx050 (1 h) are guesses, there is no estimate |
 
 ## Steps
 
@@ -55,7 +112,7 @@ Binary: `Build/mpi_gnu_linux_64/fds_mpi_gnu_linux_64`.
    ssh jureca 'mkdir -p $HOME/cvm2-hpc'   # any directory you like
    rsync -av plans/b16-cvm2-ballroom/hpc/ jureca:cvm2-hpc/
    ```
-   Check: `ssh jureca ls cvm2-hpc` lists 7 files.
+   Check: `ssh jureca ls cvm2-hpc` lists the scripts.
 
 2. Build (login node):
    ```
@@ -87,44 +144,60 @@ Binary: `Build/mpi_gnu_linux_64/fds_mpi_gnu_linux_64`.
    successfully`, and `<CHID>_evac.csv` shows all agents evacuated. A
    failure message from the job is the verdict; FDS exit status 0 is not.
 
-4. Dry run of the real chain (submits nothing), once the decks exist:
+4. Optional first: stand-alone fire test on a short copy, then in full:
    ```
-   bash submit_ballroom.sh --fire-deck cvm2_ballroom_fire.fds \
-        --evac-deck cvm2_ballroom_evac.fds --mc-deck cvm2_ballroom_evac_mc.fds \
-        --nmpi <number of fire meshes>
+   python3 make_decks.py --t-end 10 --out short     # in plans/b16-cvm2-ballroom
    ```
-   Check: it prints 10 `WOULD RUN` lines: `fire-only`, `run01` (after
-   `fire-only`), `run02`..`run10` (each after `run01`, with `run01` as
-   FROM). Verify NMPI equals the number of fire meshes, and the wall times.
-   The submit script refuses a fire deck without `NO_EVACUATION=.TRUE.` and
-   an MC deck without `EVACUATION_MC_MODE=.TRUE.`.
+   Copy `short/cvm2_ballroom_fire.fds` to the cluster and run
+   `bash submit_ballroom.sh ... --fire-deck short/cvm2_ballroom_fire.fds
+   --fire-label fire-test-short --wall-fire 00:30:00` (a label is never
+   reused, so the full test later uses `fire-test`). The fire test costs
+   the same as phase 2 if it runs to 1,200 s. Same for the phase 1 drill
+   on the 0.5 m grid: `--dx050-deck cvm2_ballroom_evac_dx050.fds`.
 
-5. Submit, only with your go-ahead: the same command plus `--go`.
-   Alternative, step by step: submit `fire-only` alone, read it, then run 1,
-   then the repeats, by hand:
+5. Dry run of the real chain (submits nothing):
    ```
-   sbatch -n NMPI -t HH:MM:SS run_ballroom.sbatch DECK NMPI LABEL [FROM]
+   bash submit_ballroom.sh --phase1-deck cvm2_ballroom_evac.fds \
+        --phase2-deck cvm2_ballroom_evac_fed.fds \
+        --phase3-deck cvm2_ballroom_evac_mc.fds --nmpi 21
+   ```
+   Check: 12 `WOULD RUN` lines: `phase1` (1 task); `phase2` (21 tasks,
+   after `phase1`, imports `phase1:_evac.xyz`); `rep01`..`rep10` (1 task,
+   each after `phase2`, imports `phase1:_evac.eff phase2:_evac.fed`).
+   The script refuses a deck without its keyword or phase decks with
+   different CHIDs. Check the wall times.
+
+6. Submit, only with your go-ahead: the same command plus `--go`.
+   Alternative, step by step: phase 1 alone, look at it in Smokeview, then
+   phase 2, then the repeats, by hand:
+   ```
+   sbatch -n NMPI -t HH:MM:SS run_ballroom.sbatch DECK NMPI LABEL [SRC:SUFFIX ...]
    ```
    Check after each job: `ballroom-<jobid>.log` has `verdict: OK`;
-   `<run dir>/run_record/run_record.txt` holds job id, deck and binary
-   sha256, node list, start, end, exit status; `build_manifest.txt` and the
-   job script are copied beside it. After run 1 and each repeat, check the
-   `STOP: FDS completed successfully` line in `<CHID>.out` yourself, the
-   `.out` has no `Numerical Instability`, and `_evac.csv` ends with all
-   1,000 agents out. A failed job cancels the jobs that depend on it
-   (`squeue`, `sacct -j <id> -o JobID,State,ExitCode,Elapsed`).
+   `<run dir>/run_record/run_record.txt` holds job id, mode, deck and
+   binary sha256, node list, start, `fds launch` time to the millisecond,
+   end, exit status. Judge each run from the `STOP: FDS completed
+   successfully` line in `<CHID>.out` and no `Numerical Instability`;
+   FDS exit status 0 proves nothing. A failed job cancels its dependents
+   (`squeue`, `sacct -j <id> -o JobID,State,ExitCode,Elapsed`). FDS+Evac
+   has no seed input (seed = wall clock), so the repeats cannot be
+   reproduced by number. Nothing is staggered; **check that the ten
+   `rep*/cvm2_ballroom_evmc.csv` files differ** (`fetch_ballroom.sh` does
+   it by sha256) and read the launch times in the run records.
 
-6. Fetch (from your machine; read-only on the cluster):
+7. Fetch (from your machine; read-only on the cluster):
    ```
    bash plans/b16-cvm2-ballroom/hpc/fetch_ballroom.sh \
         ~/sciebo/fds-evac-data/cvm2-ballroom --dry-run
    bash plans/b16-cvm2-ballroom/hpc/fetch_ballroom.sh \
         ~/sciebo/fds-evac-data/cvm2-ballroom
    ```
-   Check: the closing list shows `OK` for every run directory; slices
-   (`*.sf`), `*_evac.csv`, `*.out` and `run_record/` are present. Add
-   `--with-eff-fed` for the evacuation `.eff`/`.fed` files.
+   Check: `OK` for every run directory; `phase2/` holds the slices
+   (`*.sf`), `.smv`, `.out`, `_hrr.csv`, `_devc.csv` and `run_record/`
+   (pyFDS-Evac reads these, not the fire test's); each `rep*/` holds
+   `*_evmc.csv`; the closing line says the `_evmc.csv` files all differ.
+   Add `--with-eff-fed` for the `.eff`/`.fed`/`.xyz` files.
 
-7. Record in the study page: FDS tag and commit from
+8. Record in the study page: FDS tag and commit from
    `build_manifest.txt`, modules and compiler, deck sha256 from each run
    record.

@@ -2,15 +2,19 @@
 # Run one C/VM2 ballroom deck with FDS 6.7.7. Submit via submit_ballroom.sh
 # (or by hand, see transfer.md). Arguments:
 #   $1 DECK    path to the .fds deck
-#   $2 NMPI    MPI processes = number of FIRE meshes (evacuation meshes are
-#              not parallel)
-#   $3 LABEL   run directory name under $RUNS_BASE: fire-only, run01, run02, ...
-#   $4 FROM    optional: LABEL of the finished run 1. For an
-#              EVACUATION_MC_MODE repeat its output is copied into the new
-#              run directory first (without slice and boundary files), so
-#              run 1 is never modified.
-# Wall time is chosen on the command line (-t HH:MM:SS): the evacuation part
-# may take hours. --ntasks must equal NMPI (-n NMPI).
+#   $2 NMPI    MPI processes: the number of fire meshes for the fire decks
+#              (EVACUATION_WRITE_FED, NO_EVACUATION); exactly 1 for
+#              EVACUATION_INITIALIZATION and EVACUATION_MC_MODE (evacuation
+#              meshes only, serial)
+#   $3 LABEL   run directory name under $RUNS_BASE: phase1, phase2, rep01, ...
+#   $4...      optional imports, each SRCLABEL:SUFFIX: copies
+#              $RUNS_BASE/SRCLABEL/<CHID>SUFFIX into the new run directory,
+#              after checking that run succeeded (STOP line). Phase 2 imports
+#              phase1:_evac.xyz; a phase 3 repeat imports phase1:_evac.eff
+#              and phase2:_evac.fed. Sources are never modified.
+# Every run gets its own directory because phase 3 overwrites
+# <CHID>_evmc.csv. Wall time is chosen on the command line (-t HH:MM:SS);
+# --ntasks must equal NMPI (-n NMPI).
 # Partition: TO CONFIRM with `sinfo`; override with sbatch -p <name>.
 #SBATCH --job-name=cvm2-ballroom
 #SBATCH --account=ias-7
@@ -23,13 +27,22 @@ HPC_DIR="${HPC_DIR:-$SLURM_SUBMIT_DIR}"
 # shellcheck source=fds677_common.sh
 . "$HPC_DIR/fds677_common.sh"
 
-DECK="${1:?usage: sbatch -n NMPI -t HH:MM:SS run_ballroom.sbatch DECK NMPI LABEL [FROM]}"
+DECK="${1:?usage: sbatch -n NMPI -t HH:MM:SS run_ballroom.sbatch DECK NMPI LABEL [SRC:SUFFIX ...]}"
 NMPI="${2:?NMPI missing}"
 LABEL="${3:?LABEL missing}"
-FROM="${4:-}"
+shift 3
+IMPORTS=("$@")
 [ -f "$DECK" ] || die "deck not found: $DECK"
 require_project
 [ "$NMPI" -eq "${SLURM_NTASKS:-0}" ] || die "NMPI=$NMPI but --ntasks=${SLURM_NTASKS:-unset}; submit with sbatch -n $NMPI"
+MODE=fire
+grep -qi 'NO_EVACUATION *= *\.TRUE\.' "$DECK" && MODE=fire-only
+grep -qi 'EVACUATION_INITIALIZATION *= *\.TRUE\.' "$DECK" && MODE=phase1
+grep -qi 'EVACUATION_WRITE_FED *= *\.TRUE\.' "$DECK" && MODE=phase2
+grep -qi 'EVACUATION_MC_MODE *= *\.TRUE\.' "$DECK" && MODE=phase3
+case "$MODE" in
+  phase1|phase3) [ "$NMPI" -eq 1 ] || die "$MODE is serial (evacuation mesh only); NMPI must be 1" ;;
+esac
 [ -x "$FDS_BIN" ] || die "binary missing: $FDS_BIN (run setup_fds677_jsc.sh)"
 [ -f "$FDS_MANIFEST" ] || die "build manifest missing: $FDS_MANIFEST"
 BIN_SHA="$(sha256_of "$FDS_BIN")"
@@ -43,16 +56,13 @@ REC="$DIR/run_record"
 [ ! -e "$DIR/$CHID.out" ] || die "$DIR already holds $CHID.out; choose a new LABEL (never overwrite a run)"
 mkdir -p "$REC"
 
-if [ -n "$FROM" ]; then
-  SRC="$RUNS_BASE/$FROM"
-  [ -f "$SRC/$CHID.out" ] || die "$SRC has no $CHID.out; run 1 must be finished first"
+for imp in ${IMPORTS[@]+"${IMPORTS[@]}"}; do
+  SRC="$RUNS_BASE/${imp%%:*}"; FILE="$CHID${imp#*:}"
+  [ -f "$SRC/$CHID.out" ] || die "$SRC has no $CHID.out; its run must be finished first"
   grep -q 'STOP: FDS completed successfully' "$SRC/$CHID.out" || die "$SRC is not a successful run"
-  # TO CONFIRM against the guide (sec. 9.2): MC mode reads the evacuation flow
-  # field (.eff) and FED (.fed) files of run 1; slice and boundary data are not needed.
-  rsync -a --exclude='run_record' --exclude='*.sf' --exclude='*.bf' --exclude='*.s3d' \
-        --exclude='*.prt5' --exclude="$CHID.out" --exclude='*_evac.csv' --exclude='*.log' \
-        --exclude='*.stdout' "$SRC/" "$DIR/"
-fi
+  [ -s "$SRC/$FILE" ] || die "$SRC/$FILE missing or empty"
+  cp -p "$SRC/$FILE" "$DIR/"
+done
 cp "$DECK" "$DIR/"
 cp "$FDS_MANIFEST" "$REC/build_manifest.txt"
 cp "$0" "$REC/job_script.sbatch"
@@ -68,7 +78,7 @@ record_end() {
 trap record_end EXIT
 {
   echo "job id: $SLURM_JOB_ID"
-  echo "label: $LABEL  from: ${FROM:-none}"
+  echo "label: $LABEL  mode: $MODE  imports: ${IMPORTS[*]:-none}"
   echo "deck: $DECK"
   echo "deck sha256: $(sha256_of "$DECK")"
   echo "binary: $FDS_BIN"
@@ -80,6 +90,9 @@ trap record_end EXIT
 
 cd "$DIR"
 rc=0
+# FDS+Evac has no seed input: the seed is taken from the wall clock at start.
+# Record the launch time to the millisecond; nothing is staggered.
+echo "fds launch: $(date -u +%Y-%m-%dT%H:%M:%S.%3NZ) (epoch ms $(( $(date +%s%N) / 1000000 )))" >> "$REC/run_record.txt"
 srun -n "$NMPI" ${SRUN_MPI:+--mpi="$SRUN_MPI"} "$FDS_BIN" "$(basename "$DECK")" > fds.stdout 2>&1 || rc=$?
 echo "srun exit status: $rc" | tee -a "$REC/run_record.txt"
 [ "$rc" -eq 0 ] || die "srun failed (rc=$rc); see $DIR/fds.stdout"
@@ -89,3 +102,4 @@ else
   echo "verdict: FAILED" | tee -a "$REC/run_record.txt"
   die "run judged failed; see $DIR/$CHID.out"
 fi
+[ "$MODE" != phase3 ] || [ -s "$DIR/${CHID}_evmc.csv" ] || echo "WARN: ${CHID}_evmc.csv missing or empty in $DIR" | tee -a "$REC/run_record.txt"
