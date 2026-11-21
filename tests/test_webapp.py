@@ -3921,7 +3921,7 @@ class TestFireOptionSections:
         block = html.split("<details")[
             ["Heat exposure" in b for b in html.split("<details")].index(True)
         ]
-        assert "Used only when "Enable heat fed" is on" in block
+        assert "Used only when 'Enable heat fed' is on" in block
         assert "Used only when Enable heat FED" not in html.replace(block, "")
 
     def test_units_and_help_are_shown_without_flag_syntax(self):

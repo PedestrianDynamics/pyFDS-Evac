@@ -634,7 +634,7 @@ def _field(action: argparse.Action) -> Any:
 #: One-line notes under a section's summary, keyed by section title.
 _SECTION_INTRO = {
     "Heat exposure": (
-        "Used only when "Enable heat fed" is on and the FDS folder has a "
+        "Used only when 'Enable heat fed' is on and the FDS folder has a "
         "temperature slice."
     ),
 }
