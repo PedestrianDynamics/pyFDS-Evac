@@ -211,7 +211,6 @@ def test_option_errors_have_the_cli_message(argv):
         ["--susceptibility-sigma", "-1"],
         ["--heat-emissivity", "2"],
         ["--constant-extinction", "-1"],
-        ["--seed", "-3"],
     ],
 )
 def test_values_the_cli_accepts_are_not_errors(argv):
@@ -219,6 +218,46 @@ def test_values_the_cli_accepts_are_not_errors(argv):
     opts = _parse("--scenario", "x", *argv)
     validate_opts(opts)
     assert effective_configuration(opts, {}, inspect_fds=False).ok
+
+
+@pytest.mark.parametrize("seed", [-1, -3, 2**32])
+def test_out_of_range_seed_is_a_config_error(seed):
+    """D34: np.random.seed takes 0 to 2**32 - 1; reject before the run."""
+    opts = _parse("--scenario", "x")
+    opts.seed = seed
+    with pytest.raises(ValueError, match=r"--seed.*0 to 2\*\*32 - 1") as raised:
+        validate_opts(opts)
+    issues = check_options(opts)
+    assert issues[0].rule == "D34" and issues[0].option == "seed"
+    assert issues[0].message == str(raised.value)
+    config = effective_configuration(opts, {}, inspect_fds=False)
+    assert not config.ok
+    assert config.errors[0].message == str(raised.value)
+
+
+@pytest.mark.parametrize("seed", [0, 2**32 - 1, None])
+def test_in_range_or_missing_seed_is_valid(seed):
+    opts = _parse("--scenario", "x")
+    opts.seed = seed
+    validate_opts(opts)
+    assert effective_configuration(opts, {}, inspect_fds=False).ok
+
+
+@pytest.mark.parametrize("seed", ["-3", str(2**32)])
+def test_cli_rejects_out_of_range_seed_with_exit_2(seed, capsys):
+    with pytest.raises(SystemExit) as exited:
+        _parse("--scenario", "x", "--seed", seed)
+    assert exited.value.code == 2
+    err = capsys.readouterr().err
+    assert "argument --seed" in err and "0 to 2**32 - 1" in err
+
+
+@pytest.mark.parametrize("seed", [-3, 2**32])
+def test_run_scenario_rejects_out_of_range_seed(seed):
+    from pyfds_evac.core.scenario import run_scenario
+
+    with pytest.raises(ValueError, match=r"--seed.*0 to 2\*\*32 - 1"):
+        run_scenario(_load(DISCOVERY), seed=seed)
 
 
 # --- options with no effect (X11, M2) --------------------------------------
@@ -518,7 +557,7 @@ def _run_options(opts, absolute: bool = False) -> dict:
     "argv",
     [
         [],
-        ["--seed", "-3", "--no-enable-rerouting", "--reroute-interval", "0.1"],
+        ["--seed", "3", "--no-enable-rerouting", "--reroute-interval", "0.1"],
         ["--fds-dir", "dir with space", "--heat-u-factor", "0.3333333333333333"],
         ["--enable-heat-fed", "--heat-endpoint", "fatal", "--output-sqlite", "o.db"],
     ],

@@ -36,7 +36,7 @@ scenarios and scripts of a source checkout; with pip, replace
 | Flag | Purpose |
 |------|---------|
 | `--scenario PATH` | Scenario JSON, ZIP, or directory (required). |
-| `--seed N` | Override the scenario's `baseSeed` (42 when the scenario sets none). |
+| `--seed N` | Override the scenario's `baseSeed` (42 when the scenario sets none); an integer from 0 to 2**32 - 1. |
 | `--print-summary` | Print the loaded scenario summary before running. |
 | `--debug` | Print debug messages, such as the `Reroute debug` trace of the rerouting pass. From Python, `logging.getLogger("pyfds_evac").setLevel(logging.DEBUG)` with a handler does the same. |
 | `--show-config` | Print the effective configuration and exit without running; see [Checking a configuration before the run](#checking-a-configuration-before-the-run). |
@@ -197,7 +197,8 @@ each flag sets.
 
 ### Seed and precedence
 
-- `--seed N` overrides the scenario's `baseSeed`; a scenario without one uses 42.
+- `--seed N` overrides the scenario's `baseSeed`; a scenario without one uses 42. A seed outside 0 to 2**32 - 1 is
+  rejected before the run starts.
 - `--constant-extinction` takes precedence over the FDS extinction slice for
   walking speed and route pricing. Sign legibility reads the FDS extinction
   slice, or clear air without `--fds-dir`; it never reads the constant `K`.

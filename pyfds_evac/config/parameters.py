@@ -36,6 +36,8 @@ from pyfds_evac.core.fed import (
     HEAT_U_FACTOR_RANGE,
 )
 
+from . import messages
+
 
 class _Same:
     """Marker: the Python API default equals the CLI default."""
@@ -130,8 +132,9 @@ class Parameter:
     the default there when it differs from ``default`` (else :data:`SAME`).
     ``fds_evac`` is the value of the FDS+Evac counterpart; a run with another
     value departs from FDS+Evac. ``checked`` says where a value range is
-    enforced today (None: not checked). ``run_option`` is False for flags
-    that only steer the command (``--show-config``); they never reach
+    enforced today (None: not checked). ``argparse_type`` replaces ``type``
+    on the command line when that must reject a range too. ``run_option``
+    is False for flags that only steer the command (``--show-config``); they never reach
     ``build_run_kwargs`` and front ends do not show them. ``gui_help`` is the
     GUI's own wording of the help; None falls back to ``help``.
     :attr:`tier` is ``"common"`` or ``"advanced"`` (see :data:`TIERS`).
@@ -151,6 +154,7 @@ class Parameter:
     python_default: Any = SAME
     fds_evac: Any = NO_COUNTERPART
     checked: str | None = None
+    argparse_type: Callable[[str], Any] | None = None
     run_option: bool = True
     gui_help: str | None = None
 
@@ -194,7 +198,9 @@ class Parameter:
         if self.required:
             kwargs["required"] = True
             return kwargs
-        if self.type is not None:
+        if self.argparse_type is not None:
+            kwargs["type"] = self.argparse_type
+        elif self.type is not None:
             kwargs["type"] = self.type
         if self.choices is not None:
             kwargs["choices"] = self.choices
@@ -220,6 +226,30 @@ HEAT_REGIME = "smoke"
 _TENABILITY = "TenabilityConfig"
 _HEAT_MODEL = "DefaultHeatFedModel"
 
+#: Largest seed numpy's legacy ``np.random.seed`` accepts.
+SEED_MAX = 2**32 - 1
+
+
+def seed_out_of_range(seed: Any) -> bool:
+    """Whether *seed* is an integer ``np.random.seed`` rejects."""
+    return isinstance(seed, int) and not 0 <= seed <= SEED_MAX
+
+
+def _seed_argument(text: str) -> int:
+    """Parse ``--seed``; reject an integer outside ``[0, 2**32 - 1]``."""
+    try:
+        seed = int(text)
+    except ValueError:
+        raise argparse.ArgumentTypeError(f"invalid int value: {text!r}") from None
+    if seed_out_of_range(seed):
+        raise argparse.ArgumentTypeError(messages.seed_out_of_range(seed))
+    return seed
+
+
+# The option still takes an integer: report that type, not the parser's name.
+_seed_argument.__name__ = "int"
+
+
 PARAMETERS: tuple[Parameter, ...] = (
     Parameter(
         "scenario",
@@ -237,6 +267,8 @@ PARAMETERS: tuple[Parameter, ...] = (
         GROUP_RUN,
         "Random seed; overrides the scenario's seed",
         type=int,
+        argparse_type=_seed_argument,
+        checked="[0, 2**32 - 1], at parse",
         python="run_scenario(seed=)",
         gui_help="Random seed. Leave blank to use the scenario's own baseSeed, as "
         "run.py does. The same seed reproduces the same run; change it to get a "

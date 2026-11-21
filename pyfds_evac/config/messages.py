@@ -127,6 +127,11 @@ def horizon_hold(overrun: str) -> str:
     return f"Warning: {overrun}; holding the last frame from there on."
 
 
+def seed_out_of_range(seed: int) -> str:
+    """D34: a seed numpy's legacy seeding rejects."""
+    return f"--seed must be an integer from 0 to 2**32 - 1, got {seed}"
+
+
 # --- errors ----------------------------------------------------------------
 
 
