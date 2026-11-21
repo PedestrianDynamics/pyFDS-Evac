@@ -500,6 +500,17 @@ class RunManager:
             self.log_lines = []
             self.warnings = []
 
+    def shutdown(self, timeout: float | None = None) -> None:
+        """Stop an active run, wait for its worker, then :meth:`reset`.
+
+        For server exit: a run still active would otherwise leave its
+        temporary trajectory behind. A worker that outlasts ``timeout``
+        keeps its files.
+        """
+        self.cancel()
+        self.join(timeout)
+        self.reset()
+
     @contextlib.contextmanager
     def snapshot(self) -> Iterator[RunManager]:
         """Hold the state lock so a reader sees a single run throughout.

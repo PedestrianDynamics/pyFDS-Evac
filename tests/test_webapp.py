@@ -331,6 +331,53 @@ class TestCancelLifecycle:
         assert mgr.status == "cancelled"
         assert discarded == [True]
 
+    def test_shutdown_stops_an_active_run_and_discards_its_temp_files(
+        self, rm, monkeypatch
+    ):
+        """#319: a server exit during a run left its sqlite behind."""
+        import threading
+
+        mgr, _calls, _gate = rm
+        discarded = []
+        entered = threading.Event()
+        result = SimpleNamespace(
+            sqlite_file=None,
+            status="completed",
+            cleanup=lambda: discarded.append(True),
+        )
+
+        def run_until_cancelled(scenario, progress_callback=None, **kwargs):
+            entered.set()
+            mgr._cancel.wait(5.0)
+            return result
+
+        monkeypatch.setattr(
+            "pyfds_evac.webapp.runner.run_scenario", run_until_cancelled
+        )
+        mgr.start(None, dict, "stub")
+        assert entered.wait(5.0)
+        mgr.shutdown(5.0)
+        assert discarded == [True]
+        assert mgr.status == "idle"
+        assert mgr.result is None
+
+    def test_shutdown_discards_a_finished_run(self, rm, monkeypatch):
+        mgr, _calls, _gate = rm
+        discarded = []
+        result = SimpleNamespace(
+            sqlite_file=None,
+            status="completed",
+            cleanup=lambda: discarded.append(True),
+        )
+        monkeypatch.setattr(
+            "pyfds_evac.webapp.runner.run_scenario", lambda *a, **k: result
+        )
+        mgr.start(None, dict, "stub")
+        assert mgr.join(5.0)
+        mgr.shutdown(5.0)
+        assert discarded == [True]
+        assert mgr.status == "idle"
+
     def test_reset_is_refused_while_cancelling(self, rm):
         import threading
 
@@ -1355,6 +1402,13 @@ def test_artifact_preview_lines_are_rewritable(client):
         assert f'data-suffix="{suffix}"' in r.text
     assert "artifact-preview" in r.text
     assert "outputBase()" in r.text  # the script reads the folder box
+
+
+def test_output_files_are_labelled_as_fixed_by_the_gui(client):
+    """#319: the form says its outputs are always requested."""
+    r = client.get("/")
+    assert 'id="artifact-note"' in r.text
+    assert "The GUI always requests these files" in r.text
 
 
 def test_run_name_matches_the_client_side_clean():
