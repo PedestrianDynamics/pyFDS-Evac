@@ -1176,7 +1176,7 @@ scenarios and scripts of a source checkout; with pip, replace
 &lt;/tr>
 &lt;tr>
 &lt;td>&lt;code>--seed N&lt;/code>&lt;/td>
-&lt;td>Override the scenario&amp;rsquo;s &lt;code>baseSeed&lt;/code> (42 when the scenario sets none).&lt;/td>
+&lt;td>Override the scenario&amp;rsquo;s &lt;code>baseSeed&lt;/code> (42 when the scenario sets none); an integer from 0 to 2**32 - 1.&lt;/td>
 &lt;/tr>
 &lt;tr>
 &lt;td>&lt;code>--print-summary&lt;/code>&lt;/td>
@@ -1609,7 +1609,8 @@ each flag sets.&lt;/p>
 &lt;/table>
 &lt;h3>Seed and precedence&lt;span class="hx-absolute -hx-mt-20" id="seed-and-precedence">&lt;/span>
 &lt;a href="#seed-and-precedence" class="subheading-anchor" aria-label="Permalink for this section">&lt;/a>&lt;/h3>&lt;ul>
-&lt;li>&lt;code>--seed N&lt;/code> overrides the scenario&amp;rsquo;s &lt;code>baseSeed&lt;/code>; a scenario without one uses 42.&lt;/li>
+&lt;li>&lt;code>--seed N&lt;/code> overrides the scenario&amp;rsquo;s &lt;code>baseSeed&lt;/code>; a scenario without one uses 42. A seed outside 0 to 2**32 - 1 is
+rejected before the run starts.&lt;/li>
 &lt;li>&lt;code>--constant-extinction&lt;/code> takes precedence over the FDS extinction slice for
 walking speed and route pricing. Sign legibility reads the FDS extinction
 slice, or clear air without &lt;code>--fds-dir&lt;/code>; it never reads the constant &lt;code>K&lt;/code>.&lt;/li>
@@ -4152,7 +4153,7 @@ In the old format the key sits on &lt;code>journeys[]&lt;/code>.&lt;/p>
 &lt;tr>
 &lt;td>&lt;code>baseSeed&lt;/code>&lt;/td>
 &lt;td>42&lt;/td>
-&lt;td>Random seed; &lt;code>run.py --seed&lt;/code> overrides it.&lt;/td>
+&lt;td>Random seed, an integer from 0 to 2**32 - 1; &lt;code>run.py --seed&lt;/code> overrides it.&lt;/td>
 &lt;/tr>
 &lt;/tbody>
 &lt;/table>
@@ -4998,7 +4999,7 @@ means clothed, ISO 13571 Eq. (9), and a blank &lt;code>heat_fed_threshold&lt;/co
 &lt;tbody>
 &lt;tr>
 &lt;td>Core&lt;/td>
-&lt;td>scenario (pick or upload), seed; a blank seed uses the scenario&amp;rsquo;s &lt;code>baseSeed&lt;/code>, as &lt;code>run.py&lt;/code> does, and 42 if the scenario sets none (&lt;a href="https://pedestriandynamics.org/pyFDS-Evac/docs/using/usage/">Usage&lt;/a>)&lt;/td>
+&lt;td>scenario (pick or upload), seed (0 to 2**32 - 1); a blank seed uses the scenario&amp;rsquo;s &lt;code>baseSeed&lt;/code>, as &lt;code>run.py&lt;/code> does, and 42 if the scenario sets none (&lt;a href="https://pedestriandynamics.org/pyFDS-Evac/docs/using/usage/">Usage&lt;/a>)&lt;/td>
 &lt;/tr>
 &lt;tr>
 &lt;td>Smoke&lt;/td>
