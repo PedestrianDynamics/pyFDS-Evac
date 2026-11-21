@@ -722,6 +722,8 @@ html[data-theme="light"] .smoke-legend .sw { background: var(--sw-bg-l); color: 
 /* ember text is under 3:1 on the light ground; the chip keeps the ember
    border and uses a darker ember for its label */
 html[data-theme="light"] .cmode.active { color: #b54708; }
+/* the selected speed is marked in text as well as by the fill */
+.speed-btn[aria-pressed="true"]::before { content: "\\2713\\00a0"; }
 .speed-custom {
   width: 4.2rem; font-family: var(--font-mono); font-size: .68rem;
   padding: .28rem .5rem; border: 1px solid var(--hairline-strong); border-radius: .45rem;

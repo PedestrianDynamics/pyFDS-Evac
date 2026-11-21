@@ -720,6 +720,7 @@ _JS = """
       speedMult = parseFloat(this.dataset.speed);
       document.querySelectorAll('.speed-btn').forEach(function (b) {
         b.classList.toggle('active', b === btn);
+        b.setAttribute('aria-pressed', String(b === btn));
       });
       if (customInput) customInput.classList.remove('active');
       if (markSpeed) markSpeed('');  // a preset replaces the rejected value's note
@@ -752,7 +753,10 @@ _JS = """
       }
       markSpeed('');
       speedMult = v;
-      document.querySelectorAll('.speed-btn').forEach(function (b) { b.classList.remove('active'); });
+      document.querySelectorAll('.speed-btn').forEach(function (b) {
+        b.classList.remove('active');
+        b.setAttribute('aria-pressed', 'false');
+      });
       customInput.classList.add('active');
     };
     customInput.addEventListener('change', applyCustomSpeed);
@@ -1142,11 +1146,11 @@ def trajectory_component(
         '<button id="traj-reset-view" type="button" class="traj-play" title="Reset zoom/pan" style="font-size:.85rem">&#8634;</button>'
         '<div class="traj-color">'
         '<span class="traj-color-lbl">speed</span>'
-        '<button type="button" class="cmode speed-btn active" data-speed="1">1&times;</button>'
-        '<button type="button" class="cmode speed-btn" data-speed="2">2&times;</button>'
-        '<button type="button" class="cmode speed-btn" data-speed="5">5&times;</button>'
-        '<button type="button" class="cmode speed-btn" data-speed="10">10&times;</button>'
-        '<button type="button" class="cmode speed-btn" data-speed="50">50&times;</button>'
+        '<button type="button" class="cmode speed-btn active" aria-pressed="true" data-speed="1">1&times;</button>'
+        '<button type="button" class="cmode speed-btn" aria-pressed="false" data-speed="2">2&times;</button>'
+        '<button type="button" class="cmode speed-btn" aria-pressed="false" data-speed="5">5&times;</button>'
+        '<button type="button" class="cmode speed-btn" aria-pressed="false" data-speed="10">10&times;</button>'
+        '<button type="button" class="cmode speed-btn" aria-pressed="false" data-speed="50">50&times;</button>'
         + _SPEED_CUSTOM_INPUT
         + "</div>"
         + _SPEED_MSG
