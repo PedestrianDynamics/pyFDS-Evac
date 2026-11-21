@@ -4,6 +4,7 @@ import json
 import shutil
 
 from pyfds_evac.core import ProgressEvent, load_scenario, run_scenario
+from pyfds_evac.core.run_outputs import summary_line
 
 
 def test_progress_callback_receives_events():
@@ -114,3 +115,35 @@ def test_no_event_is_emitted_after_the_last_agent_leaves():
     assert result.success and result.total_agents == 1
     assert events[-1].evacuated == 0
     assert events[-1].pct == 0
+
+
+def test_flow_run_names_the_planned_denominator(capsys):
+    """With flow sources the progress and done lines say ``planned``.
+
+    ``t_junction`` plans 200 agents and spawns 150 before the time limit.
+    The summary counts the spawned ones; only the progress label is new.
+    """
+    scenario = load_scenario("assets/t_junction")
+    events: list[ProgressEvent] = []
+    result = run_scenario(scenario, seed=420, progress_callback=events.append)
+    result.cleanup()
+    lines = capsys.readouterr().out.split("\r")
+    progress = [ln for ln in lines if ln.startswith("Evacuated")]
+
+    assert {e.total for e in events} == {200}
+    assert progress and all("/200 planned  sim=" in ln for ln in progress)
+    assert progress[-1].rstrip().endswith("done")
+    assert (result.total_agents, result.agents_not_spawned) == (150, 50)
+    summary = summary_line(result)
+    assert "/150 evacuated, " in summary
+    assert "50 not spawned)" in summary
+
+
+def test_run_without_flow_keeps_the_unlabelled_progress_line(capsys):
+    scenario = load_scenario("assets/ISO-table21")
+    result = run_scenario(scenario, seed=420)
+    result.cleanup()
+    out = capsys.readouterr().out
+
+    assert "Evacuated 1/1  sim=" in out
+    assert "planned" not in out
