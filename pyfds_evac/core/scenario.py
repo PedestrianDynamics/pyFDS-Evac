@@ -3003,6 +3003,7 @@ def run_scenario(
         _active_speed_zones = active_steering_zones(direct_steering_info)
         _check_flow_variants(flow_distributions, spawning_info.get("stage_map", {}))
         total_progress_agents = initial_agent_count + sum(num_agents_per_source)
+        planned_label = " planned" if has_flow_spawning else ""
         import time as _time
 
         _wall_start = _time.monotonic()
@@ -3060,7 +3061,7 @@ def run_scenario(
                     else 0
                 )
                 print(
-                    f"\rEvacuated {evacuated_agents}/{total_progress_agents}"
+                    f"\rEvacuated {evacuated_agents}/{total_progress_agents}{planned_label}"
                     f"  sim={current_time:.1f}s"
                     f"  wall={wall_m}m{wall_s:02d}s"
                     f"  {pct}%   ",
@@ -4287,7 +4288,7 @@ def run_scenario(
         wall_elapsed = _time.monotonic() - _wall_start
         wall_m, wall_s = divmod(int(wall_elapsed), 60)
         print(
-            f"\rEvacuated {final_evacuated}/{total_progress_agents}"
+            f"\rEvacuated {final_evacuated}/{total_progress_agents}{planned_label}"
             f"  sim={simulation.elapsed_time():.1f}s"
             f"  wall={wall_m}m{wall_s:02d}s"
             f"  done   "

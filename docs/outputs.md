@@ -373,6 +373,7 @@ Four things to keep in mind:
   `fed_cumulative` column is all zero. Check `metrics["fed_enabled"]`, or the
   `FED is disabled` warning
   ([#137](https://github.com/PedestrianDynamics/pyFDS-Evac/issues/137)).
-- **The progress line counts planned agents.** With flow spawning it can show
-  more agents than the final summary, which counts those actually spawned
-  ([#279](https://github.com/PedestrianDynamics/pyFDS-Evac/issues/279)).
+- **The progress line counts planned agents.** With flow spawning it names
+  its denominator, `Evacuated 142/200 planned`, and can show more agents
+  than the final summary, which counts those actually spawned. Runs
+  without flow sources print `Evacuated 1/1`.
