@@ -546,7 +546,7 @@ _RUN_BTN_JS = """
 })();
 """
 
-_TENABILITY_JS = """
+_TENABILITY_TEMPLATE = """
 function drawIncapDist() {
   var canvas = document.getElementById('incap-canvas');
   var dist   = document.getElementById('incap-dist');
@@ -554,7 +554,10 @@ function drawIncapDist() {
 
   var sigmaEl = document.getElementById('susceptibility_sigma');
   var sigma = sigmaEl ? (parseFloat(sigmaEl.value) || __SIGMA__) : __SIGMA__;
-  var mu = Math.log(0.3);  // median incapacitation at FED = 0.3
+  var medianEl = document.getElementById('fed_threshold');
+  var median = medianEl ? (parseFloat(medianEl.value) || __MEDIAN__) : __MEDIAN__;
+  if (!(median > 0)) median = __MEDIAN__;
+  var mu = Math.log(median);  // log-normal median = the FED threshold
 
   var dpr = window.devicePixelRatio || 1;
   var cw = canvas.clientWidth, ch = canvas.clientHeight;
@@ -573,7 +576,7 @@ function drawIncapDist() {
 
   var pL = 28, pR = 10, pT = 18, pB = 18;
   var pw = cw - pL - pR, ph = ch - pT - pB;
-  var fedMax = 1.8, N = 400;
+  var fedMax = Math.max(1.8, 2 * median), N = 400;
 
   // Compute log-normal PDF: f(x) = 1/(x*σ*√2π) * exp(-(ln(x)-μ)²/(2σ²))
   var pts = [], yMax = 0;
@@ -601,9 +604,9 @@ function drawIncapDist() {
   // Shaded fill — horizontal gradient through FED tiers
   var gFill = ctx.createLinearGradient(tx(0), 0, tx(fedMax), 0);
   gFill.addColorStop(0,            'rgba(244,196,48,.28)');
-  gFill.addColorStop(0.3  / 1.8,  'rgba(255,176,32,.28)');
-  gFill.addColorStop(0.6  / 1.8,  'rgba(255,106,26,.28)');
-  gFill.addColorStop(1.0  / 1.8,  'rgba(224,30,55,.28)');
+  gFill.addColorStop(0.3 / fedMax,  'rgba(255,176,32,.28)');
+  gFill.addColorStop(0.6 / fedMax,  'rgba(255,106,26,.28)');
+  gFill.addColorStop(1.0 / fedMax,  'rgba(224,30,55,.28)');
   gFill.addColorStop(1,            'rgba(224,30,55,.10)');
   ctx.beginPath();
   ctx.moveTo(tx(pts[0][0]), pT + ph);
@@ -614,9 +617,9 @@ function drawIncapDist() {
   // Curve line — same gradient
   var gLine = ctx.createLinearGradient(tx(0), 0, tx(fedMax), 0);
   gLine.addColorStop(0,           '#F4C430');
-  gLine.addColorStop(0.3  / 1.8, '#FFB020');
-  gLine.addColorStop(0.6  / 1.8, '#FF6A1A');
-  gLine.addColorStop(1.0  / 1.8, '#E01E37');
+  gLine.addColorStop(0.3 / fedMax, '#FFB020');
+  gLine.addColorStop(0.6 / fedMax, '#FF6A1A');
+  gLine.addColorStop(1.0 / fedMax, '#E01E37');
   gLine.addColorStop(1,          '#E01E37');
   ctx.beginPath();
   pts.forEach(function (p, i) {
@@ -626,7 +629,7 @@ function drawIncapDist() {
 
   // Threshold verticals
   ctx.setLineDash([3, 3]);
-  [[0.3, 'rgba(255,176,32,.6)', '0.3'], [1.0, 'rgba(224,30,55,.6)', '1.0']].forEach(function (th) {
+  [[0.3, 'rgba(255,176,32,.6)', '0.3'], [median, 'rgba(224,30,55,.6)', String(median)]].forEach(function (th) {
     ctx.strokeStyle = th[1]; ctx.lineWidth = 1;
     ctx.beginPath(); ctx.moveTo(tx(th[0]), pT); ctx.lineTo(tx(th[0]), pT + ph); ctx.stroke();
     ctx.fillStyle = th[1]; ctx.font = '7.5px JetBrains Mono, monospace';
@@ -641,9 +644,10 @@ function drawIncapDist() {
 
   // X-axis ticks
   ctx.fillStyle = cssVar('--ink-faint', '#837a74'); ctx.font = '8px JetBrains Mono, monospace'; ctx.textAlign = 'center';
-  [0, 0.3, 0.6, 0.9, 1.2, 1.5].forEach(function (v) {
-    ctx.fillText(v.toFixed(1), tx(v), pT + ph + 12);
-  });
+  var tickStep = fedMax <= 1.8 ? 0.3 : Math.ceil(fedMax / 6 * 10) / 10;
+  for (var k = 0; k * tickStep < fedMax - 0.15 * tickStep; k++) {
+    ctx.fillText((k * tickStep).toFixed(1), tx(k * tickStep), pT + ph + 12);
+  }
 
   // Axis labels
   ctx.fillStyle = cssVar('--ink-faint', '#837a74'); ctx.font = '7.5px JetBrains Mono, monospace';
@@ -675,14 +679,24 @@ function setTenabilityMode(mode) {
 }
 
 document.addEventListener('input', function (e) {
-  if (e.target && e.target.id === 'susceptibility_sigma') drawIncapDist();
+  if (e.target && (e.target.id === 'susceptibility_sigma' || e.target.id === 'fed_threshold')) drawIncapDist();
 });
 document.addEventListener('DOMContentLoaded', function () {
   var el = document.getElementById('incapacitation_mode');
   if (el) setTenabilityMode(el.value || 'deterministic');
 });
 setTimeout(drawIncapDist, 150);
-""".replace("__SIGMA__", repr(default("susceptibility_sigma")))
+"""
+
+
+def _tenability_js() -> str:
+    """Preview script with the median and sigma defaults from the core."""
+    return _TENABILITY_TEMPLATE.replace(
+        "__SIGMA__", repr(default("susceptibility_sigma"))
+    ).replace("__MEDIAN__", repr(default("fed_threshold")))
+
+
+_TENABILITY_JS = _tenability_js()
 
 _MATH_JS = """
 window._renderMath = function () {
