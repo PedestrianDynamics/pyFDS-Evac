@@ -302,7 +302,7 @@ formal contradiction. It is still not a coherent position, and it is sharpest
 exactly where the discovery tier's modelling is most careful.
 
 **What this affects.** *Not* map growth: what an agent learns and when runs
-through `VisibilityModel` alone, so results about map expansion, exploration
+through `VisibilityModel` when the run has one, so results about map expansion, exploration
 order, wander behaviour and the lost-exit failure mode stand. What it undercuts
 is any claim that a **discovery agent's route choice** is perception-limited. It
 is not.
@@ -315,9 +315,9 @@ bound is a legitimate and useful thing to publish, and the discovery tier
 remains a perception-limited model of *wayfinding*; but the two are different
 claims and only one of them is about smoke.
 
-Nothing is fixed here. `foresight_horizon_s` is the one lever already shipped
-that bounds half of it (the temporal half); it defaults to `inf`. #125 records
-the three options and evaluates none.
+**Decision (2026-11-21, #125): accept and label.** `tau` stays in the ranking
+and the engine is unchanged. `foresight_horizon_s` is the one lever already
+shipped that bounds half of it (the temporal half); it defaults to `inf`.
 
 ### One asymmetry favours the exit the agent already walks to
 

@@ -631,13 +631,20 @@ is the waypoint method of Börger, Belt and Arnold (2024), Eqs. (2) and
 - **Legibility is binary** and acts only on knowledge. In the discrete-choice
   studies on [Exit choice and familiarity](/fundamentals/exit-choice.md), exit
   visibility enters the utility as a graded attribute.
-- **Knowledge of topology, not of smoke**
+- **Map growth is perception-limited, route choice is not**
   ([#125](https://github.com/PedestrianDynamics/pyFDS-Evac/issues/125)).
   Learning is limited by the sign-legibility test. Route costs are not: an
-  agent that knows an exit prices the whole route to it from the global
-  extinction field, including legs it has never seen and, with `anticipate`,
-  future times (`route_graph.py`, `RouteCostConfig.anticipate`, `RouteCostConfig.foresight_horizon_s`). The route choice of a discovery
-  agent is therefore not limited by what it has perceived.
+  agent that knows an exit prices the whole remaining route to it from the
+  global extinction field, including legs it has never seen and, with
+  `anticipate`, future times (`route_graph.py`, `_measure_route`,
+  `RouteCostConfig.anticipate`, `RouteCostConfig.foresight_horizon_s`). The
+  choice among known exits is therefore that of an evacuee who knows the
+  smoke on those routes, an optimality bound
+  ([Routing › Limitations](/models/routing.md#limitations)). In a comparison
+  of familiarity tiers, results on which exits are learned and when, on
+  exploration and on exits that are never found rest on perception. A
+  difference in the choice among known exits follows from the routes each
+  agent knows and shows no effect of perceived smoke.
 - **Haensel's heuristics are not reproduced.** Haensel (2014, §3.2) weights
   known edges by sensors (smoke, density, room-to-corridor) and uses a
   `LastDestinationsSensor` against back-tracking. He reports that with an
