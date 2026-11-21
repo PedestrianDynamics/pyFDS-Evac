@@ -118,8 +118,10 @@ def test_huge_int_std_is_a_named_error_not_an_overflow(tmp_path, key):
     assert issue is not None and "'d1'" in issue.message
 
 
-def test_a_huge_positive_int_std_is_accepted(tmp_path):
-    _load(tmp_path, {"v0_distribution": "gaussian", "v0_std": 10**400})
+def test_an_int_std_too_large_for_a_float_stops_the_load(tmp_path):
+    # The run converts the std to a float; 10**400 would overflow there.
+    with pytest.raises(ValueError, match="'d1'.*v0_std"):
+        _load(tmp_path, {"v0_distribution": "gaussian", "v0_std": 10**400})
 
 
 @pytest.mark.parametrize(

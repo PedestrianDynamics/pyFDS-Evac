@@ -184,14 +184,20 @@ def _check_enum_value(dist_id: str, key: str, value: Any) -> None:
     )
 
 
+def _fits_float(value: int | float) -> bool:
+    """Whether *value* is a finite float, or an int a float can hold."""
+    try:
+        return math.isfinite(value)
+    except OverflowError:
+        return False
+
+
 def _check_std_value(dist_id: str, key: str, value: Any) -> None:
     """Raise ValueError when *key* is not null or a finite number >= 0."""
     if value is None:
         return
     is_number = isinstance(value, (int, float)) and not isinstance(value, bool)
-    # An int is finite; math.isfinite would overflow on a huge one.
-    finite = isinstance(value, int) or (is_number and math.isfinite(value))
-    if is_number and finite and value >= 0:
+    if is_number and _fits_float(value) and value >= 0:
         return
     raise ValueError(
         f"Distribution {dist_id!r}: {key} must be a finite number >= 0 or "

@@ -173,6 +173,10 @@ empty object, before the setter's keys are written.
 Most scenarios set only `number`, `v0`, `radius`, `use_flow_spawning` and
 `use_premovement`; [Examples](#examples) shows each.
 
+A value that "stops the load" in the table below is refused again when
+`run_scenario` starts, so a deck changed through `set_agent_params` gets
+the same error.
+
 | Key | Default | Range | Effect |
 |---|---|---|---|
 | `number` | `simulationParams.number`, else 10 | ≥ 0 | Agents placed at the start by number, or added over the window with `use_flow_spawning`. Not read, and not checked, in the percentage modes. No value is taken from another spawn area. |
