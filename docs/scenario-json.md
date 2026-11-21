@@ -170,29 +170,35 @@ read as no parameters, so every key takes its default. The
 the object it encodes, with all its keys, and an unreadable value by an
 empty object, before the setter's keys are written.
 
+Most scenarios set only `number`, `v0`, `radius`, `use_flow_spawning` and
+`use_premovement`; [Examples](#examples) shows each.
+
 | Key | Default | Range | Effect |
 |---|---|---|---|
 | `number` | `simulationParams.number`, else 10 | ≥ 0 | Agents placed at the start by number, or added over the window with `use_flow_spawning`. Not read, and not checked, in the percentage modes. No value is taken from another spawn area. |
-| `distribution_mode` | `"by_number"` | `by_number`, `by_percentage`, `fill_area`, `until_full` | `by_percentage` fills the polygon to `percentage` (default 50) of its capacity estimate: ⌊estimate × `percentage` / 100⌋ agents, at least 1. The estimate is ⌊A / (π r²) / 2⌋ for the spawn area A clipped to the walkable area and the largest agent radius r (`radius`, or mean + 3 × `radius_std` up to 1 m for a Gaussian radius; at least 0.1 m). `number` is not read. The same count applies at the start and with `use_flow_spawning`; `--print-summary` shows it. `percentage` is clamped to 1–100; a value that is not a number takes the default. The `by_percentage` count is exact: when JuPedSim cannot seat it, the run stops with a `SpawnCapacityError`, which near 100 % can happen. `fill_area` and `until_full` take the same count, with `percentage` defaulting to 100, as an upper bound: at the start they place as many agents as fit up to it, the run prints `Distribution '<id>': fill_area placed N of at most M agents`, and the result (`ScenarioResult.fill_placement`, the closing summary line) records it; `--print-summary` shows `up to M agents`, and `--export-only` does not report it as over-full. With or without journeys, every exact count is placed before any fill mode, whatever the deck order, and the fill modes share what is left. |
+| `distribution_mode` | `"by_number"` | `by_number`, `by_percentage`, `fill_area`, `until_full` | Any other string is read as `by_number`, without a message. `by_percentage` fills the polygon to `percentage` of its capacity estimate: ⌊estimate × `percentage` / 100⌋ agents, at least 1. The estimate is ⌊A / (π r²) / 2⌋ for the spawn area A clipped to the walkable area and the largest agent radius r (`radius`, or mean + 3 × `radius_std` up to 1 m for a Gaussian radius; at least 0.1 m). `number` is not read. The same count applies at the start and with `use_flow_spawning`; `--print-summary` shows it. The `by_percentage` count is exact: when JuPedSim cannot seat it, the run stops with a `SpawnCapacityError`, which near 100 % can happen. `fill_area` and `until_full` take the same count as an upper bound: at the start they place as many agents as fit up to it, the run prints `Distribution '<id>': fill_area placed N of at most M agents`, and the result (`ScenarioResult.fill_placement`, the closing summary line) records it; `--print-summary` shows `up to M agents`, and `--export-only` does not report it as over-full. With or without journeys, every exact count is placed before any fill mode, whatever the deck order, and the fill modes share what is left. |
+| `percentage` | 50 (`by_percentage`), 100 (`fill_area`, `until_full`) | whole percent, clamped to 1–100 | Share of the capacity estimate that the percentage modes use (see `distribution_mode`). The value is read as `int(float(value))`; a value that is not a number takes the default, without a message. Not read with `by_number`. |
 | `v0` | `simulationParams.v0`, else 1.25 m/s | finite, ≥ 0 | Clear-air walking speed, for every movement model (FDS+Evac `VEL_MEAN`; 1.2 before). Every smoke, irritant and zone factor multiplies this value. |
-| `v0_distribution` | `"constant"` | `constant`, `gaussian` | `gaussian` draws per agent with `v0_std`; draws are clipped to [0.1, 5.0] m/s. |
-| `v0_std` | none | — | Spread of the Gaussian draw. |
+| `v0_distribution` | `"constant"` | `constant`, `gaussian` | `gaussian` draws per agent with `v0_std`; draws are clipped to [0.1, 5.0] m/s. Any other string, such as `"normal"`, gives the constant `v0`, without a message. Only agents placed at the start are drawn; flow-spawned agents take `v0`. |
+| `v0_std` | none | not checked; draws clipped to [0.1, 5.0] m/s | Spread of the Gaussian draw. A `v0_std` of 0 or `null` gives the constant `v0`. A negative value stops the run with numpy's `ValueError: scale < 0`, and a string with a `TypeError` or `ValueError`; neither names the distribution. |
 | `radius` | `simulationParams.radius`, else 0.2 m | finite, > 0 | Body radius: packing, spawn spacing, and the `radius + 0.5` m arrival distance at a checkpoint (an agent also arrives when its centre is inside the checkpoint polygon). An agent leaves at an exit when its centre enters the exit polygon or comes within 0.03 m of it. |
-| `radius_distribution` | `"constant"` | `constant`, `gaussian` | `gaussian` draws per agent with `radius_std`, clipped to [0.1 m, b], where b = min(max(`radius` + 3 × `radius_std`, 0.1), 1.0) m is the radius placement spaces agents for. Only agents placed at the start are drawn; flow-spawned agents take `radius`. |
-| `radius_std` | none | — | Spread of the Gaussian draw. |
-| `use_premovement` | constant 10 s when no pre-movement key is set, with a warning | `true`, `false` | Delay before the agent starts moving. Setting any pre-movement key, including `use_premovement: false`, turns the default off. |
-| `premovement_distribution` | `"gamma"` | `gamma`, `lognormal`, `weibull`, `uniform`, `constant` | Distribution of the delay. |
-| `premovement_param_a`, `premovement_param_b` | the preset of the distribution | — | Override the preset; the presets and their sources are in [Coming from FDS+Evac](coming-from-fds-evac.md#pre-movement-parameters). |
+| `radius_distribution` | `"constant"` | `constant`, `gaussian` | `gaussian` draws per agent with `radius_std`; any other string gives the constant `radius`, without a message. The draws are clipped to [0.1 m, b], where b = min(max(`radius` + 3 × `radius_std`, 0.1), 1.0) m is the radius placement spaces agents for. Only agents placed at the start are drawn; flow-spawned agents take `radius`. |
+| `radius_std` | none | not checked; draws clipped to [0.1 m, b] (see `radius_distribution`) | Spread of the Gaussian draw. A `radius_std` of 0 or `null` gives the constant `radius`. A negative or string value fails as for `v0_std`. |
+| `use_premovement` | constant 10 s when no pre-movement key is set, with a warning | `true`, `false` | Delay before the agent starts moving. Setting any pre-movement key, including `use_premovement: false`, turns the default off. A `premovement_*` key such as `premovement_param_a` without `use_premovement: true` therefore gives no delay at all, without a message: the key removes the 10 s default and `use_premovement` reads as `false`. Not applied to flow-spawned agents. |
+| `premovement_distribution` | `"gamma"` | `gamma`, `lognormal`, `weibull`, `uniform`, `constant` | Distribution of the delay. Another value stops the run with a `ValueError` when the delays are drawn. |
+| `premovement_param_a`, `premovement_param_b` | the preset of the distribution | not range-checked | Override the preset. Set both for the override to take effect; `constant` needs only `premovement_param_a`. The two values mean different things per distribution; the meanings, presets and sources are in [Coming from FDS+Evac](coming-from-fds-evac.md#pre-movement-parameters). |
 | `premovement_preset` | none | one of the 16 `cvm2_*` names | A constant pre-travel time from C/VM2 Table 3.3 ([list](coming-from-fds-evac.md#cvm2-table-33-presets)). Cannot be combined with `premovement_distribution`, `premovement_param_a/b` or `use_premovement: false`. `premovement_offset_s` adds detection and notification. |
-| `premovement_seed` | none | — | Separate seed for the pre-movement draw. When set, the pre-movement times are the same for every run seed. |
+| `premovement_seed` | none | not checked | Separate seed for the pre-movement draw. When set, the pre-movement times are the same for every run seed. |
 | `premovement_offset_s` | none | ≥ 0 s | A fixed delay added to every agent's drawn pre-movement time, so nobody starts earlier. It stands for FDS+Evac's detection time, and it is also the way to let the fire develop before the alarm (Pathfinder's time offset for FDS results): the FDS clock is not shifted, agents are in the building from ignition, and while they wait the smoke update skips them, so they accrue no dose (see [Spawn areas](#spawn-areas-distributionsidparameters)). `pyfds-evac init` writes it. It needs `use_premovement: true`, and without it the run stops with a `ValueError`. Applies with and without `journeys`; ignored with flow spawning. |
-| `use_flow_spawning` | `false` | — | Add agents over time instead of at the start (no pre-movement then). |
-| `flow_start_time`, `flow_end_time` | 0 s, 10 s | — | Window of flow spawning. A flow agent keeps twice the larger radius from every agent already in the run; while no position in the area is that free, it waits, and one still waiting when the window closes does not enter (`agents_not_spawned`); a run whose building then empties ends there (`end_reason` `flows_closed`). Besides that spacing, only a position JuPedSim refuses (too close to an agent or a wall, or outside the walkable area) makes the agent wait; any other error while building a flow agent, such as no valid entry stage, no exit or exit journey, or an invalid agent parameter, stops the run with an error naming the distribution, its source and the position, and is not counted in `agents_not_spawned`. |
+| `use_flow_spawning` | `false` | truthiness, not type-checked | Add agents over time instead of at the start (no pre-movement then). See [Flow-spawned agents](#flow-spawned-agents). |
+| `flow_start_time`, `flow_end_time` | 0 s, 10 s | not checked; the run uses start = max(0, `flow_start_time`) and end = max(start + 0.1, `flow_end_time`) | Window of flow spawning. A flow agent keeps twice the larger radius from every agent already in the run; while no position in the area is that free, it waits, and one still waiting when the window closes does not enter (`agents_not_spawned`); a run whose building then empties ends there (`end_reason` `flows_closed`). Besides that spacing, only a position JuPedSim refuses (too close to an agent or a wall, or outside the walkable area) makes the agent wait; any other error while building a flow agent, such as no valid entry stage, no exit or exit journey, or an invalid agent parameter, stops the run with an error naming the distribution, its source and the position, and is not counted in `agents_not_spawned`. |
 | `flow_schedule` | none | a list of windows | Flow windows that replace `flow_start_time`, `flow_end_time` and `number`: each `{"flow_start_time", "flow_end_time", "number"}` (aliases `start_time_s`, `end_time_s`, `sim_count`) adds `number` agents at evenly spaced times within its window, as written, at most one per time step (`simulationParams.dt`, 0.01 s by default); a window shorter than `number` × `dt`, or one whose agents per second exceed the area's capacity estimate, stops the run. Agents of a window that the time limit cuts off count as not spawned; a run whose building empties after the last flow window with agents still to enter closed ends then (`end_reason` `flows_closed`). An entry that is not an object, a time that is not a finite number, a start below 0, an end not after the start or a `number` that is not a whole number ≥ 1 stops the run. Each of these errors is a `SpawnConfigError` (a `ValueError`) that names the distribution, printed by the CLI in one line; `--export-only` reports the same. `Scenario.set_flow_schedule()` writes it. |
 | `initial_number` | 0 | ≥ 0 | With `flow_schedule`: agents placed at the start beside the scheduled ones, checked against the area's capacity as `number` is. Ignored, and not checked, without `flow_schedule`. |
-| `familiarity` | `"full"` | `full`, `discovery`, a probability in [0, 1], or an object `{exit_id: p}` | What the agents know of the exits at the start; see [Models › Wayfinding](/models/wayfinding.md). The object form makes each listed exit known with probability p, drawn once per agent in the order of `exits`; an unlisted exit is unknown, and an empty object is `discovery`. The agents then learn as under `discovery`, also when every p is 1. An id that is not in `exits`, or a p outside [0, 1] or not a number, stops the run. |
+| `familiarity` | `"full"` | `full`, `discovery`, a probability in [0, 1], or an object `{exit_id: p}` | What the agents know of the exits at the start; see [Models › Wayfinding](/models/wayfinding.md). The object form makes each listed exit known with probability p, drawn once per agent in the order of `exits`; an unlisted exit is unknown, and an empty object is `discovery`. The agents then learn as under `discovery`, also when every p is 1. An id that is not in `exits`, or a p outside [0, 1] or not a number, stops the run. Any other string, including `"0.5"` and `"Full"`, stops the run with a `ValueError`. `true` is accepted as 1.0, although the object form rejects booleans. |
 | `entrance` | none | an exit id, or a list of exit ids | The exits, reachable from the spawn area, that the agents know from the start; an id that is not in `exits` stops the run, and an exit no route from the spawn area reaches is reported as a warning. `pyfds-evac init` writes a list for a group whose `KNOWN_DOOR_NAMES` has several doors with probability 1. |
 | `no_known_exit` | `"default_route"` | `default_route`, `explore`, `return`, `stay` | What an agent does while no exit is reachable in its map. `default_route` (the FDS+Evac counterpart) follows the journey, or without one the nearest exit on foot, and flags leaving by an exit not in the map. `explore`, `return` and `stay` need rerouting and are refused with `--smoke-blind`; see [Models › Wayfinding §2.4](/models/wayfinding.md#2-the-knowledge-contract). |
+| `population` | none | any value | A free label. When at least one distribution has the key, the run writes the table `agent_distributions` into the trajectory SQLite ([Outputs](outputs.md#trajectory-sqlite)). The value is not read, so any value switches the table on. The `station_fahy` and `station_nist` decks use it. |
+| `coordinates` (beside `parameters`, not inside) | required | a polygon, as a list of corners | The spawn area. The set-up without journeys leaves out an area with fewer than three corners. `journey_weights` also sits beside `parameters`; see [Journeys](#journeys-journeys_v2). |
 
 A spawn area's own `number`, `radius` and `v0` are read as the
 `simulationParams` values are: `number` with `int()`, `radius` and `v0`
@@ -221,6 +227,82 @@ win instead
 
 While an agent waits out its pre-movement time, the smoke update skips it, so
 it starts at its full clear-air speed.
+
+### Flow-spawned agents
+
+Agents added with `use_flow_spawning` or `flow_schedule` read these keys:
+`number` (the total over the window), `distribution_mode` and `percentage`
+(the count), `radius`, `v0`, `familiarity`, `entrance` and `no_known_exit`.
+They do not read `v0_distribution`, `v0_std`, `radius_distribution` or
+`radius_std`: a flow agent takes `v0` and `radius` as written. They have no
+pre-movement, so every `premovement_*` key is ignored for them. The
+three knowledge keys reach a flow agent only when it has a routed path.
+Agents from `initial_number` are placed at the start and read every key.
+
+### Examples
+
+Minimal: only the agent count. The agents get `v0` 1.25 m/s and `radius`
+0.2 m, and the run warns that it applied the default 10 s pre-movement.
+
+```json
+"parameters": {"number": 20}
+```
+
+Flow spawning, 30 agents over the first 60 s:
+
+```json
+"parameters": {"number": 30, "use_flow_spawning": true,
+               "flow_start_time": 0, "flow_end_time": 60}
+```
+
+The same with a schedule, 5 agents at the start and 10 agents in each of
+two windows:
+
+```json
+"parameters": {"initial_number": 5,
+               "flow_schedule": [
+                 {"flow_start_time": 0,  "flow_end_time": 30, "number": 10},
+                 {"flow_start_time": 60, "flow_end_time": 90, "number": 10}]}
+```
+
+A lognormal pre-movement time with a 60 s detection offset. The two
+parameters are the lognormal preset (Lovreglio et al., 2019, Table 3,
+Business Cluster 1; see
+[Coming from FDS+Evac](coming-from-fds-evac.md#pre-movement-parameters));
+its median pre-movement time is about 98 s (e^4.586) before the 60 s
+offset. `premovement_offset_s` needs `use_premovement: true`:
+
+```json
+"parameters": {"number": 20, "use_premovement": true,
+               "premovement_distribution": "lognormal",
+               "premovement_param_a": 4.586, "premovement_param_b": 0.967,
+               "premovement_offset_s": 60}
+```
+
+Agents that know no exit at the start and explore; `explore` needs
+rerouting and is refused with `--smoke-blind`:
+
+```json
+"parameters": {"number": 10, "familiarity": "discovery",
+               "no_known_exit": "explore"}
+```
+
+## Keys the run does not read
+
+The loader does not check `parameters` against a list of keys. A key that
+the run does not know is dropped without a message: `{"numbr": 5}` leaves
+`number` at 10. The same holds for the `routing` block, where only the
+removed keys in `REMOVED_ROUTING_KEYS` are refused. A misspelled key
+therefore changes nothing, with one exception: any key starting with
+`premovement_` counts as a pre-movement setting and turns the 10 s default
+off, so `premovement_typo` removes the delay without a message.
+
+- `fahy_row` and `fahy_class` are study labels. The package ignores them;
+  only the scripts in `assets/station_fahy/` and `assets/station_nist/` read
+  them.
+- `queues`, `waiting_sets`, `obstacles`, `background_image` and
+  `project_version` at the top level are not read by the run.
+- `type` in a distribution has no reader in `pyfds_evac/core`.
 
 ## Exits: `exits.<id>`
 
@@ -439,6 +521,3 @@ Some parameters exist only in Python, as fields of a config object:
   [Models › Smoke speed](/models/smoke-speed.md#parameters);
 - `RerouteConfig.exit_switch_anchor`, which, when set,
   overrides the `routing` key `exit_switch_anchor` for that run.
-
-Tracking issue for this reference:
-[#119](https://github.com/PedestrianDynamics/pyFDS-Evac/issues/119).

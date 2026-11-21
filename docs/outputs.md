@@ -15,6 +15,7 @@ fields of the `ScenarioResult` that `run_scenario()` returns.
 | Run manifest | with `--output-sqlite` | always | one JSON object, `<stem>.manifest.json` beside the SQLite |
 | `agent_scalars` table | inside the SQLite | a FED track ran | one per agent per FED update |
 | `agent_exits` table | inside the SQLite | always | one per agent that left |
+| `agent_distributions` table | inside the SQLite | a distribution has a `population` key | one per agent placed at the start |
 | Smoke history | `--output-smoke-history CSV` | a smoke model ran (`--fds-dir` with an extinction slice, or `--constant-extinction`) | one per agent per `--smoke-update-interval` |
 | FED history | `--output-fed-history CSV` | the gas FED or the heat FED ran | one per agent per `--smoke-update-interval` |
 | Route history | `--output-route-history CSV` | rerouting is on (the default), or an exit has `open_from_s` or `closed_after_s`; without rerouting it then holds only the rows of agents whose exit is closed: `exit_closed`, `initial` (exit not open yet) or `default_route` ([#395](https://github.com/PedestrianDynamics/pyFDS-Evac/issues/395)) | one per change of target: switch, fallback, better path, explore or wander; `initial` only when an agent without an exit is first given one, so a deck whose agents start with an exit can write a file with only its header |
@@ -59,6 +60,19 @@ Every file, and the trajectory of the exported Python script, also holds
 (`ScenarioResult.exit_times`). An agent still inside at the end has no row.
 `pyfds_evac.analysis.load_exit_times` reads it for the RSET
 map ([ASET/RSET maps](aset-rset-maps.md)).
+
+When at least one distribution of the scenario has a `population` key in its
+`parameters` ([Scenario JSON](scenario-json.md#spawn-areas-distributionsidparameters)),
+the file also holds a table, `agent_distributions(id, distribution)`: the key of the
+distribution each agent placed at the start came from, for example
+`jps-distributions_0` (`ScenarioResult.agent_distributions`). `id` is the
+JuPedSim agent id, as in the trajectory. Flow-spawned agents
+(`use_flow_spawning`, `flow_schedule`) are not listed, so a deck that
+spawns only by flow writes an empty table. The table is written even
+then, so an empty table differs from a run without the key. The
+value of `population` is not read: its presence switches the table on, and
+a run without the key leaves the file as it was. `assets/station_fahy/validate.py`
+reads the table to attribute each agent to its distribution.
 
 ## Run manifest
 

@@ -121,10 +121,10 @@ can apply them again after the next export
   app. The run does not read it.
 - `exits.<id>`: `coordinates`, `enable_throughput_throttling`,
   `max_throughput`, and an optional `sign`.
-- `distributions.<id>.parameters`: `number`, `distribution_mode` and
-  `percentage`, the `v0*` and `radius*` keys, `use_premovement` and the
-  `premovement_*` keys, `use_flow_spawning` with `flow_start_time` and
-  `flow_end_time`; and next to the parameters, `journey_weights`.
+- `distributions.<id>.parameters`: the spawn-area keys, listed with their
+  defaults in
+  [Scenario JSON](scenario-json.md#spawn-areas-distributionsidparameters);
+  and next to the parameters, `journey_weights`.
 - `checkpoints.<id>`: `waiting_time` with its distribution and spread, the
   throughput keys, `speed_factor` (always 1) and an optional `sign`.
 - `zones.<id>.speed_factor`, and `obstacles` with their heights.

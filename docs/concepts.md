@@ -247,9 +247,10 @@ starts with whatever the agent's familiarity gives it:
   everyone spawning there).
 - **A number between 0 and 1**: each exit is known from the start with that
   probability, so a crowd can be a mixture rather than two groups.
-- **`entrance`**: names one exit that is also known from the start, such as the
-  door the agent came in by. It must be an exit reachable from the spawn area;
-  otherwise it is ignored without a warning.
+- **`entrance`**: names an exit, or a list of exits, that are also known from
+  the start, such as the door the agent came in by. An id that is not in
+  `exits` stops the run. An exit that no route from the spawn area reaches is
+  reported as a warning.
 
 After that, the map grows only when the agent can read a sign (a run with
 visibility switched off lets it learn by contact instead). A sign is
