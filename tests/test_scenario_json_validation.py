@@ -75,6 +75,20 @@ def test_unknown_enum_value_stops_the_load(tmp_path, key, value, allowed):
     assert "'d1'" in message and key in message and allowed in message
 
 
+@pytest.mark.parametrize(
+    "key",
+    [
+        "v0_distribution",
+        "desired_speed_distribution",
+        "radius_distribution",
+        "distribution_mode",
+    ],
+)
+def test_null_enum_value_reads_as_unset(tmp_path, key):
+    scenario = _load(tmp_path, {key: None, "number": 3})
+    assert scenario.raw["distributions"]["d1"]["parameters"][key] is None
+
+
 @pytest.mark.parametrize("key", ["v0_std", "desired_speed_std", "radius_std"])
 @pytest.mark.parametrize("value", [-0.1, "0.2", True, float("inf")])
 def test_bad_std_stops_the_load(tmp_path, key, value):

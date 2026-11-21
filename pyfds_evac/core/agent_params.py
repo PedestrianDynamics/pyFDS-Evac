@@ -168,7 +168,12 @@ def _distribution_parameters(data: Any) -> Iterator[tuple[str, dict[str, Any]]]:
 
 
 def _check_enum_value(dist_id: str, key: str, value: Any) -> None:
-    """Raise ValueError when *key* holds a value the run does not act on."""
+    """Raise ValueError when *key* holds a value the run does not act on.
+
+    ``null`` reads as unset: the run takes the default.
+    """
+    if value is None:
+        return
     allowed = _DISTRIBUTION_ENUMS[key]
     if isinstance(value, str) and value in allowed:
         return
