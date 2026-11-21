@@ -120,8 +120,12 @@ def discard_result(result: Any) -> None:
     cleanup = getattr(result, "cleanup", None)
     if cleanup is None:
         return
-    with contextlib.suppress(OSError):
+    try:
         cleanup()
+    except OSError:
+        logging.getLogger(__name__).warning(
+            "Could not delete a temporary run file", exc_info=True
+        )
 
 
 @functools.cache
@@ -499,6 +503,17 @@ class RunManager:
             self.fed_snapshots = []
             self.log_lines = []
             self.warnings = []
+
+    def shutdown(self, timeout: float | None = None) -> None:
+        """Stop an active run, wait for its worker, then :meth:`reset`.
+
+        For server exit: a run still active would otherwise leave its
+        temporary trajectory behind. A worker that outlasts ``timeout``
+        keeps its files.
+        """
+        self.cancel()
+        self.join(timeout)
+        self.reset()
 
     @contextlib.contextmanager
     def snapshot(self) -> Iterator[RunManager]:
