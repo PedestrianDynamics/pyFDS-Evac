@@ -21,7 +21,7 @@ al.'s *w*, *x* (*S* in the notation table) and *A*, which plays the role of
 | Jin, non-irritant (Purser's fit) | *K* | v = 1.0573 − 0.4326 K | points 0.5–1.13 1/m (Purser: 0.2–1.13) | absolute | kerosene, less irritant |
 | Jin, irritant (Purser's fit) | *K* | v = 1.1517 − 0.9578 K | points 0.32–0.47 1/m (Purser: 0.32–0.5) | absolute | wood cribs, highly irritant |
 | Purser 2003, fit to Jin, non-irritant | OD/m (K ≈ 2.303 OD/m) | F = 1.236 − 1.738 OD/m | Purser's stated range OD/m 0.13–0.55 (K ≈ 0.30–1.27 1/m); Jin's data K ≈ 0.5–1.13 1/m | fractional | non-irritant |
-| Frantzich–Nilsson, Eq. 3 | *K* | v = 0.706 − 0.057 K | 1.9–7.4 1/m | absolute | artificial, mild (acetic acid) |
+| Frantzich–Nilsson, Eq. 3 | *K* | v = 0.706 − 0.057 K | ≈ 1.9–7.4 1/m, read from Fig. 14 | absolute | artificial, mild (acetic acid) |
 | [FDS+Evac](https://github.com/firemodels/fds/tree/c9da70d7a/Source), Eq. 11 | *K* | v = max(0.1 v₀, v₀ (1 − 0.057 K / 0.706)) | as Frantzich–Nilsson | fractional | as Frantzich–Nilsson |
 | Purser, Eq. 70.8 | *K* | W = −0.1364 ln K + 0.6423 | 0.32–0.5 and 1.9–7.5 1/m | absolute | pooled, "moderately irritant" |
 | Fridolf et al., Eq. 2 | *x* = *A*/*K* | w = 0.34 x + 0.31 | x ≈ 0.3–3 m | absolute | mostly non-irritant |
@@ -232,7 +232,8 @@ $$
 
 with \(R^2\) = 0.342 (Table D3); the bracketed values are standard errors
 of the coefficients, not the spread between people. The lit runs cover
-*K* ≈ 1.9–7.4 1/m (Fig. 9).
+*K* ≈ 1.9–7.4 1/m, read from Fig. 14 (p. 39), which shows the lit runs
+alone; the report does not print the range.
 
 {{< details title="More on the Frantzich–Nilsson data" closed="true" >}}
 **Participants.** 30 men and 16 women, mean age about 22, mostly students
@@ -360,7 +361,7 @@ legend), solid over the range of Jin's points in FRI Report No. 42, Fig. 2
 ranges (0.2–1.13 and 0.32–0.5 1/m, p. 2285);
 means 0.74 ± 0.17 m/s at K = 0.73 1/m (circle) and 0.75 ± 0.21 m/s
 at K = 0.42 1/m (square) (Ch. 70, p. 2285). Frantzich–Nilsson:
-v = 0.706 − 0.057 K on K = 1.9–7.4 1/m (report Eq. 3; range from Fig. 9),
+v = 0.706 − 0.057 K on K = 1.9–7.4 1/m (report Eq. 3; range read from Fig. 14),
 prediction interval 0.2–0.7 m/s at K = 4 1/m (§3.3.2, "ca 0,2 och 0,7").
 Purser: W = −0.1364 ln K + 0.6423 (Eq. 70.8) on K = 0.32–0.5 and
 1.9–7.5 1/m, the ranges Ch. 70 states for the pooled data (pp. 2285–2286).

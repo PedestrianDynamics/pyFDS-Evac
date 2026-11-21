@@ -164,6 +164,13 @@ another, and that there is no agreed population for tenability criteria to
 protect. Following Fleming (2000), whom they cite, they propose reporting
 the margin ASET − RSET to compare designs (pp. 350–351). Their evidence comes from fires in single-family homes.
 
+Neither time is one number for a building. Schröder, Arnold and Seyfried
+(2020, §1) argue that ASET and RSET are "distributed values in space even
+in the frame of one single scenario", and that a margin checked at a few
+chosen points need not be positive everywhere; they map both over the
+floor. In their demonstration case everyone starts to move at once (§2.1),
+so the RSET they map contains no pre-movement time.
+
 ## Sources
 
 - ISO (2009). *ISO/TR 16738:2009 Fire-safety engineering — Technical
@@ -215,6 +222,9 @@ the margin ASET − RSET to compare designs (pp. 350–351). Their evidence come
 - Babrauskas, V., Fleming, J. M., & Russell, B. D. (2010). *RSET/ASET, a
   flawed concept for fire safety assessment*. Fire and Materials, 34(7),
   341–355. [doi:10.1002/fam.1025](https://doi.org/10.1002/fam.1025)
+- Schröder, B., Arnold, L., & Seyfried, A. (2020). *A map representation
+  of the ASET-RSET concept*. Fire Safety Journal, 115, 103154. §1 and §2.1.
+  [doi:10.1016/j.firesaf.2020.103154](https://doi.org/10.1016/j.firesaf.2020.103154)
 - Gwynne, S. M. V., Boyce, K. E., & Lovreglio, R. (2026). *Egress data for
   engineering analysis*. SFPE Handbook of Fire Protection Engineering,
   6th ed., Ch. 72, 2375–2484. p. 2378.
