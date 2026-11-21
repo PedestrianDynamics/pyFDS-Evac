@@ -5166,7 +5166,7 @@ means clothed, ISO 13571 Eq. (9), and a blank &lt;code>heat_fed_threshold&lt;/co
 &lt;/tr>
 &lt;tr>
 &lt;td>Output files&lt;/td>
-&lt;td>&lt;strong>Output folder&lt;/strong>; the SQLite with its run manifest, the five CSVs and the scenario bundle (&lt;code>&amp;lt;run folder&amp;gt;/bundle&lt;/code>) are written to the run&amp;rsquo;s folder (see &lt;a href="#output-folders">Output folders&lt;/a>)&lt;/td>
+&lt;td>&lt;strong>Output folder&lt;/strong>; the SQLite with its run manifest, the five CSVs and the scenario bundle (&lt;code>&amp;lt;run folder&amp;gt;/bundle&lt;/code>) are written to the run&amp;rsquo;s folder (see &lt;a href="#output-folders">Output folders&lt;/a>). The GUI always requests these files and has no switch for them; a file the run has no data for is not written&lt;/td>
 &lt;/tr>
 &lt;tr>
 &lt;td>Other (collapsed)&lt;/td>
