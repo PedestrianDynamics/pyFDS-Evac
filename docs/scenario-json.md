@@ -284,7 +284,7 @@ rerouting and is refused with `--smoke-blind`:
 
 ```json
 "parameters": {"number": 10, "familiarity": "discovery",
-               "entrance": "jps-exits_0", "no_known_exit": "explore"}
+               "no_known_exit": "explore"}
 ```
 
 ## Keys the run does not read
@@ -293,7 +293,9 @@ The loader does not check `parameters` against a list of keys. A key that
 the run does not know is dropped without a message: `{"numbr": 5}` leaves
 `number` at 10. The same holds for the `routing` block, where only the
 removed keys in `REMOVED_ROUTING_KEYS` are refused. A misspelled key
-therefore changes nothing.
+therefore changes nothing, with one exception: any key starting with
+`premovement_` counts as a pre-movement setting and turns the 10 s default
+off, so `premovement_typo` removes the delay without a message.
 
 - `fahy_row` and `fahy_class` are study labels. The package ignores them;
   only the scripts in `assets/station_fahy/` and `assets/station_nist/` read
