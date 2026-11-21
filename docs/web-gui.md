@@ -346,9 +346,10 @@ already exists, `-2`, `-3`, … is added to its name.
   without data are listed under **Not shown**. FED is shown live during a
   run.
 - **Trajectory replay**: agents move between the stored trajectory samples,
-  coloured by cumulative gas FED or by assigned exit, with play, pause, a
-  scrub bar, speeds of 1×, 2×, 5×, 10× and 50× or a custom speed, and
-  scroll-to-zoom and drag-to-pan. When the run has an `fds_dir`, the
+  coloured by cumulative gas FED, by cumulative heat FED (a "heat FED"
+  button, present only when the run modelled heat FED) or by assigned
+  exit, with play, pause, a scrub bar, speeds of 1×, 2×, 5×, 10× and 50×
+  or a custom speed, and scroll-to-zoom and drag-to-pan. When the run has an `fds_dir`, the
   horizontal extinction slice the engine samples is drawn under the agents
   in fixed *K* bins, as a smoke layer that can be switched off; see
   [Look at the results](#look-at-the-results). The result does not record
@@ -357,11 +358,13 @@ already exists, `-2`, `-3`, … is added to its name.
   ([#592](https://github.com/PedestrianDynamics/pyFDS-Evac/issues/592)).
   Without a FED model, for example when the FDS output has no CO, CO₂ or O₂
   slices, agents are coloured by exit and the FED/exit
-  switch is not shown. The replay colours by gas FED only, not by heat FED
-  ([#232](https://github.com/PedestrianDynamics/pyFDS-Evac/issues/232)).
+  switch is not shown. Heat FED and gas FED are coloured separately on the
+  same scale; the core defines no combined dose, so none is drawn.
 - **FED panel**: under the replay, when the run has a FED model. It shows
-  the highest gas FED of any agent on one continuous scale that runs to 1, or
-  to the run's FED threshold if that is higher. A marker labelled
+  the highest gas FED (or heat FED, while that colouring is selected) of
+  any agent on one continuous scale that runs to 1, or
+  to the run's FED threshold if that is higher; heat FED uses this same
+  scale and has no marker. A marker labelled
   "threshold" (deterministic mode) or "median threshold" (probabilistic
   mode) sits at the run's `fed_threshold`, read from the run's own settings,
   not the current form. Without a recorded threshold there is no marker.

@@ -3546,6 +3546,110 @@ class TestQaFixes595:
         assert 'aria-label="Smoke layer" aria-pressed="true">on</button>' in html
         assert "smoke-legend" in html
 
+    @staticmethod
+    def _component(monkeypatch, **payload):
+        from fasthtml.common import to_xml
+
+        from pyfds_evac.webapp import trajviz
+
+        base = {"hasFed": True, "hasHeat": False, "smoke": None}
+        monkeypatch.setattr(trajviz, "_payload", lambda *a, **k: {**base, **payload})
+        return to_xml(trajviz.trajectory_component(None, None))
+
+    def test_heat_fed_run_offers_a_labelled_heat_colouring(self, monkeypatch):
+        html = self._component(monkeypatch, hasHeat=True)
+        assert 'id="traj-mode-fed"' in html and ">gas FED</button>" in html
+        assert 'id="traj-mode-heat"' in html and ">heat FED</button>" in html
+        assert 'aria-label="Agent colour"' in html
+        assert 'id="traj-mode-fed" type="button" class="cmode active" ' in html
+        assert 'aria-pressed="true">gas FED' in html
+        assert 'aria-pressed="false">heat FED' in html
+        assert "FED dose (dimensionless, cumulative)" in html
+        assert 'id="fed-heat-note"' in html
+
+    def test_run_without_heat_fed_has_no_heat_control(self, monkeypatch):
+        html = self._component(monkeypatch)
+        assert 'id="traj-mode-heat"' not in html and "heat FED</button>" not in html
+        assert ">FED</button>" in html
+        assert "Gas FED dose (dimensionless, cumulative)" in html
+        assert 'aria-pressed="true">FED' in html
+
+    def test_heat_only_run_starts_on_heat_and_has_no_gas_button(self, monkeypatch):
+        html = self._component(monkeypatch, hasFed=False, hasHeat=True)
+        assert 'id="traj-mode-fed"' not in html
+        assert 'aria-pressed="true">heat FED' in html
+        assert "Heat FED dose (dimensionless, cumulative)" in html
+
+    def test_dose_tracks_are_absent_not_zero_without_the_column(self):
+        from pyfds_evac.webapp.trajviz import _dose_tracks
+
+        rows = [{"agent_id": 0, "time_s": 0.0, "fed_cumulative": 0.1}]
+        args = (
+            [0],
+            [0],
+            [[0.0, 0.0, 1.0, 1.0]],
+            [0.0, 1.0],
+            [{0: (0, 0)}, {0: (1, 1)}],
+        )
+        assert _dose_tracks(rows, "heat_fed_cumulative", *args) == []
+        assert _dose_tracks(rows, "fed_cumulative", *args) == [[0.1, 0.1]]
+
+    def test_heat_track_is_built_only_when_the_heat_model_ran(
+        self, tmp_path, monkeypatch
+    ):
+        import pandas as pd
+        import pedpy
+        from shapely.geometry import box
+
+        from pyfds_evac.webapp import trajviz
+
+        sqlite_file = tmp_path / "run.sqlite"
+        sqlite_file.write_bytes(b"")
+        frames = pd.DataFrame(
+            {"id": [0, 0], "frame": [0, 10], "x": [0.0, 1.0], "y": [0.0, 1.0]}
+        )
+        monkeypatch.setattr(
+            pedpy,
+            "load_trajectory_from_jupedsim_sqlite",
+            lambda trajectory_file: SimpleNamespace(data=frames, frame_rate=10.0),
+        )
+        monkeypatch.setattr(
+            pedpy,
+            "load_walkable_area_from_jupedsim_sqlite",
+            lambda trajectory_file: SimpleNamespace(polygon=box(-1, -1, 2, 2)),
+        )
+        rows = [
+            {
+                "agent_id": 0,
+                "time_s": 0.0,
+                "fed_cumulative": 0.1,
+                "heat_fed_cumulative": 0.0,
+            },
+            {
+                "agent_id": 0,
+                "time_s": 1.0,
+                "fed_cumulative": 0.2,
+                "heat_fed_cumulative": 0.5,
+            },
+        ]
+
+        def payload(**metrics):
+            res = SimpleNamespace(
+                sqlite_file=str(sqlite_file),
+                route_cost_history=[],
+                fed_history=rows,
+                metrics=metrics,
+            )
+            return trajviz._payload(res, None)
+
+        on = payload(fed_enabled=True, fed_max=0.2, heat_fed_max=0.5)
+        assert on["hasFed"] and on["hasHeat"]
+        assert on["heat"][0][-1] == 0.5 and on["fed"][0][-1] == 0.2
+        off = payload(fed_enabled=True, fed_max=0.2)
+        assert off["hasFed"] and not off["hasHeat"] and off["heat"] == []
+        heat_only = payload(fed_enabled=False, heat_fed_max=0.5)
+        assert not heat_only["hasFed"] and heat_only["hasHeat"]
+
     def test_incapacitated_help_is_linked(self, monkeypatch):
         from fasthtml.common import to_xml
 

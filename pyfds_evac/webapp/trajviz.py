@@ -249,6 +249,61 @@ def _agent_radius_m(scenario: Any) -> float:
     return sum(radii) / len(radii) if radii else _DEFAULT_AGENT_RADIUS_M
 
 
+def _dose_tracks(
+    rows: Any,
+    column: str,
+    agent_ids: list[int],
+    starts: list[int],
+    tracks: list[list[Any]],
+    times: list[float],
+    positions_by_sample: list[dict[int, tuple[float, float]]],
+) -> list[list[Any]]:
+    """Per-agent series of *column* aligned with the position tracks.
+
+    The dose is a step function in time: each sample takes the last value at
+    or before its time, and None where the agent is absent. Empty when no
+    row carries the column (the run did not record it).
+    """
+    pairs: dict[int, list[tuple[float, float]]] = {}
+    for row in rows:
+        try:
+            point = (float(row["time_s"]), float(row[column]))
+            aid = int(row["agent_id"])
+        except (KeyError, TypeError, ValueError):
+            continue
+        pairs.setdefault(aid, []).append(point)
+    if not pairs:
+        return []
+    ts_of: dict[int, list[float]] = {}
+    v_of: dict[int, list[float]] = {}
+    for aid, seq in pairs.items():
+        seq.sort()
+        ts_of[aid] = [p[0] for p in seq]
+        v_of[aid] = [p[1] for p in seq]
+
+    def at(aid: int, ts: float) -> float:
+        ts_list = ts_of.get(aid)
+        if not ts_list:
+            return 0.0
+        j = bisect.bisect_right(ts_list, ts) - 1
+        return v_of[aid][j] if j >= 0 else 0.0
+
+    out: list[list[Any]] = []
+    for i, a in enumerate(agent_ids):
+        first = starts[i]
+        if first < 0:
+            out.append([])
+            continue
+        n_samples = len(tracks[i]) // 2
+        out.append(
+            [
+                at(a, times[first + k]) if a in positions_by_sample[first + k] else None
+                for k in range(n_samples)
+            ]
+        )
+    return out
+
+
 def _payload(
     result: Any,
     scenario: Any,
@@ -321,52 +376,44 @@ def _payload(
     starts = [start_of.get(a, -1) for a in agent_ids]
     tracks = [track_of[a] for a in agent_ids]
 
-    # Per-agent cumulative FED at each sample time, aligned with `samples`.
-    # FED is a step function in time; we take the last value at or before the
-    # sample time. None where the agent is absent from that frame.
-    fed_t: dict[int, list[float]] = {}
-    fed_v: dict[int, list[float]] = {}
-    pairs: dict[int, list[tuple[float, float]]] = {}
-    for row in result.fed_history or []:
-        try:
-            pairs.setdefault(int(row["agent_id"]), []).append(
-                (float(row["time_s"]), float(row["fed_cumulative"]))
-            )
-        except (KeyError, TypeError, ValueError):
-            continue
-    for aid, seq in pairs.items():
-        seq.sort()
-        fed_t[aid] = [p[0] for p in seq]
-        fed_v[aid] = [p[1] for p in seq]
-    has_fed = bool(fed_t)
-
-    def _fed_at(aid: int, ts: float) -> float:
-        ts_list = fed_t.get(aid)
-        if not ts_list:
-            return 0.0
-        j = bisect.bisect_right(ts_list, ts) - 1
-        return fed_v[aid][j] if j >= 0 else 0.0
-
-    # Aligned with `tracks`: one value per agent per sample it is present for,
-    # starting at the same `starts[i]`.  Every read of it in the JS sits behind
-    # a hasFed guard, so without a FED model it is not built at all rather than
-    # shipping a second payload of zeros.
-    fed_tracks: list[list[Any]] = []
-    if has_fed:
-        for i, a in enumerate(agent_ids):
-            first = starts[i]
-            if first < 0:
-                fed_tracks.append([])
-                continue
-            n_samples = len(tracks[i]) // 2
-            fed_tracks.append(
-                [
-                    _fed_at(a, times[first + k])
-                    if a in positions_by_sample[first + k]
-                    else None
-                    for k in range(n_samples)
-                ]
-            )
+    # Per-agent cumulative dose at each sample time, aligned with `samples`.
+    # None where the agent is absent from that frame. Every read of a series
+    # in the JS sits behind a hasFed / hasHeat guard, so a quantity the run
+    # did not model is not built at all rather than shipping zeros.
+    metrics = getattr(result, "metrics", None) or {}
+    fed_rows = result.fed_history or []
+    gas_modelled = metrics.get("fed_enabled", True)
+    fed_tracks = (
+        _dose_tracks(
+            fed_rows,
+            "fed_cumulative",
+            agent_ids,
+            starts,
+            tracks,
+            times,
+            positions_by_sample,
+        )
+        if gas_modelled
+        else []
+    )
+    has_fed = bool(fed_tracks)
+    # The core writes heat_fed_cumulative as 0.0 on every row when heat FED is
+    # off, so the column alone cannot tell "off" from "no exposure"; the run
+    # metric heat_fed_max exists only when the heat model ran.
+    heat_tracks = (
+        _dose_tracks(
+            fed_rows,
+            "heat_fed_cumulative",
+            agent_ids,
+            starts,
+            tracks,
+            times,
+            positions_by_sample,
+        )
+        if "heat_fed_max" in metrics
+        else []
+    )
+    has_heat = bool(heat_tracks)
 
     try:
         wx, wy = walkable.polygon.exterior.xy
@@ -393,6 +440,8 @@ def _payload(
         "colors": colors,
         "fed": fed_tracks,
         "hasFed": has_fed,
+        "heat": heat_tracks,
+        "hasHeat": has_heat,
         "walk": walk,
         "walls": _interior_walls(
             getattr(scenario, "walkable_polygon", None) if scenario else None,
@@ -415,7 +464,7 @@ _JS = """
   var tlabel = document.getElementById('traj-time');
   var ctx = canvas.getContext('2d');
   var T = D.times, ST = D.starts, TR = D.tracks, COL = D.colors, FED = D.fed,
-      n = COL.length;
+      HEAT = D.heat, n = COL.length;
   // Agents carry their own track from ST[i], so a lookup is a bounds check
   // rather than an index into a grid mostly full of nulls. Returns null when
   // agent i had not spawned yet, or had already left, at sample ti.
@@ -426,10 +475,10 @@ _JS = """
     if (j + 1 >= tr.length || tr[j] == null) return null;
     return [tr[j], tr[j + 1]];
   }
-  function fedAt(i, ti) {
+  function fedAt(i, ti, src) {
     var k = ti - ST[i];
     if (ST[i] < 0 || k < 0) return null;
-    var fr = FED[i];
+    var fr = (src || FED)[i];
     if (!fr || k >= fr.length) return null;
     return fr[k];
   }
@@ -437,7 +486,7 @@ _JS = """
   var simT = t0, playing = false, lastTs = null;
   var speedMult = 1;            // 1x = real time: 1 sim-second per wall-second
   var bx = D.bounds, pad = 0.06;
-  var mode = D.hasFed ? 'fed' : 'exit';
+  var mode = D.hasFed ? 'fed' : (D.hasHeat ? 'heat' : 'exit');
   var zoom = 1, panX = 0, panY = 0, MIN_ZOOM = 0.5, MAX_ZOOM = 20;
   // Agent body radius in metres, drawn to scale with the geometry.  The floor
   // is a visibility backstop only: on a plan hundreds of metres across a
@@ -536,17 +585,18 @@ _JS = """
   // verdict: each agent's incapacitation threshold is drawn separately, so
   // the highest dose need not belong to an agent who was incapacitated. A
   // mean would hide the one agent at risk.
-  var fedMaxByTime = null;
-  if (D.hasFed) {
-    fedMaxByTime = T.map(function (_, ti) {
+  function maxByTime(src) {
+    return T.map(function (_, ti) {
       var m = 0;
       for (var k = 0; k < n; k++) {
-        var v = fedAt(k, ti);
+        var v = fedAt(k, ti, src);
         if (v != null && v > m) m = v;
       }
       return m;
     });
   }
+  var fedMaxByTime = D.hasFed ? maxByTime(FED) : null;
+  var heatMaxByTime = D.hasHeat ? maxByTime(HEAT) : null;
 
   // FED dose -> colour on a continuous ramp over [0, D.fedScale], where
   // fedScale is max(1, the run's FED threshold). The stops are fractions of
@@ -625,10 +675,23 @@ _JS = """
     var f = (t - T[lo]) / Math.max(1e-9, T[hi] - T[lo]);
     return [lo, hi, f];
   }
+  // The panel follows the quantity being coloured; in exit mode it shows
+  // gas when the run has it, else heat.
+  function panelIsHeat() {
+    return mode === 'heat' || (mode === 'exit' && !D.hasFed);
+  }
   function drawFedPanel() {
-    if (!D.hasFed || !fedMaxByTime) return;
+    var heat = panelIsHeat(), ser = heat ? heatMaxByTime : fedMaxByTime;
+    if (!ser) return;
+    var title = document.getElementById('fed-title');
+    if (title) title.textContent = (heat ? 'Heat' : 'Gas') +
+      ' FED dose (dimensionless, cumulative)';
+    var thr = document.querySelectorAll('#fed-panel .fed-thr');
+    for (var q = 0; q < thr.length; q++) thr[q].hidden = heat;
+    var hn = document.getElementById('fed-heat-note');
+    if (hn) hn.hidden = !heat;
     var b = bracket(simT), lo = b[0], hi = b[1], f = b[2];
-    var cur = fedMaxByTime[lo] + (fedMaxByTime[hi] - fedMaxByTime[lo]) * f;
+    var cur = ser[lo] + (ser[hi] - ser[lo]) * f;
     // The number stays in the ink colour for contrast; the ramp colour goes
     // on the swatch beside it and on the bar.
     var maxEl = document.getElementById('fed-val-max');
@@ -666,8 +729,9 @@ _JS = """
       else if (pc == null) { X = pa[0]; Y = pa[1]; }
       else { X = pa[0] + (pc[0] - pa[0]) * f; Y = pa[1] + (pc[1] - pa[1]) * f; }
       var col = COL[i];
-      if (mode === 'fed') {
-        var da = fedAt(i, b[0]), dc = fedAt(i, b[1]), dv;
+      if (mode === 'fed' || mode === 'heat') {
+        var src = mode === 'heat' ? HEAT : FED;
+        var da = fedAt(i, b[0], src), dc = fedAt(i, b[1], src), dv;
         if (da == null) dv = dc; else if (dc == null) dv = da;
         else dv = da + (dc - da) * f;
         col = fedColor(dv);
@@ -679,7 +743,7 @@ _JS = """
     }
     tlabel.textContent = 't = ' + (simT - t0).toFixed(0) + ' s';
     slider.value = String(((simT - t0) / span) * 1000);
-    if (D.hasFed) drawFedPanel();
+    if (D.hasFed || D.hasHeat) drawFedPanel();
   }
   // A stalled tab or a frame that took too long to render must not let simT
   // leap past what was actually recorded: the wall-clock gap between two
@@ -871,16 +935,24 @@ _JS = """
       draw();
     });
   }
-  var bf = document.getElementById('traj-mode-fed');
-  var be = document.getElementById('traj-mode-exit');
-  if (bf && be) {
-    bf.addEventListener('click', function () {
-      mode = 'fed'; bf.classList.add('active'); be.classList.remove('active');
+  var modeBtns = {
+    fed: document.getElementById('traj-mode-fed'),
+    heat: document.getElementById('traj-mode-heat'),
+    exit: document.getElementById('traj-mode-exit')
+  };
+  function setMode(m) {
+    mode = m;
+    Object.keys(modeBtns).forEach(function (k) {
+      var btn = modeBtns[k];
+      if (!btn) return;
+      btn.classList.toggle('active', k === m);
+      btn.setAttribute('aria-pressed', k === m ? 'true' : 'false');
     });
-    be.addEventListener('click', function () {
-      mode = 'exit'; be.classList.add('active'); bf.classList.remove('active');
-    });
+    if (typeof drawFedPanel === 'function') drawFedPanel();
   }
+  Object.keys(modeBtns).forEach(function (k) {
+    if (modeBtns[k]) modeBtns[k].addEventListener('click', function () { setMode(k); });
+  });
   window.addEventListener('resize', draw);
 
   // Called by the footer theme switch. Nothing here is reachable from CSS:
@@ -908,6 +980,15 @@ def _js(data_json: str) -> str:
     )
 
 
+def _mode_button(key: str, label: str, active: bool) -> str:
+    """One colouring-quantity button; aria-pressed carries the state."""
+    return (
+        f'<button id="traj-mode-{key}" type="button" '
+        f'class="cmode{" active" if active else ""}" '
+        f'aria-pressed="{"true" if active else "false"}">{label}</button>'
+    )
+
+
 def fed_scale(threshold: Any) -> float:
     """Upper end of the FED colour ramp and bar: max(1, the run's threshold)."""
     try:
@@ -919,8 +1000,8 @@ def fed_scale(threshold: Any) -> float:
 _FED_MONO = "font-family:'JetBrains Mono',monospace"
 
 
-def _fed_panel(threshold: Any, mode: Any) -> str:
-    """Gas FED readout under the canvas.
+def _fed_panel(threshold: Any, mode: Any, heat_first: bool = False) -> str:
+    """FED readout under the canvas (gas; heat when the run has only heat FED).
 
     One continuous scale, with a marker at the FED threshold of the run
     (from its snapshot, never the current form); no marker when the run did
@@ -934,11 +1015,11 @@ def _fed_panel(threshold: Any, mode: Any) -> str:
         name = "median threshold" if probabilistic else "threshold"
         pos = min(100.0, threshold / scale * 100)
         marker = (
-            f'<div style="position:absolute;top:-2px;left:calc({pos:.2f}% - 1px);width:2px;'
+            f'<div class="fed-thr" style="position:absolute;top:-2px;left:calc({pos:.2f}% - 1px);width:2px;'
             'height:10px;background:var(--ink)"></div>'
         )
         tick = (
-            f'<span style="position:absolute;left:{pos:.2f}%;'
+            f'<span class="fed-thr" style="position:absolute;left:{pos:.2f}%;'
             f"transform:translateX(-{min(100, round(pos))}%);white-space:nowrap;"
             f'color:var(--ink-dim)">{name} {threshold:g}</span>'
         )
@@ -949,7 +1030,7 @@ def _fed_panel(threshold: Any, mode: Any) -> str:
         )
     else:
         tick = (
-            f'<span style="position:absolute;right:0;color:var(--ink-faint)">'
+            f'<span class="fed-thr" style="position:absolute;right:0;color:var(--ink-faint)">'
             f"{scale:g}</span>"
         )
         note = "The run did not record a FED threshold."
@@ -958,7 +1039,8 @@ def _fed_panel(threshold: Any, mode: Any) -> str:
         'border:1px solid var(--hairline);border-radius:12px;padding:14px 16px">'
         f'<div style="{_FED_MONO};font-size:9.5px;letter-spacing:.1em;'
         'text-transform:uppercase;color:var(--ink-faint);margin-bottom:10px">'
-        "Gas FED dose (dimensionless)</div>"
+        f'<span id="fed-title">{"Heat" if heat_first else "Gas"} FED dose '
+        "(dimensionless, cumulative)</span></div>"
         '<div style="display:flex;align-items:baseline;gap:24px;margin-bottom:12px">'
         f'<div><div style="{_FED_MONO};font-size:9px;letter-spacing:.06em;'
         'text-transform:uppercase;color:var(--ink-faint);margin-bottom:2px">'
@@ -983,7 +1065,13 @@ def _fed_panel(threshold: Any, mode: Any) -> str:
         f'<div style="position:relative;height:12px;{_FED_MONO};font-size:9px">'
         '<span style="position:absolute;left:0;color:var(--ink-faint)">0</span>'
         f"{tick}</div>"
-        f'<p style="margin:8px 0 0;font-size:11px;color:var(--ink-dim)">{note}</p>'
+        f'<p class="fed-thr" style="margin:8px 0 0;font-size:11px;color:var(--ink-dim)">'
+        f"{note}</p>"
+        '<p id="fed-heat-note" style="margin:8px 0 0;font-size:11px;'
+        f'color:var(--ink-dim)"{"" if heat_first else " hidden"}>'
+        "Heat FED dose, on the same colour scale as gas FED. No threshold "
+        "marker is drawn for it."
+        "</p>"
         "</div>"
     )
 
@@ -1105,13 +1193,22 @@ def trajectory_component(
     payload["fedScale"] = fed_scale(fed_threshold)
     data_json = json.dumps(payload)
     toggle = ""
-    if payload["hasFed"]:
+    has_heat = bool(payload.get("hasHeat"))
+    if payload["hasFed"] or has_heat:
+        # The heat button exists only when the run modelled heat FED; the
+        # quantity in force is named on the button and in the panel title.
+        first = "fed" if payload["hasFed"] else "heat"
         toggle = (
-            '<div class="traj-color">'
+            '<div class="traj-color" role="group" aria-label="Agent colour">'
             '<span class="traj-color-lbl">colour</span>'
-            '<button id="traj-mode-fed" type="button" class="cmode active">FED</button>'
-            '<button id="traj-mode-exit" type="button" class="cmode">exit</button>'
-            "</div>"
+            + (
+                _mode_button("fed", "gas FED" if has_heat else "FED", first == "fed")
+                if payload["hasFed"]
+                else ""
+            )
+            + (_mode_button("heat", "heat FED", first == "heat") if has_heat else "")
+            + _mode_button("exit", "exit", False)
+            + "</div>"
         )
     smoke_line = ""
     smoke = payload.get("smoke")
@@ -1157,7 +1254,11 @@ def trajectory_component(
         + toggle
         + "</div>"
         + smoke_legend
-        + (_fed_panel(fed_threshold, fed_mode) if payload["hasFed"] else "")
+        + (
+            _fed_panel(fed_threshold, fed_mode, heat_first=not payload["hasFed"])
+            if payload["hasFed"] or has_heat
+            else ""
+        )
         + "</div>"
     )
     script = "<script>" + _js(data_json) + "</script>"
