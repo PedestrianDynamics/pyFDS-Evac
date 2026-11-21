@@ -546,7 +546,7 @@ _RUN_BTN_JS = """
 })();
 """
 
-_TENABILITY_JS = """
+_TENABILITY_TEMPLATE = """
 function drawIncapDist() {
   var canvas = document.getElementById('incap-canvas');
   var dist   = document.getElementById('incap-dist');
@@ -554,7 +554,10 @@ function drawIncapDist() {
 
   var sigmaEl = document.getElementById('susceptibility_sigma');
   var sigma = sigmaEl ? (parseFloat(sigmaEl.value) || __SIGMA__) : __SIGMA__;
-  var mu = Math.log(0.3);  // median incapacitation at FED = 0.3
+  var medianEl = document.getElementById('fed_threshold');
+  var median = medianEl ? (parseFloat(medianEl.value) || __MEDIAN__) : __MEDIAN__;
+  if (!(median > 0)) median = __MEDIAN__;
+  var mu = Math.log(median);  // log-normal median = the FED threshold
 
   var dpr = window.devicePixelRatio || 1;
   var cw = canvas.clientWidth, ch = canvas.clientHeight;
@@ -626,7 +629,7 @@ function drawIncapDist() {
 
   // Threshold verticals
   ctx.setLineDash([3, 3]);
-  [[0.3, 'rgba(255,176,32,.6)', '0.3'], [1.0, 'rgba(224,30,55,.6)', '1.0']].forEach(function (th) {
+  [[0.3, 'rgba(255,176,32,.6)', '0.3'], [median, 'rgba(224,30,55,.6)', String(median)]].forEach(function (th) {
     ctx.strokeStyle = th[1]; ctx.lineWidth = 1;
     ctx.beginPath(); ctx.moveTo(tx(th[0]), pT); ctx.lineTo(tx(th[0]), pT + ph); ctx.stroke();
     ctx.fillStyle = th[1]; ctx.font = '7.5px JetBrains Mono, monospace';
@@ -675,14 +678,24 @@ function setTenabilityMode(mode) {
 }
 
 document.addEventListener('input', function (e) {
-  if (e.target && e.target.id === 'susceptibility_sigma') drawIncapDist();
+  if (e.target && (e.target.id === 'susceptibility_sigma' || e.target.id === 'fed_threshold')) drawIncapDist();
 });
 document.addEventListener('DOMContentLoaded', function () {
   var el = document.getElementById('incapacitation_mode');
   if (el) setTenabilityMode(el.value || 'deterministic');
 });
 setTimeout(drawIncapDist, 150);
-""".replace("__SIGMA__", repr(default("susceptibility_sigma")))
+"""
+
+
+def _tenability_js() -> str:
+    """Preview script with the median and sigma defaults from the core."""
+    return _TENABILITY_TEMPLATE.replace(
+        "__SIGMA__", repr(default("susceptibility_sigma"))
+    ).replace("__MEDIAN__", repr(default("fed_threshold")))
+
+
+_TENABILITY_JS = _tenability_js()
 
 _MATH_JS = """
 window._renderMath = function () {

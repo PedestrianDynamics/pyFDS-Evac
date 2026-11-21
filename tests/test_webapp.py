@@ -3653,3 +3653,19 @@ class TestRouteHistoryMessage:
         assert "written" in route
         assert "rerouting" not in route
         assert "switch" not in route.split("written", 1)[1]
+
+
+def test_incapacitation_preview_median_follows_the_core_default(monkeypatch):
+    """#226: the preview's median is the core's fed_threshold, not a literal."""
+    from pyfds_evac.webapp import app as app_mod
+
+    assert "Math.log(0.3)" not in app_mod._TENABILITY_JS
+    real = app_mod.default
+    monkeypatch.setattr(
+        app_mod, "default", lambda d: 2.5 if d == "fed_threshold" else real(d)
+    )
+    js = app_mod._tenability_js()
+    assert "__MEDIAN__" not in js
+    assert "|| 2.5) : 2.5" in js
+    assert "getElementById('fed_threshold')" in js
+    assert app_mod._TENABILITY_JS.count("|| 1.0) : 1.0") == 1
