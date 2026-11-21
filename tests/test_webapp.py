@@ -3916,6 +3916,14 @@ class TestFireOptionSections:
         assert "enable_heat_fed" in sections["FED & Tenability"]
         assert not set(self.HEAT + self.VISIBILITY) & sections.get("Other", set())
 
+    def test_heat_section_says_when_it_applies(self):
+        _, html = self._sections()
+        block = html.split("<details")[
+            ["Heat exposure" in b for b in html.split("<details")].index(True)
+        ]
+        assert "Used only when "Enable heat fed" is on" in block
+        assert "Used only when Enable heat FED" not in html.replace(block, "")
+
     def test_units_and_help_are_shown_without_flag_syntax(self):
         _, html = self._sections()
         for dest, unit in (
@@ -3942,3 +3950,11 @@ class TestFireOptionSections:
             assert f"`{dest}`" in docs, dest
         for dest in self.HEAT + self.VISIBILITY:
             assert f"`{dest}`" in docs, dest
+
+    def test_every_rendered_field_is_in_the_docs_table(self):
+        docs = (pathlib.Path(__file__).parents[1] / "docs" / "web-gui.md").read_text()
+        sections, _ = self._sections()
+        for title, names in sections.items():
+            for dest in sorted(names - {"scenario", "seed", "output_base"}):
+                assert f"`{dest}`" in docs, (title, dest)
+        assert "`show_config`" in docs

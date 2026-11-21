@@ -758,11 +758,9 @@ in [Assumptions (unsourced values)](#assumptions-unsourced-values).
 - **Web GUI.** The GUI's FED & Tenability group holds `--enable-heat-fed`,
   `--heat-clothing` (a dropdown), `--heat-fed-threshold`,
   `--heat-incapacitation-mode` and `--heat-susceptibility-sigma`. The other
-  11 heat options are fields of its collapsed "Other" section, not next to
-  them
-  ([Web GUI](/docs/web-gui.md);
-  [#270](https://github.com/PedestrianDynamics/pyFDS-Evac/issues/270),
-  [#311](https://github.com/PedestrianDynamics/pyFDS-Evac/issues/311)).
+  12 heat options are fields of its collapsed "Heat exposure" section, used
+  only with `--enable-heat-fed`; the visibility options are in "Visibility"
+  ([Web GUI](/docs/web-gui.md)).
 - **Terminal UI.** The terminal UI offers every heat option in its Heat
   section: the common ones first, the other 11 under "Advanced"
   ([Terminal UI](/docs/terminal-ui.md)).

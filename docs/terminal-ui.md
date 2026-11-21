@@ -582,7 +582,7 @@ differences:
 | Runs in | a background thread of the server | a child process; its output goes to `child.log` |
 | Closing the window or the terminal | the server keeps the run going | the run stops |
 | Scenario input | `./assets` picker; uploads saved in `./uploads` | `./assets` examples, Recent, or a file, zip or folder opened where it is |
-| Options offered | the GUI form (several heat and visibility options under "Other", [#311](https://github.com/PedestrianDynamics/pyFDS-Evac/issues/311), [#270](https://github.com/PedestrianDynamics/pyFDS-Evac/issues/270)) | 40 options: every run option except `--cleanup`, `--export-only`, `--inspect-fds`, `--print-summary` |
+| Options offered | the GUI form (the heat options in its collapsed "Heat exposure" section, the visibility ones in "Visibility") | 40 options: every run option except `--cleanup`, `--export-only`, `--inspect-fds`, `--print-summary` |
 | Effective configuration before the run | — | Review (the `--show-config` report) |
 | Results | charts, trajectory replay, FED panel | outcome, per-exit counts, sparkline, plan replay in 1 s steps (coarser on long runs), file list |
 | Results-only mode | yes | no |

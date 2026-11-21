@@ -20,6 +20,7 @@ from fasthtml.common import (
     NotStr,
     Optgroup,
     Option,
+    P,
     Select,
     Span,
 )
@@ -630,11 +631,33 @@ def _field(action: argparse.Action) -> Any:
     )
 
 
+#: One-line notes under a section's summary, keyed by section title.
+_SECTION_INTRO = {
+    "Heat exposure": (
+        "Used only when "Enable heat fed" is on and the FDS folder has a "
+        "temperature slice."
+    ),
+}
+
+
 def _details_block(
     title: str, accent: str, fields: list[Any], open_: bool = False
 ) -> NotStr:
+    intro = _SECTION_INTRO.get(title)
+    note = (
+        [
+            P(
+                intro,
+                cls="section-intro",
+                style="margin:0;font-size:12px;color:var(--ink-faint)",
+            )
+        ]
+        if intro
+        else []
+    )
     body = to_xml(
         Div(
+            *note,
             *fields,
             style="display:flex;flex-direction:column;gap:13px;padding:14px 4px 4px",
         )

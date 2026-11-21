@@ -625,7 +625,7 @@ PARAMETERS: tuple[Parameter, ...] = (
         default=False,
         python="run_scenario(vis_model=VisibilityModel.clear_air(...))",
         gui_help=(
-            "Build the clear-air sign-visibility map even when every agent starts knowing the building. Decks with discovery agents get it without asking."
+            "Build the clear-air sign-visibility map even when every agent starts knowing the building; there it changes nothing. Decks with discovery agents get it without asking. Cannot be combined with No visibility or an FDS directory."
         ),
     ),
     Parameter(
@@ -829,7 +829,7 @@ PARAMETERS: tuple[Parameter, ...] = (
         choices=tuple(HEAT_ENDPOINTS),
         python=f"{_HEAT_MODEL}.endpoint",
         gui_help=(
-            "Blank: the ISO 13571 law chosen by Heat clothing. Otherwise an SFPE Handbook endpoint (tolerance, injury, fatal) at which heat FED = 1."
+            "Convective method: blank uses the ISO 13571 law chosen by Heat clothing, otherwise an SFPE endpoint (tolerance, injury, fatal) at which heat FED = 1. Total-flux method: the endpoint selects the dose D, blank means fatal."
         ),
     ),
     Parameter(
@@ -848,7 +848,7 @@ PARAMETERS: tuple[Parameter, ...] = (
         default=HEAT_FED_METHOD,
         python=f"{_HEAT_MODEL}.method",
         gui_help=(
-            "convective (default) uses the ISO or SFPE hot-air law; total-flux uses the skin heat flux of SFPE Eq. 63.49 and the settings below."
+            "convective (default) uses the ISO or SFPE hot-air law; total-flux uses the skin heat flux of SFPE Eq. 63.49 and the radiant and layer settings below."
         ),
     ),
     Parameter(
@@ -863,7 +863,7 @@ PARAMETERS: tuple[Parameter, ...] = (
         python=f"{_HEAT_MODEL}.emissivity",
         checked="[0, 1], when the heat model is built",
         gui_help=(
-            "Emissivity of the gas at the head, 0 to 1. Total-flux method with the gas radiant source only; an assumption."
+            "Emissivity of the gas at the head, 0 to 1. Used only with the total-flux method, the gas radiant source and the smoke regime; an assumption."
         ),
     ),
     Parameter(
@@ -965,7 +965,7 @@ PARAMETERS: tuple[Parameter, ...] = (
         default=HEAT_REGIME,
         python=f"{_HEAT_MODEL}.regime",
         gui_help=(
-            "Where the head is, total-flux method: smoke (default) or layer (clear air below a hot layer; needs the three layer settings)."
+            "Where the head is, total-flux method only: smoke (default) or layer (clear air below a hot layer; needs the three layer settings). With the integrated-intensity or radiometer source the layer term is not added."
         ),
     ),
     Parameter(
