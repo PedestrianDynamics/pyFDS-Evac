@@ -231,6 +231,129 @@ def warn_unknown_parameter_keys(raw: Any) -> None:
             )
 
 
+KNOWN_TOP_LEVEL_KEYS = frozenset(
+    {
+        # Scenario.load and the set-up in simulation_init
+        "walkable_area_wkt",
+        "geometry",
+        "config",
+        "exits",
+        "distributions",
+        "zones",
+        "checkpoints",
+        "waiting_polygons",
+        "journeys",
+        "journeys_v2",
+        "transitions",
+        "waypoint_routing",
+        "routing",
+        # visibility.py and plan_view.py read these sections as well
+        "waypoints",
+    }
+)
+"""The top-level scenario keys the code reads (#1033)."""
+
+KNOWN_SIM_PARAM_KEYS = frozenset(
+    {
+        # run settings: scenario.py, time_step.py, run_config.py, effective.py
+        "max_simulation_time",
+        "model_type",
+        "dt",
+        "smoke_slice_height",
+        # deck-wide spawn defaults (_deck_spawn_defaults)
+        "number",
+        "radius",
+        "v0",
+        # CollisionFreeSpeedModel and V2 (scenario._MODEL_BUILDERS)
+        "strength_neighbor_repulsion",
+        "range_neighbor_repulsion",
+        # GeneralizedCentrifugalForceModel (builder and create_agent_parameters)
+        "gcfm_strength_neighbor_repulsion",
+        "gcfm_strength_geometry_repulsion",
+        "gcfm_max_neighbor_interaction_distance",
+        "gcfm_max_geometry_interaction_distance",
+        "gcfm_max_neighbor_repulsion_force",
+        "gcfm_max_geometry_repulsion_force",
+        "mass",
+        "tau",
+        "a_v",
+        "a_min",
+        "b_min",
+        "b_max",
+        # SocialForceModel
+        "sfm_body_force",
+        "sfm_friction",
+        "sfm_obstacle_scale",
+        "relaxation_time",
+        "agent_strength",
+        "agent_range",
+        # WarpDriverModel
+        "time_horizon",
+        "step_size",
+        "sigma",
+        "time_uncertainty",
+        "velocity_uncertainty_x",
+        "velocity_uncertainty_y",
+        # AnticipationVelocityModel
+        "anticipation_time",
+        "reaction_time",
+    }
+)
+"""The ``simulationParams`` keys the code reads (#1033)."""
+
+WEBAPP_TOP_LEVEL_KEYS = frozenset(
+    {
+        # Written by the JuPedSim web app, not read here.
+        "background_image",
+        "obstacles",
+        "project_version",
+        "queues",
+        "waiting_sets",
+    }
+)
+WEBAPP_SIM_PARAM_KEYS = frozenset(
+    {
+        # Written by the JuPedSim web app, not read here.
+        "T",
+        "s0",
+        "time_gap",
+    }
+)
+
+
+def _warn_unknown_keys(where: str, keys: Any, known: frozenset[str]) -> None:
+    """Log one warning for each key of *keys* that is not in *known*."""
+    for key in keys:
+        if key in known:
+            continue
+        _logger.warning(
+            "%s: unknown key %r is ignored; check the spelling against the "
+            "scenario-json reference",
+            where,
+            key,
+        )
+
+
+def warn_unknown_scenario_keys(raw: Any) -> None:
+    """Log one warning per unknown top-level or ``simulationParams`` key (#1033).
+
+    Keys of the JuPedSim web app that this package does not read are
+    allowed. Not an error: the deck still loads and nothing it reads changes.
+    """
+    if not isinstance(raw, dict):
+        return
+    _warn_unknown_keys("Scenario", raw, KNOWN_TOP_LEVEL_KEYS | WEBAPP_TOP_LEVEL_KEYS)
+    config = raw.get("config")
+    settings = config.get("simulation_settings") if isinstance(config, dict) else None
+    params = settings.get("simulationParams") if isinstance(settings, dict) else None
+    if isinstance(params, dict):
+        _warn_unknown_keys(
+            "simulationParams",
+            params,
+            KNOWN_SIM_PARAM_KEYS | WEBAPP_SIM_PARAM_KEYS,
+        )
+
+
 def normalize_distribution_speed_aliases(data: Any) -> None:
     """Apply ``_normalize_speed_aliases`` to every distribution of ``data``.
 

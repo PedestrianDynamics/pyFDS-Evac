@@ -130,3 +130,47 @@ def test_removed_routing_key_is_still_refused_without_the_unknown_warning(
     assert _unknown_warnings(caplog) == []
     issue = scenario_issue(scenario.raw)
     assert issue is not None and "tau_return_margin was removed" in issue.message
+
+
+def _load_with(tmp_path, extra_top=None, sim_params=None):
+    raw = {
+        "walkable_area_wkt": "POLYGON ((0 0, 10 0, 10 10, 0 10, 0 0))",
+        "exits": {"e1": {"coordinates": [[9, 4], [10, 4], [10, 5], [9, 5]]}},
+        "distributions": {"d1": {"coordinates": SQUARE, "parameters": {"number": 3}}},
+        "config": {
+            "simulation_settings": {"simulationParams": sim_params or {"dt": 0.05}}
+        },
+        **(extra_top or {}),
+    }
+    path = tmp_path / "config.json"
+    path.write_text(json.dumps(raw), encoding="utf-8")
+    return load_scenario(str(path))
+
+
+def test_misspelled_top_level_key_warns_and_names_it(tmp_path, caplog):
+    with caplog.at_level(logging.WARNING, logger="pyfds_evac"):
+        _load_with(tmp_path, extra_top={"routting": {"w_fed": 1.0}})
+    unknown = _unknown_warnings(caplog)
+    assert len(unknown) == 1 and "'routting'" in unknown[0]
+
+
+def test_misspelled_simulation_param_warns_and_names_it(tmp_path, caplog):
+    with caplog.at_level(logging.WARNING, logger="pyfds_evac"):
+        _load_with(tmp_path, sim_params={"dt": 0.05, "max_simulation_tim": 60})
+    unknown = _unknown_warnings(caplog)
+    assert len(unknown) == 1
+    assert "simulationParams" in unknown[0] and "'max_simulation_tim'" in unknown[0]
+
+
+def test_a_deck_of_known_keys_does_not_warn(tmp_path, caplog):
+    params = {"dt": 0.05, "max_simulation_time": 60, "model_type": "WarpDriverModel"}
+    with caplog.at_level(logging.WARNING, logger="pyfds_evac"):
+        _load_with(tmp_path, extra_top={"zones": {}, "routing": {}}, sim_params=params)
+    assert _unknown_warnings(caplog) == []
+
+
+def test_web_app_keys_do_not_warn(tmp_path, caplog):
+    top = {"project_version": "1", "obstacles": {}, "background_image": None}
+    with caplog.at_level(logging.WARNING, logger="pyfds_evac"):
+        _load_with(tmp_path, extra_top=top, sim_params={"T": 1.0, "s0": 0.4})
+    assert _unknown_warnings(caplog) == []
