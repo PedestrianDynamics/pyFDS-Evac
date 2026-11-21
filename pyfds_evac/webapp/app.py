@@ -576,7 +576,7 @@ function drawIncapDist() {
 
   var pL = 28, pR = 10, pT = 18, pB = 18;
   var pw = cw - pL - pR, ph = ch - pT - pB;
-  var fedMax = 1.8, N = 400;
+  var fedMax = Math.max(1.8, 2 * median), N = 400;
 
   // Compute log-normal PDF: f(x) = 1/(x*σ*√2π) * exp(-(ln(x)-μ)²/(2σ²))
   var pts = [], yMax = 0;
@@ -604,9 +604,9 @@ function drawIncapDist() {
   // Shaded fill — horizontal gradient through FED tiers
   var gFill = ctx.createLinearGradient(tx(0), 0, tx(fedMax), 0);
   gFill.addColorStop(0,            'rgba(244,196,48,.28)');
-  gFill.addColorStop(0.3  / 1.8,  'rgba(255,176,32,.28)');
-  gFill.addColorStop(0.6  / 1.8,  'rgba(255,106,26,.28)');
-  gFill.addColorStop(1.0  / 1.8,  'rgba(224,30,55,.28)');
+  gFill.addColorStop(0.3 / fedMax,  'rgba(255,176,32,.28)');
+  gFill.addColorStop(0.6 / fedMax,  'rgba(255,106,26,.28)');
+  gFill.addColorStop(1.0 / fedMax,  'rgba(224,30,55,.28)');
   gFill.addColorStop(1,            'rgba(224,30,55,.10)');
   ctx.beginPath();
   ctx.moveTo(tx(pts[0][0]), pT + ph);
@@ -617,9 +617,9 @@ function drawIncapDist() {
   // Curve line — same gradient
   var gLine = ctx.createLinearGradient(tx(0), 0, tx(fedMax), 0);
   gLine.addColorStop(0,           '#F4C430');
-  gLine.addColorStop(0.3  / 1.8, '#FFB020');
-  gLine.addColorStop(0.6  / 1.8, '#FF6A1A');
-  gLine.addColorStop(1.0  / 1.8, '#E01E37');
+  gLine.addColorStop(0.3 / fedMax, '#FFB020');
+  gLine.addColorStop(0.6 / fedMax, '#FF6A1A');
+  gLine.addColorStop(1.0 / fedMax, '#E01E37');
   gLine.addColorStop(1,          '#E01E37');
   ctx.beginPath();
   pts.forEach(function (p, i) {
@@ -644,9 +644,10 @@ function drawIncapDist() {
 
   // X-axis ticks
   ctx.fillStyle = cssVar('--ink-faint', '#837a74'); ctx.font = '8px JetBrains Mono, monospace'; ctx.textAlign = 'center';
-  [0, 0.3, 0.6, 0.9, 1.2, 1.5].forEach(function (v) {
-    ctx.fillText(v.toFixed(1), tx(v), pT + ph + 12);
-  });
+  var tickStep = fedMax <= 1.8 ? 0.3 : Math.ceil(fedMax / 6 * 10) / 10;
+  for (var k = 0; k * tickStep < fedMax - 0.15 * tickStep; k++) {
+    ctx.fillText((k * tickStep).toFixed(1), tx(k * tickStep), pT + ph + 12);
+  }
 
   // Axis labels
   ctx.fillStyle = cssVar('--ink-faint', '#837a74'); ctx.font = '7.5px JetBrains Mono, monospace';

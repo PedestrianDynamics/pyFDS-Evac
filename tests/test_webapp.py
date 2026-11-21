@@ -3669,3 +3669,12 @@ def test_incapacitation_preview_median_follows_the_core_default(monkeypatch):
     assert "|| 2.5) : 2.5" in js
     assert "getElementById('fed_threshold')" in js
     assert app_mod._TENABILITY_JS.count("|| 1.0) : 1.0") == 1
+
+
+def test_incapacitation_preview_axis_grows_with_the_median():
+    """#226: a median above 0.9 must stay inside the plotted FED range."""
+    from pyfds_evac.webapp import app as app_mod
+
+    js = app_mod._TENABILITY_JS
+    assert "var fedMax = Math.max(1.8, 2 * median)" in js
+    assert "/ 1.8" not in js
