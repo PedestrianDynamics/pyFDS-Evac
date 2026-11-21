@@ -13,6 +13,7 @@ import numpy as np
 import pytest
 
 import run
+from pyfds_evac.core.agent_params import DEFAULT_SPAWN_PARAMS
 from pyfds_evac.core.fed import (
     DEFAULT_HEAT_CONVECTIVE_COEFFICIENT,
     DEFAULT_HEAT_EMISSIVITY,
@@ -25,7 +26,12 @@ from pyfds_evac.core.fed import (
     _o2_hypoxia_rate_per_minute,
 )
 from pyfds_evac.core.route_graph import RerouteConfig, RouteCostConfig
-from pyfds_evac.core.simulation_init import _sample_agent_values
+from pyfds_evac.core.simulation_init import (
+    DEFAULT_PREMOVEMENT_S,
+    _get_distribution_percentage,
+    _sample_agent_values,
+    _spawn_params,
+)
 from pyfds_evac.core.smoke_speed import SmokeSpeedConfig
 
 ROOT = Path(__file__).resolve().parents[1]
@@ -41,6 +47,7 @@ QUICKSTART = ROOT / "docs" / "quickstart.md"
 HOMOGENEOUS = ROOT / "docs" / "testing-homogeneous.md"
 HEAT = ROOT / "docs" / "testing-heat.md"
 LIMITATIONS = ROOT / "docs" / "limitations.md"
+SCENARIO_JSON = ROOT / "docs" / "scenario-json.md"
 
 _NUMBER = re.compile(r"-?\d+(?:\.\d+)?(?:[eE]-?\d+)?")
 
@@ -98,6 +105,38 @@ def _clothed_mantissa():
 
 
 DEFAULTS = [
+    # scenario-json: spawn-area defaults
+    (
+        SCENARIO_JSON,
+        "| `number` | `simulationParams.number`, else 10",
+        lambda: DEFAULT_SPAWN_PARAMS["number"],
+    ),
+    (
+        SCENARIO_JSON,
+        "| `radius` | `simulationParams.radius`, else 0.2",
+        lambda: DEFAULT_SPAWN_PARAMS["radius"],
+    ),
+    (
+        SCENARIO_JSON,
+        "| `v0` | `simulationParams.v0`, else 1.25",
+        lambda: DEFAULT_SPAWN_PARAMS["v0"],
+    ),
+    (
+        SCENARIO_JSON,
+        "| `percentage` | 50",
+        lambda: _get_distribution_percentage({"distribution_mode": "by_percentage"}),
+    ),
+    (
+        SCENARIO_JSON,
+        "| `percentage` | 50 (`by_percentage`), 100",
+        lambda: _get_distribution_percentage({"distribution_mode": "fill_area"}),
+    ),
+    (
+        SCENARIO_JSON,
+        "| `flow_start_time`, `flow_end_time` | 0 s, 10",
+        lambda: _spawn_params({}, DEFAULT_SPAWN_PARAMS)["flow_end_time"],
+    ),
+    (SCENARIO_JSON, "| `use_premovement` | constant 10", lambda: DEFAULT_PREMOVEMENT_S),
     # smoke-speed: SmokeSpeedConfig fields
     (SMOKE, "| `alpha` | `0.706` |", lambda: SmokeSpeedConfig().alpha),
     (SMOKE, "| `beta` | `-0.057` |", lambda: SmokeSpeedConfig().beta),
