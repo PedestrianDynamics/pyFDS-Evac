@@ -4279,6 +4279,9 @@ the object it encodes, with all its keys, and an unreadable value by an
 empty object, before the setter&amp;rsquo;s keys are written.&lt;/p>
 &lt;p>Most scenarios set only &lt;code>number&lt;/code>, &lt;code>v0&lt;/code>, &lt;code>radius&lt;/code>, &lt;code>use_flow_spawning&lt;/code> and
 &lt;code>use_premovement&lt;/code>; &lt;a href="#examples">Examples&lt;/a> shows each.&lt;/p>
+&lt;p>A value that &amp;ldquo;stops the load&amp;rdquo; in the table below is refused again when
+&lt;code>run_scenario&lt;/code> starts, so a deck changed through &lt;code>set_agent_params&lt;/code> gets
+the same error.&lt;/p>
 &lt;table>
 &lt;thead>
 &lt;tr>
@@ -4299,7 +4302,7 @@ empty object, before the setter&amp;rsquo;s keys are written.&lt;/p>
 &lt;td>&lt;code>distribution_mode&lt;/code>&lt;/td>
 &lt;td>&lt;code>&amp;quot;by_number&amp;quot;&lt;/code>&lt;/td>
 &lt;td>&lt;code>by_number&lt;/code>, &lt;code>by_percentage&lt;/code>, &lt;code>fill_area&lt;/code>, &lt;code>until_full&lt;/code>&lt;/td>
-&lt;td>Any other string is read as &lt;code>by_number&lt;/code>, without a message. &lt;code>by_percentage&lt;/code> fills the polygon to &lt;code>percentage&lt;/code> of its capacity estimate: ⌊estimate × &lt;code>percentage&lt;/code> / 100⌋ agents, at least 1. The estimate is ⌊A / (π r²) / 2⌋ for the spawn area A clipped to the walkable area and the largest agent radius r (&lt;code>radius&lt;/code>, or mean + 3 × &lt;code>radius_std&lt;/code> up to 1 m for a Gaussian radius; at least 0.1 m). &lt;code>number&lt;/code> is not read. The same count applies at the start and with &lt;code>use_flow_spawning&lt;/code>; &lt;code>--print-summary&lt;/code> shows it. The &lt;code>by_percentage&lt;/code> count is exact: when JuPedSim cannot seat it, the run stops with a &lt;code>SpawnCapacityError&lt;/code>, which near 100 % can happen. &lt;code>fill_area&lt;/code> and &lt;code>until_full&lt;/code> take the same count as an upper bound: at the start they place as many agents as fit up to it, the run prints &lt;code>Distribution '&amp;lt;id&amp;gt;': fill_area placed N of at most M agents&lt;/code>, and the result (&lt;code>ScenarioResult.fill_placement&lt;/code>, the closing summary line) records it; &lt;code>--print-summary&lt;/code> shows &lt;code>up to M agents&lt;/code>, and &lt;code>--export-only&lt;/code> does not report it as over-full. With or without journeys, every exact count is placed before any fill mode, whatever the deck order, and the fill modes share what is left.&lt;/td>
+&lt;td>Any other value stops the load with a &lt;code>ValueError&lt;/code> naming the distribution and the four modes; &lt;code>null&lt;/code> reads as unset. &lt;code>by_percentage&lt;/code> fills the polygon to &lt;code>percentage&lt;/code> of its capacity estimate: ⌊estimate × &lt;code>percentage&lt;/code> / 100⌋ agents, at least 1. The estimate is ⌊A / (π r²) / 2⌋ for the spawn area A clipped to the walkable area and the largest agent radius r (&lt;code>radius&lt;/code>, or mean + 3 × &lt;code>radius_std&lt;/code> up to 1 m for a Gaussian radius; at least 0.1 m). &lt;code>number&lt;/code> is not read. The same count applies at the start and with &lt;code>use_flow_spawning&lt;/code>; &lt;code>--print-summary&lt;/code> shows it. The &lt;code>by_percentage&lt;/code> count is exact: when JuPedSim cannot seat it, the run stops with a &lt;code>SpawnCapacityError&lt;/code>, which near 100 % can happen. &lt;code>fill_area&lt;/code> and &lt;code>until_full&lt;/code> take the same count as an upper bound: at the start they place as many agents as fit up to it, the run prints &lt;code>Distribution '&amp;lt;id&amp;gt;': fill_area placed N of at most M agents&lt;/code>, and the result (&lt;code>ScenarioResult.fill_placement&lt;/code>, the closing summary line) records it; &lt;code>--print-summary&lt;/code> shows &lt;code>up to M agents&lt;/code>, and &lt;code>--export-only&lt;/code> does not report it as over-full. With or without journeys, every exact count is placed before any fill mode, whatever the deck order, and the fill modes share what is left.&lt;/td>
 &lt;/tr>
 &lt;tr>
 &lt;td>&lt;code>percentage&lt;/code>&lt;/td>
@@ -4317,13 +4320,13 @@ empty object, before the setter&amp;rsquo;s keys are written.&lt;/p>
 &lt;td>&lt;code>v0_distribution&lt;/code>&lt;/td>
 &lt;td>&lt;code>&amp;quot;constant&amp;quot;&lt;/code>&lt;/td>
 &lt;td>&lt;code>constant&lt;/code>, &lt;code>gaussian&lt;/code>&lt;/td>
-&lt;td>&lt;code>gaussian&lt;/code> draws per agent with &lt;code>v0_std&lt;/code>; draws are clipped to [0.1, 5.0] m/s. Any other string, such as &lt;code>&amp;quot;normal&amp;quot;&lt;/code>, gives the constant &lt;code>v0&lt;/code>, without a message. Only agents placed at the start are drawn; flow-spawned agents take &lt;code>v0&lt;/code>.&lt;/td>
+&lt;td>&lt;code>gaussian&lt;/code> draws per agent with &lt;code>v0_std&lt;/code>; draws are clipped to [0.1, 5.0] m/s. Any other value, such as &lt;code>&amp;quot;normal&amp;quot;&lt;/code>, stops the load with a &lt;code>ValueError&lt;/code> naming the distribution; &lt;code>null&lt;/code> reads as unset. Only agents placed at the start are drawn; flow-spawned agents take &lt;code>v0&lt;/code>.&lt;/td>
 &lt;/tr>
 &lt;tr>
 &lt;td>&lt;code>v0_std&lt;/code>&lt;/td>
 &lt;td>none&lt;/td>
-&lt;td>not checked; draws clipped to [0.1, 5.0] m/s&lt;/td>
-&lt;td>Spread of the Gaussian draw. A &lt;code>v0_std&lt;/code> of 0 or &lt;code>null&lt;/code> gives the constant &lt;code>v0&lt;/code>. A negative value stops the run with numpy&amp;rsquo;s &lt;code>ValueError: scale &amp;lt; 0&lt;/code>, and a string with a &lt;code>TypeError&lt;/code> or &lt;code>ValueError&lt;/code>; neither names the distribution.&lt;/td>
+&lt;td>finite, ≥ 0, or &lt;code>null&lt;/code>; draws clipped to [0.1, 5.0] m/s&lt;/td>
+&lt;td>Spread of the Gaussian draw. A &lt;code>v0_std&lt;/code> of 0 or &lt;code>null&lt;/code> gives the constant &lt;code>v0&lt;/code>. A negative, non-finite, boolean or string value stops the load with a &lt;code>ValueError&lt;/code> naming the distribution.&lt;/td>
 &lt;/tr>
 &lt;tr>
 &lt;td>&lt;code>radius&lt;/code>&lt;/td>
@@ -4335,13 +4338,13 @@ empty object, before the setter&amp;rsquo;s keys are written.&lt;/p>
 &lt;td>&lt;code>radius_distribution&lt;/code>&lt;/td>
 &lt;td>&lt;code>&amp;quot;constant&amp;quot;&lt;/code>&lt;/td>
 &lt;td>&lt;code>constant&lt;/code>, &lt;code>gaussian&lt;/code>&lt;/td>
-&lt;td>&lt;code>gaussian&lt;/code> draws per agent with &lt;code>radius_std&lt;/code>; any other string gives the constant &lt;code>radius&lt;/code>, without a message. The draws are clipped to [0.1 m, b], where b = min(max(&lt;code>radius&lt;/code> + 3 × &lt;code>radius_std&lt;/code>, 0.1), 1.0) m is the radius placement spaces agents for. Only agents placed at the start are drawn; flow-spawned agents take &lt;code>radius&lt;/code>.&lt;/td>
+&lt;td>&lt;code>gaussian&lt;/code> draws per agent with &lt;code>radius_std&lt;/code>; any other value stops the load with a &lt;code>ValueError&lt;/code> naming the distribution, and &lt;code>null&lt;/code> reads as unset. The draws are clipped to [0.1 m, b], where b = min(max(&lt;code>radius&lt;/code> + 3 × &lt;code>radius_std&lt;/code>, 0.1), 1.0) m is the radius placement spaces agents for. Only agents placed at the start are drawn; flow-spawned agents take &lt;code>radius&lt;/code>.&lt;/td>
 &lt;/tr>
 &lt;tr>
 &lt;td>&lt;code>radius_std&lt;/code>&lt;/td>
 &lt;td>none&lt;/td>
-&lt;td>not checked; draws clipped to [0.1 m, b] (see &lt;code>radius_distribution&lt;/code>)&lt;/td>
-&lt;td>Spread of the Gaussian draw. A &lt;code>radius_std&lt;/code> of 0 or &lt;code>null&lt;/code> gives the constant &lt;code>radius&lt;/code>. A negative or string value fails as for &lt;code>v0_std&lt;/code>.&lt;/td>
+&lt;td>finite, ≥ 0, or &lt;code>null&lt;/code>; draws clipped to [0.1 m, b] (see &lt;code>radius_distribution&lt;/code>)&lt;/td>
+&lt;td>Spread of the Gaussian draw. A &lt;code>radius_std&lt;/code> of 0 or &lt;code>null&lt;/code> gives the constant &lt;code>radius&lt;/code>. A negative, non-finite, boolean or string value fails as for &lt;code>v0_std&lt;/code>.&lt;/td>
 &lt;/tr>
 &lt;tr>
 &lt;td>&lt;code>use_premovement&lt;/code>&lt;/td>
@@ -4547,17 +4550,20 @@ title="Copy code"
 &lt;/div>
 &lt;/div>
 &lt;h2>Keys the run does not read&lt;span class="hx-absolute -hx-mt-20" id="keys-the-run-does-not-read">&lt;/span>
-&lt;a href="#keys-the-run-does-not-read" class="subheading-anchor" aria-label="Permalink for this section">&lt;/a>&lt;/h2>&lt;p>The loader does not check &lt;code>parameters&lt;/code> against a list of keys. A key that
-the run does not know is dropped without a message: &lt;code>{&amp;quot;numbr&amp;quot;: 5}&lt;/code> leaves
-&lt;code>number&lt;/code> at 10. The same holds for the &lt;code>routing&lt;/code> block, where only the
-removed keys in &lt;code>REMOVED_ROUTING_KEYS&lt;/code> are refused. A misspelled key
-therefore changes nothing, with one exception: any key starting with
-&lt;code>premovement_&lt;/code> counts as a pre-movement setting and turns the 10 s default
-off, so &lt;code>premovement_typo&lt;/code> removes the delay without a message.&lt;/p>
+&lt;a href="#keys-the-run-does-not-read" class="subheading-anchor" aria-label="Permalink for this section">&lt;/a>&lt;/h2>&lt;p>A key in &lt;code>parameters&lt;/code> or &lt;code>routing&lt;/code> that the run does not read is dropped:
+&lt;code>{&amp;quot;numbr&amp;quot;: 5}&lt;/code> leaves &lt;code>number&lt;/code> at 10. The loader logs one warning per
+distribution and key, or per &lt;code>routing&lt;/code> key, naming it, and goes on; it is
+not an error. The keys in &lt;code>REMOVED_ROUTING_KEYS&lt;/code> are still refused. A
+misspelled key therefore changes nothing, with one exception: any key
+starting with &lt;code>premovement_&lt;/code> counts as a pre-movement setting and turns the
+10 s default off, so &lt;code>premovement_typo&lt;/code> removes the delay, with the
+warning as the only message.&lt;/p>
 &lt;ul>
-&lt;li>&lt;code>fahy_row&lt;/code> and &lt;code>fahy_class&lt;/code> are study labels. The package ignores them;
-only the scripts in &lt;code>assets/station_fahy/&lt;/code> and &lt;code>assets/station_nist/&lt;/code> read
-them.&lt;/li>
+&lt;li>&lt;code>fahy_row&lt;/code>, &lt;code>fahy_class&lt;/code> and &lt;code>population&lt;/code> are allowed without a
+warning. The run does not read &lt;code>fahy_row&lt;/code> and &lt;code>fahy_class&lt;/code>; only the
+scripts in &lt;code>assets/station_fahy/&lt;/code> and &lt;code>assets/station_nist/&lt;/code> do.
+&lt;code>population&lt;/code> switches on the &lt;code>agent_distributions&lt;/code> table (see
+&lt;code>population&lt;/code> above).&lt;/li>
 &lt;li>&lt;code>queues&lt;/code>, &lt;code>waiting_sets&lt;/code>, &lt;code>obstacles&lt;/code>, &lt;code>background_image&lt;/code> and
 &lt;code>project_version&lt;/code> at the top level are not read by the run.&lt;/li>
 &lt;li>&lt;code>type&lt;/code> in a distribution has no reader in &lt;code>pyfds_evac/core&lt;/code>.&lt;/li>
