@@ -232,6 +232,15 @@ def _warn_params(dist_id: str, params: dict[str, Any]) -> None:
     for key in params:
         if key in KNOWN_PARAMETER_KEYS:
             continue
+        if key.startswith("premovement_"):
+            _logger.warning(
+                "Distribution '%s': unknown parameters key %r is not read, but "
+                "a premovement_* key turns off the default pre-movement delay; "
+                "check the spelling against the scenario-json reference",
+                dist_id,
+                key,
+            )
+            continue
         _logger.warning(
             "Distribution '%s': unknown parameters key %r is ignored; "
             "check the spelling against the scenario-json reference",

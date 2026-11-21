@@ -42,6 +42,16 @@ def test_misspelled_parameter_key_warns_once_and_names_it(tmp_path, caplog):
     assert "'d1'" in unknown[0] and "'numbr'" in unknown[0]
 
 
+def test_misspelled_premovement_key_warns_that_it_removes_the_default(tmp_path, caplog):
+    with caplog.at_level(logging.WARNING, logger="pyfds_evac"):
+        _load(tmp_path, {"number": 3, "premovement_typo": 1})
+    unknown = _unknown_warnings(caplog)
+    assert len(unknown) == 1
+    assert "'premovement_typo'" in unknown[0]
+    assert "turns off the default pre-movement delay" in unknown[0]
+    assert "is ignored" not in unknown[0]
+
+
 @pytest.mark.parametrize(
     "parameters",
     [
