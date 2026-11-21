@@ -775,6 +775,13 @@ def _output_files_section() -> NotStr:
                     "bundle/{config.json,geometry.wkt}",
                     style=_PREVIEW_ROW,
                 ),
+                Div(
+                    "The GUI always requests these files; none can be switched "
+                    "off here. A file the run has no data for is not written.",
+                    id="artifact-note",
+                    style=f"{_GROTESK};font-size:10.5px;color:var(--ink-dim);"
+                    "margin-top:4px",
+                ),
                 style=(
                     "background:var(--surface-accent);border:1px solid var(--hairline);"
                     "border-radius:10px;padding:11px 12px;display:flex;flex-direction:column;gap:5px"

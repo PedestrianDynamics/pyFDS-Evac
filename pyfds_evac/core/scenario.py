@@ -1365,12 +1365,14 @@ class ScenarioResult:
 
     def cleanup(self):
         """Delete the temporary SQLite trajectory file and its manifest."""
-        if self.sqlite_file and os.path.exists(self.sqlite_file):
-            os.unlink(self.sqlite_file)
-            self.sqlite_file = None
-        if self.manifest_file and os.path.exists(self.manifest_file):
-            os.unlink(self.manifest_file)
-            self.manifest_file = None
+        try:
+            if self.sqlite_file and os.path.exists(self.sqlite_file):
+                os.unlink(self.sqlite_file)
+                self.sqlite_file = None
+        finally:
+            if self.manifest_file and os.path.exists(self.manifest_file):
+                os.unlink(self.manifest_file)
+                self.manifest_file = None
 
 
 # The exit an agent's scripted plan ends at; route_graph owns it so the
