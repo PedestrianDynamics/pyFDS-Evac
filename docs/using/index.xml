@@ -5246,7 +5246,7 @@ title="Copy code"
 (pyfds-evac 0.8.0; path shortened):&lt;/p>
 &lt;div class="hextra-code-block hx-relative hx-mt-6 first:hx-mt-0 hx-group/code">
 &lt;div>&lt;div class="highlight">&lt;pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;">&lt;code class="language-text" data-lang="text">&lt;span style="display:flex;">&lt;span>Simulation finished in 34.87 s (30/30 evacuated).
-&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>Trajectory SQLite: /…/pyfds_evac_blind_spawn_discovery_run1_20260929T182009Z_output/trajectory.sqlite&lt;/span>&lt;/span>&lt;/code>&lt;/pre>&lt;/div>&lt;/div>&lt;div class="hextra-code-copy-btn-container hx-opacity-0 hx-transition group-hover/code:hx-opacity-100 hx-flex hx-gap-1 hx-absolute hx-m-[11px] hx-right-0 hx-top-0">
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>Trajectory SQLite: /…/pyfds_evac_blind_spawn_discovery_run1_20260929T182009Z_output/blind_spawn_discovery.sqlite&lt;/span>&lt;/span>&lt;/code>&lt;/pre>&lt;/div>&lt;/div>&lt;div class="hextra-code-copy-btn-container hx-opacity-0 hx-transition group-hover/code:hx-opacity-100 hx-flex hx-gap-1 hx-absolute hx-m-[11px] hx-right-0 hx-top-0">
 &lt;button
 class="hextra-code-copy-btn hx-group/copybtn hx-transition-all active:hx-opacity-50 hx-bg-primary-700/5 hx-border hx-border-black/5 hx-text-gray-600 hover:hx-text-gray-900 hx-rounded-md hx-p-1.5 dark:hx-bg-primary-300/10 dark:hx-border-white/10 dark:hx-text-gray-400 dark:hover:hx-text-gray-50"
 title="Copy code"
@@ -5259,8 +5259,8 @@ title="Copy code"
 &lt;p>The run is complete, so the script exits with status 0. An incomplete run
 exits with status 2, as &lt;code>run.py&lt;/code> does.
 The folder &lt;code>pyfds_evac_blind_spawn_discovery_run1_20260929T182009Z_output&lt;/code>, created in the
-folder you ran the script from, holds &lt;code>trajectory.sqlite&lt;/code> and
-&lt;code>trajectory.manifest.json&lt;/code>.&lt;/p>
+folder you ran the script from, holds the files of the GUI run under the same
+names: the trajectory SQLite with its manifest, the CSV histories and &lt;code>bundle/&lt;/code>.&lt;/p>
 &lt;/div>
 &lt;/aside>
 &lt;p>On another machine, copy the scenario folder and the FDS results as well: the
@@ -5280,9 +5280,6 @@ the GUI run&amp;rsquo;s files. It does read the same &lt;code>VIS_CACHE&lt;/code
 key includes the resolved FDS directory (&lt;code>_make_meta&lt;/code> in
 &lt;code>pyfds_evac/core/visibility.py&lt;/code>), so a changed &lt;code>FDS_DIR&lt;/code> or setting makes
 the script rebuild the map and rewrite that file.&lt;/li>
-&lt;li>&lt;strong>Fewer output files.&lt;/strong> The script writes the trajectory SQLite and its
-manifest, not the GUI&amp;rsquo;s CSV histories or app bundle
-(&lt;a href="https://github.com/PedestrianDynamics/pyFDS-Evac/issues/328" target="_blank" rel="noopener">#328&lt;/a>).&lt;/li>
 &lt;/ul>
 &lt;h3>Preview and run code&lt;span class="hx-absolute -hx-mt-20" id="preview-and-run-code">&lt;/span>
 &lt;a href="#preview-and-run-code" class="subheading-anchor" aria-label="Permalink for this section">&lt;/a>&lt;/h3>&lt;p>&lt;strong>Preview.&lt;/strong> The form is resolved exactly as a submitted run would be. If the
@@ -5347,9 +5344,11 @@ hands it to &lt;code>build_run_kwargs&lt;/code>.&lt;/li>
 script then calls &lt;code>load_scenario&lt;/code>, &lt;code>build_run_kwargs&lt;/code>
 (&lt;code>pyfds_evac/core/run_config.py&lt;/code>) and &lt;code>run_scenario&lt;/code>. There is no second
 option mapping, so the script cannot drift from the GUI.&lt;/li>
-&lt;li>&lt;strong>After the run.&lt;/strong> A finished or stopped message. The trajectory SQLite is
-copied to &lt;code>OUTPUT_DIR/trajectory.sqlite&lt;/code> with its manifest, and
-&lt;code>result.cleanup()&lt;/code> removes the temporary copies &lt;code>run_scenario&lt;/code> wrote.&lt;/li>
+&lt;li>&lt;strong>After the run.&lt;/strong> A finished or stopped message. The script calls
+&lt;code>apply_outputs&lt;/code> (&lt;code>pyfds_evac.core.run_outputs&lt;/code>), as the GUI and the CLI do:
+the trajectory SQLite with its manifest and side tables, the CSV histories
+and the app bundle are written into &lt;code>OUTPUT_DIR&lt;/code> under the names of the GUI
+run&amp;rsquo;s files, and &lt;code>result.cleanup()&lt;/code> removes the temporary copies &lt;code>run_scenario&lt;/code> wrote.&lt;/li>
 &lt;li>&lt;strong>CLI-only keys.&lt;/strong> &lt;code>cleanup&lt;/code>, &lt;code>export_only&lt;/code>, &lt;code>inspect_fds&lt;/code> and
 &lt;code>print_summary&lt;/code> appear in &lt;code>OPTIONS&lt;/code>, but &lt;code>build_run_kwargs&lt;/code> ignores them.
 &lt;code>'cleanup': False&lt;/code> next to &lt;code>result.cleanup()&lt;/code> is expected, not a bug.&lt;/li>
@@ -5443,17 +5442,14 @@ cancelled run): the submitted value, with
 &lt;/details>
 &lt;details class="last-of-type:hx-mb-0 hx-rounded-lg hx-bg-neutral-50 dark:hx-bg-neutral-800 hx-p-2 hx-mt-4 hx-group" >
 &lt;summary class="hx-flex hx-items-center hx-cursor-pointer hx-select-none hx-list-none hx-p-1 hx-rounded hx-transition-colors hover:hx-bg-gray-100 dark:hover:hx-bg-neutral-800 before:hx-mr-1 before:hx-inline-block before:hx-transition-transform before:hx-content-[''] dark:before:hx-invert rtl:before:hx-rotate-180 group-open:before:hx-rotate-90">
-&lt;strong class="hx-text-lg">What the script leaves out, and why&lt;/strong>
+&lt;strong class="hx-text-lg">What the script does differently, and why&lt;/strong>
 &lt;/summary>
 &lt;div class="hx-p-2 hx-overflow-hidden">
 &lt;ul>
-&lt;li>&lt;strong>The GUI&amp;rsquo;s CSV histories and app bundle.&lt;/strong> The smoke, FED, route,
-route-cost and exit histories and the bundle are written by &lt;code>apply_outputs&lt;/code> in
-&lt;code>pyfds_evac.core.run_outputs&lt;/code>, which the exported script does not call yet. Their keys
-(&lt;code>output_smoke_history&lt;/code>, &lt;code>output_fed_history&lt;/code>, &lt;code>output_route_history&lt;/code>,
-&lt;code>output_route_cost_history&lt;/code>, &lt;code>output_exit_history&lt;/code>, &lt;code>output_sqlite&lt;/code>,
-&lt;code>export_app_bundle&lt;/code>) are set
-to &lt;code>None&lt;/code>
+&lt;li>&lt;strong>Where the output files go.&lt;/strong> The output options (&lt;code>output_sqlite&lt;/code>,
+the CSV histories, &lt;code>export_app_bundle&lt;/code>) keep only their file names in
+&lt;code>OPTIONS&lt;/code>; the script writes them into &lt;code>OUTPUT_DIR&lt;/code>, never into the GUI
+run&amp;rsquo;s folder, and writes the same output files the GUI run wrote
 (&lt;a href="https://github.com/PedestrianDynamics/pyFDS-Evac/issues/328" target="_blank" rel="noopener">#328&lt;/a>).
 Route-cost history collection stays on (&lt;code>collect_route_cost_history&lt;/code>), as
 in the GUI.&lt;/li>
