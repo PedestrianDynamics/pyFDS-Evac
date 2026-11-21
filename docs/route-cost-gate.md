@@ -280,7 +280,7 @@ for non-visible doors (`:16796`) it vanishes on this deck, because both
 corridors are axis-aligned and the L1 distance equals the polyline exactly. The
 sign and size of the bias on other geometries have not been measured.
 
-### Route choice is an optimality bound, not a perception-limited model
+### Route choice uses global smoke knowledge, not a perception-limited model
 
 Issue [#125](https://github.com/PedestrianDynamics/pyFDS-Evac/issues/125). Two assumptions
 apply to the same agent on the same tick and point in opposite directions:
@@ -308,7 +308,7 @@ order, wander behaviour and the lost-exit failure mode stand. What it undercuts
 is any claim that a **discovery agent's route choice** is perception-limited. It
 is not.
 
-**So name what the model is.** Route choice here is an **optimality bound**:
+**So name what the model is.** Route choice here uses **global smoke knowledge**:
 what an evacuee with perfect knowledge of the smoke field would choose *over the
 part of the building it happens to know*. Not "what a perfectly informed
 evacuee would choose" — the topology restriction is real and still binds. That
@@ -738,7 +738,7 @@ it alone.
   the crossover itself is not modelled away.
 - **[#125](https://github.com/PedestrianDynamics/pyFDS-Evac/issues/125) — route
   choice is not perception-limited.** See
-  [Route choice is an optimality bound](#route-choice-is-an-optimality-bound-not-a-perception-limited-model).
+  [Route choice uses global smoke knowledge](#route-choice-uses-global-smoke-knowledge-not-a-perception-limited-model).
   It bounds what the discovery tier can be said to demonstrate about route
   choice; it does not touch map growth.
 

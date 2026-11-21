@@ -363,7 +363,7 @@ movie.
 - **Route choice is not perception-limited.** Among the exits it knows, a
   discovery agent prices smoke over legs it has never seen
   ([#125](https://github.com/PedestrianDynamics/pyFDS-Evac/issues/125)),
-  so its choice among known exits is an optimality bound
+  so its choice among known exits uses global smoke knowledge
   ([Wayfinding](/models/wayfinding.md#deviations-from-the-literature)).
   Map growth, which this page checks, goes through the sign-legibility
   test. In clear air this changes nothing here.

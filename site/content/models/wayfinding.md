@@ -640,8 +640,8 @@ is the waypoint method of Börger, Belt and Arnold (2024), Eqs. (2) and
   `anticipate`, future times (`route_graph.py`, `_measure_route`,
   `RouteCostConfig.anticipate`, `RouteCostConfig.foresight_horizon_s`). The
   choice among known exits is therefore that of an evacuee who knows the
-  smoke on those routes, an optimality bound
-  that is approximate ([Routing › Limitations](/models/routing.md#limitations)).
+  smoke on those routes, approximately
+  ([Routing › Limitations](/models/routing.md#limitations)).
   In a comparison of familiarity tiers run with a visibility model, results
   on which exits are learned and when, on exploration and on exits that are
   never found rest on perception; without one, learning follows

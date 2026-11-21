@@ -246,9 +246,9 @@ finished FDS run holds for the time the agent would arrive there (#650). Knowled
 routes an agent ranks, and only fully familiar agents know the whole graph;
 it does not limit the smoke those routes are priced with. The route choice of
 a discovery agent is therefore not limited by what it has perceived: it is
-the choice of an evacuee who knows the smoke on every route in its map, an
-optimality bound (approximate: the arrival clock uses the unimpeded speed
-and the path is searched on the smoke at decision time). With a visibility
+the choice of an evacuee who knows the smoke on every route in its map, approximately (the arrival clock
+uses the unimpeded speed and the path is searched on the smoke at decision
+time). With a visibility
 model, map growth is perception-limited
 ([Wayfinding](/models/wayfinding.md#deviations-from-the-literature)).
 
