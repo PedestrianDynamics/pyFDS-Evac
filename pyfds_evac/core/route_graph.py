@@ -1151,6 +1151,53 @@ def check_removed_routing_keys(routing: Mapping[str, object] | None) -> None:
             raise ValueError(message)
 
 
+KNOWN_ROUTING_KEYS = frozenset(
+    {
+        # read by RouteCostConfig.from_routing_params
+        "cost_model",
+        "clean_extinction_threshold",
+        "clean_exit_margin",
+        "tau_max",
+        "tau_deadband",
+        "current_exit_discount",
+        "anticipate",
+        "foresight_horizon_s",
+        "fallback_switch_margin",
+        "exit_switch_anchor",
+        "w_smoke",
+        "w_fed",
+        "w_queue",
+        "fed_rejection_threshold",
+        "visibility_extinction_threshold",
+        "sampling_step_m",
+        "base_speed_m_per_s",
+        "alpha",
+        "beta",
+        "min_speed_factor",
+        "default_exit_capacity",
+        # read by run_scenario (_fed_rate_memo_flag)
+        "fed_rate_memo",
+    }
+)
+"""The ``routing`` keys a scenario may set (#1033)."""
+
+
+def warn_unknown_routing_keys(routing: Mapping[str, object] | None) -> None:
+    """Log one warning per ``routing`` key that nothing reads (#1033).
+
+    Removed keys are not reported here: they stop the run with their own
+    error (:func:`check_removed_routing_keys`).
+    """
+    for key in routing or {}:
+        if key in KNOWN_ROUTING_KEYS or key in REMOVED_ROUTING_KEYS:
+            continue
+        _logger.warning(
+            "routing: unknown key %r is ignored; check the spelling against "
+            "the scenario-json reference",
+            key,
+        )
+
+
 def _check_margin(
     label: str, value: object, closed_low: bool, closed_high: bool
 ) -> None:

@@ -773,6 +773,17 @@ def speed_alias_issue(raw: Mapping[str, Any]) -> ConfigIssue | None:
     return None
 
 
+def distribution_value_issue(raw: Mapping[str, Any]) -> ConfigIssue | None:
+    """A distribution enum or ``*_std`` value the run cannot act on (#1033)."""
+    from pyfds_evac.core.agent_params import check_distribution_values
+
+    try:
+        check_distribution_values(raw)
+    except ValueError as exc:
+        return ConfigIssue("B", None, str(exc), "S")
+    return None
+
+
 def no_known_exit_value_issue(raw: Mapping[str, Any]) -> ConfigIssue | None:
     """A distribution's ``no_known_exit`` that is not a mode (#610)."""
     from pyfds_evac.core.cognitive_map import distribution_no_known_exit
@@ -830,6 +841,7 @@ def scenario_issue(raw: Mapping[str, Any]) -> ConfigIssue | None:
     return (
         dt_issue(raw)
         or speed_alias_issue(raw)
+        or distribution_value_issue(raw)
         or routing_issue(raw)
         or no_known_exit_value_issue(raw)
         or entrance_value_issue(raw)

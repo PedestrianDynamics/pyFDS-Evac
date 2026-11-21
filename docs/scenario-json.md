@@ -173,17 +173,21 @@ empty object, before the setter's keys are written.
 Most scenarios set only `number`, `v0`, `radius`, `use_flow_spawning` and
 `use_premovement`; [Examples](#examples) shows each.
 
+A value that "stops the load" in the table below is refused again when
+`run_scenario` starts, so a deck changed through `set_agent_params` gets
+the same error.
+
 | Key | Default | Range | Effect |
 |---|---|---|---|
 | `number` | `simulationParams.number`, else 10 | ≥ 0 | Agents placed at the start by number, or added over the window with `use_flow_spawning`. Not read, and not checked, in the percentage modes. No value is taken from another spawn area. |
-| `distribution_mode` | `"by_number"` | `by_number`, `by_percentage`, `fill_area`, `until_full` | Any other string is read as `by_number`, without a message. `by_percentage` fills the polygon to `percentage` of its capacity estimate: ⌊estimate × `percentage` / 100⌋ agents, at least 1. The estimate is ⌊A / (π r²) / 2⌋ for the spawn area A clipped to the walkable area and the largest agent radius r (`radius`, or mean + 3 × `radius_std` up to 1 m for a Gaussian radius; at least 0.1 m). `number` is not read. The same count applies at the start and with `use_flow_spawning`; `--print-summary` shows it. The `by_percentage` count is exact: when JuPedSim cannot seat it, the run stops with a `SpawnCapacityError`, which near 100 % can happen. `fill_area` and `until_full` take the same count as an upper bound: at the start they place as many agents as fit up to it, the run prints `Distribution '<id>': fill_area placed N of at most M agents`, and the result (`ScenarioResult.fill_placement`, the closing summary line) records it; `--print-summary` shows `up to M agents`, and `--export-only` does not report it as over-full. With or without journeys, every exact count is placed before any fill mode, whatever the deck order, and the fill modes share what is left. |
+| `distribution_mode` | `"by_number"` | `by_number`, `by_percentage`, `fill_area`, `until_full` | Any other value stops the load with a `ValueError` naming the distribution and the four modes; `null` reads as unset. `by_percentage` fills the polygon to `percentage` of its capacity estimate: ⌊estimate × `percentage` / 100⌋ agents, at least 1. The estimate is ⌊A / (π r²) / 2⌋ for the spawn area A clipped to the walkable area and the largest agent radius r (`radius`, or mean + 3 × `radius_std` up to 1 m for a Gaussian radius; at least 0.1 m). `number` is not read. The same count applies at the start and with `use_flow_spawning`; `--print-summary` shows it. The `by_percentage` count is exact: when JuPedSim cannot seat it, the run stops with a `SpawnCapacityError`, which near 100 % can happen. `fill_area` and `until_full` take the same count as an upper bound: at the start they place as many agents as fit up to it, the run prints `Distribution '<id>': fill_area placed N of at most M agents`, and the result (`ScenarioResult.fill_placement`, the closing summary line) records it; `--print-summary` shows `up to M agents`, and `--export-only` does not report it as over-full. With or without journeys, every exact count is placed before any fill mode, whatever the deck order, and the fill modes share what is left. |
 | `percentage` | 50 (`by_percentage`), 100 (`fill_area`, `until_full`) | whole percent, clamped to 1–100 | Share of the capacity estimate that the percentage modes use (see `distribution_mode`). The value is read as `int(float(value))`; a value that is not a number takes the default, without a message. Not read with `by_number`. |
 | `v0` | `simulationParams.v0`, else 1.25 m/s | finite, ≥ 0 | Clear-air walking speed, for every movement model (FDS+Evac `VEL_MEAN`; 1.2 before). Every smoke, irritant and zone factor multiplies this value. |
-| `v0_distribution` | `"constant"` | `constant`, `gaussian` | `gaussian` draws per agent with `v0_std`; draws are clipped to [0.1, 5.0] m/s. Any other string, such as `"normal"`, gives the constant `v0`, without a message. Only agents placed at the start are drawn; flow-spawned agents take `v0`. |
-| `v0_std` | none | not checked; draws clipped to [0.1, 5.0] m/s | Spread of the Gaussian draw. A `v0_std` of 0 or `null` gives the constant `v0`. A negative value stops the run with numpy's `ValueError: scale < 0`, and a string with a `TypeError` or `ValueError`; neither names the distribution. |
+| `v0_distribution` | `"constant"` | `constant`, `gaussian` | `gaussian` draws per agent with `v0_std`; draws are clipped to [0.1, 5.0] m/s. Any other value, such as `"normal"`, stops the load with a `ValueError` naming the distribution; `null` reads as unset. Only agents placed at the start are drawn; flow-spawned agents take `v0`. |
+| `v0_std` | none | finite, ≥ 0, or `null`; draws clipped to [0.1, 5.0] m/s | Spread of the Gaussian draw. A `v0_std` of 0 or `null` gives the constant `v0`. A negative, non-finite, boolean or string value stops the load with a `ValueError` naming the distribution. |
 | `radius` | `simulationParams.radius`, else 0.2 m | finite, > 0 | Body radius: packing, spawn spacing, and the `radius + 0.5` m arrival distance at a checkpoint (an agent also arrives when its centre is inside the checkpoint polygon). An agent leaves at an exit when its centre enters the exit polygon or comes within 0.03 m of it. |
-| `radius_distribution` | `"constant"` | `constant`, `gaussian` | `gaussian` draws per agent with `radius_std`; any other string gives the constant `radius`, without a message. The draws are clipped to [0.1 m, b], where b = min(max(`radius` + 3 × `radius_std`, 0.1), 1.0) m is the radius placement spaces agents for. Only agents placed at the start are drawn; flow-spawned agents take `radius`. |
-| `radius_std` | none | not checked; draws clipped to [0.1 m, b] (see `radius_distribution`) | Spread of the Gaussian draw. A `radius_std` of 0 or `null` gives the constant `radius`. A negative or string value fails as for `v0_std`. |
+| `radius_distribution` | `"constant"` | `constant`, `gaussian` | `gaussian` draws per agent with `radius_std`; any other value stops the load with a `ValueError` naming the distribution, and `null` reads as unset. The draws are clipped to [0.1 m, b], where b = min(max(`radius` + 3 × `radius_std`, 0.1), 1.0) m is the radius placement spaces agents for. Only agents placed at the start are drawn; flow-spawned agents take `radius`. |
+| `radius_std` | none | finite, ≥ 0, or `null`; draws clipped to [0.1 m, b] (see `radius_distribution`) | Spread of the Gaussian draw. A `radius_std` of 0 or `null` gives the constant `radius`. A negative, non-finite, boolean or string value fails as for `v0_std`. |
 | `use_premovement` | constant 10 s when no pre-movement key is set, with a warning | `true`, `false` | Delay before the agent starts moving. Setting any pre-movement key, including `use_premovement: false`, turns the default off. A `premovement_*` key such as `premovement_param_a` without `use_premovement: true` therefore gives no delay at all, without a message: the key removes the 10 s default and `use_premovement` reads as `false`. Not applied to flow-spawned agents. |
 | `premovement_distribution` | `"gamma"` | `gamma`, `lognormal`, `weibull`, `uniform`, `constant` | Distribution of the delay. Another value stops the run with a `ValueError` when the delays are drawn. |
 | `premovement_param_a`, `premovement_param_b` | the preset of the distribution | not range-checked | Override the preset. Set both for the override to take effect; `constant` needs only `premovement_param_a`. The two values mean different things per distribution; the meanings, presets and sources are in [Coming from FDS+Evac](coming-from-fds-evac.md#pre-movement-parameters). |
@@ -289,17 +293,38 @@ rerouting and is refused with `--smoke-blind`:
 
 ## Keys the run does not read
 
-The loader does not check `parameters` against a list of keys. A key that
-the run does not know is dropped without a message: `{"numbr": 5}` leaves
-`number` at 10. The same holds for the `routing` block, where only the
-removed keys in `REMOVED_ROUTING_KEYS` are refused. A misspelled key
-therefore changes nothing, with one exception: any key starting with
-`premovement_` counts as a pre-movement setting and turns the 10 s default
-off, so `premovement_typo` removes the delay without a message.
+A key that the run does not read is dropped: `{"numbr": 5}` in
+`parameters` leaves `number` at 10. The loader logs one warning per key,
+naming it and where it is, and goes on; it is not an error. It checks
+four places: the keys of `distributions.*.parameters`, of `routing`, of
+`simulationParams`, and the top level of the file. Keys that the
+JuPedSim web app writes and this package does not read
+(`project_version`, `obstacles`, `queues`, `waiting_sets` and
+`background_image` at the top level; `T`, `s0` and `time_gap` in
+`simulationParams`) do not warn.
 
-- `fahy_row` and `fahy_class` are study labels. The package ignores them;
-  only the scripts in `assets/station_fahy/` and `assets/station_nist/` read
-  them.
+Nothing else is checked, so a misspelled key there gives no message:
+
+- the entries of `exits`, `checkpoints`, `waypoints` and `zones`,
+  including the `sign` of an exit, checkpoint or waypoint;
+- the journeys (`journeys`, `journeys_v2`, `transitions`,
+  `waypoint_routing`);
+- the keys of `config` other than `simulation_settings`, and of
+  `config.simulation_settings` other than `simulationParams`: a
+  misspelled `baseSeed` there runs with the default seed 42, without a
+  warning.
+
+The keys in `REMOVED_ROUTING_KEYS` are still refused. A misspelled key
+therefore changes nothing, with one exception: any key starting with
+`premovement_` counts as a pre-movement setting and turns the 10 s
+default off, so `premovement_typo` removes the delay, with the warning
+as the only message.
+
+- `fahy_row`, `fahy_class` and `population` are allowed without a
+  warning. The run does not read `fahy_row` and `fahy_class`; only the
+  scripts in `assets/station_fahy/` and `assets/station_nist/` do.
+  `population` switches on the `agent_distributions` table (see
+  `population` above).
 - `queues`, `waiting_sets`, `obstacles`, `background_image` and
   `project_version` at the top level are not read by the run.
 - `type` in a distribution has no reader in `pyfds_evac/core`.

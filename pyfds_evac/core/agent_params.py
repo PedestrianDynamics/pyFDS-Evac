@@ -20,9 +20,12 @@ share (#390).
 from __future__ import annotations
 
 import json
+import logging
 import math
 from collections.abc import Iterator
 from typing import Any
+
+_logger = logging.getLogger(__name__)
 
 SPEED_KEY_ALIASES = (
     ("desired_speed", "v0"),
@@ -101,6 +104,273 @@ def check_speed_aliases(raw: Any) -> None:
     """
     for dist_id, _, params in _alias_parameters(raw):
         _check_speed_pairs(params, dist_id)
+
+
+KNOWN_PARAMETER_KEYS = frozenset(
+    {
+        # _spawn_params and the readers of cognitive_map and the views
+        "number",
+        "radius",
+        "v0",
+        "use_flow_spawning",
+        "flow_start_time",
+        "flow_end_time",
+        "flow_schedule",
+        "initial_number",
+        "use_premovement",
+        "premovement_distribution",
+        "premovement_param_a",
+        "premovement_param_b",
+        "premovement_seed",
+        "premovement_preset",
+        "premovement_offset_s",
+        "radius_distribution",
+        "radius_std",
+        "v0_distribution",
+        "v0_std",
+        "distribution_mode",
+        "percentage",
+        "familiarity",
+        "entrance",
+        "no_known_exit",
+        # aliases of the v0 keys
+        "desired_speed",
+        "desired_speed_distribution",
+        "desired_speed_std",
+        # allowed without a warning: fahy_row and fahy_class are not read by
+        # the run; population switches on the agent_distributions table
+        "population",
+        "fahy_row",
+        "fahy_class",
+    }
+)
+"""The ``distributions.*.parameters`` keys the code reads or allows (#1033)."""
+
+_DISTRIBUTION_ENUMS = {
+    "v0_distribution": ("constant", "gaussian"),
+    "desired_speed_distribution": ("constant", "gaussian"),
+    "radius_distribution": ("constant", "gaussian"),
+    "distribution_mode": ("by_number", "by_percentage", "fill_area", "until_full"),
+}
+_STD_KEYS = ("v0_std", "desired_speed_std", "radius_std")
+
+
+def _distribution_parameters(data: Any) -> Iterator[tuple[str, dict[str, Any]]]:
+    """Yield ``(dist_id, params)`` of each distribution whose parameters parse."""
+    distributions = data.get("distributions") if isinstance(data, dict) else None
+    if not isinstance(distributions, dict):
+        return
+    for dist_id, dist_data in distributions.items():
+        if not isinstance(dist_data, dict):
+            continue
+        params = parameters_as_dict(dist_data.get("parameters"))
+        if params is not None:
+            yield dist_id, params
+
+
+def _check_enum_value(dist_id: str, key: str, value: Any) -> None:
+    """Raise ValueError when *key* holds a value the run does not act on.
+
+    ``null`` reads as unset: the run takes the default.
+    """
+    if value is None:
+        return
+    allowed = _DISTRIBUTION_ENUMS[key]
+    if isinstance(value, str) and value in allowed:
+        return
+    raise ValueError(
+        f"Distribution {dist_id!r}: {key} {value!r} is not supported; "
+        f"allowed values: {', '.join(allowed)}"
+    )
+
+
+def _fits_float(value: int | float) -> bool:
+    """Whether *value* is a finite float, or an int a float can hold."""
+    try:
+        return math.isfinite(value)
+    except OverflowError:
+        return False
+
+
+def _check_std_value(dist_id: str, key: str, value: Any) -> None:
+    """Raise ValueError when *key* is not null or a finite number >= 0."""
+    if value is None:
+        return
+    is_number = isinstance(value, (int, float)) and not isinstance(value, bool)
+    if is_number and _fits_float(value) and value >= 0:
+        return
+    raise ValueError(
+        f"Distribution {dist_id!r}: {key} must be a finite number >= 0 or "
+        f"null, got {value!r}"
+    )
+
+
+def _check_params(dist_id: str, params: dict[str, Any]) -> None:
+    """Raise ValueError for the first enum or std value of *params* the run rejects."""
+    for key in _DISTRIBUTION_ENUMS:
+        if key in params:
+            _check_enum_value(dist_id, key, params[key])
+    for key in _STD_KEYS:
+        if key in params:
+            _check_std_value(dist_id, key, params[key])
+
+
+def check_distribution_values(raw: Any) -> None:
+    """Raise ValueError for the first distribution value the run cannot act on.
+
+    An unknown ``v0_distribution``, ``radius_distribution`` or
+    ``distribution_mode``, or a ``v0_std`` / ``radius_std`` (and the
+    ``desired_speed*`` aliases) that is not null or a finite number >= 0.
+    The error names the distribution. ``raw`` is not modified.
+    """
+    for dist_id, params in _distribution_parameters(raw):
+        _check_params(dist_id, params)
+
+
+def _warn_params(dist_id: str, params: dict[str, Any]) -> None:
+    """Log a warning for each key of *params* that is not a known key."""
+    for key in params:
+        if key in KNOWN_PARAMETER_KEYS:
+            continue
+        _logger.warning(
+            "Distribution '%s': unknown parameters key %r is ignored; "
+            "check the spelling against the scenario-json reference",
+            dist_id,
+            key,
+        )
+
+
+def warn_unknown_parameter_keys(raw: Any) -> None:
+    """Log one warning per distribution and unknown ``parameters`` key (#1033).
+
+    An unknown key is dropped by the set-up, so a misspelling such as
+    ``numbr`` runs with the default. Not an error: the deck still loads.
+    """
+    for dist_id, params in _distribution_parameters(raw):
+        _warn_params(dist_id, params)
+
+
+KNOWN_TOP_LEVEL_KEYS = frozenset(
+    {
+        # Scenario.load and the set-up in simulation_init
+        "walkable_area_wkt",
+        "geometry",
+        "config",
+        "exits",
+        "distributions",
+        "zones",
+        "checkpoints",
+        "waiting_polygons",
+        "journeys",
+        "journeys_v2",
+        "transitions",
+        "waypoint_routing",
+        "routing",
+        # visibility.py and plan_view.py read these sections as well
+        "waypoints",
+    }
+)
+"""The top-level scenario keys the code reads (#1033)."""
+
+KNOWN_SIM_PARAM_KEYS = frozenset(
+    {
+        # run settings: scenario.py, time_step.py, run_config.py, effective.py
+        "max_simulation_time",
+        "model_type",
+        "dt",
+        "smoke_slice_height",
+        # deck-wide spawn defaults (_deck_spawn_defaults)
+        "number",
+        "radius",
+        "v0",
+        # CollisionFreeSpeedModel and V2 (scenario._MODEL_BUILDERS)
+        "strength_neighbor_repulsion",
+        "range_neighbor_repulsion",
+        # GeneralizedCentrifugalForceModel (builder and create_agent_parameters)
+        "gcfm_strength_neighbor_repulsion",
+        "gcfm_strength_geometry_repulsion",
+        "gcfm_max_neighbor_interaction_distance",
+        "gcfm_max_geometry_interaction_distance",
+        "gcfm_max_neighbor_repulsion_force",
+        "gcfm_max_geometry_repulsion_force",
+        "mass",
+        "tau",
+        "a_v",
+        "a_min",
+        "b_min",
+        "b_max",
+        # SocialForceModel
+        "sfm_body_force",
+        "sfm_friction",
+        "sfm_obstacle_scale",
+        "relaxation_time",
+        "agent_strength",
+        "agent_range",
+        # WarpDriverModel
+        "time_horizon",
+        "step_size",
+        "sigma",
+        "time_uncertainty",
+        "velocity_uncertainty_x",
+        "velocity_uncertainty_y",
+        # AnticipationVelocityModel
+        "anticipation_time",
+        "reaction_time",
+    }
+)
+"""The ``simulationParams`` keys the code reads (#1033)."""
+
+WEBAPP_TOP_LEVEL_KEYS = frozenset(
+    {
+        # Written by the JuPedSim web app, not read here.
+        "background_image",
+        "obstacles",
+        "project_version",
+        "queues",
+        "waiting_sets",
+    }
+)
+WEBAPP_SIM_PARAM_KEYS = frozenset(
+    {
+        # Written by the JuPedSim web app, not read here.
+        "T",
+        "s0",
+        "time_gap",
+    }
+)
+
+
+def _warn_unknown_keys(where: str, keys: Any, known: frozenset[str]) -> None:
+    """Log one warning for each key of *keys* that is not in *known*."""
+    for key in keys:
+        if key in known:
+            continue
+        _logger.warning(
+            "%s: unknown key %r is ignored; check the spelling against the "
+            "scenario-json reference",
+            where,
+            key,
+        )
+
+
+def warn_unknown_scenario_keys(raw: Any) -> None:
+    """Log one warning per unknown top-level or ``simulationParams`` key (#1033).
+
+    Keys of the JuPedSim web app that this package does not read are
+    allowed. Not an error: the deck still loads and nothing it reads changes.
+    """
+    if not isinstance(raw, dict):
+        return
+    _warn_unknown_keys("Scenario", raw, KNOWN_TOP_LEVEL_KEYS | WEBAPP_TOP_LEVEL_KEYS)
+    config = raw.get("config")
+    settings = config.get("simulation_settings") if isinstance(config, dict) else None
+    params = settings.get("simulationParams") if isinstance(settings, dict) else None
+    if isinstance(params, dict):
+        _warn_unknown_keys(
+            "simulationParams",
+            params,
+            KNOWN_SIM_PARAM_KEYS | WEBAPP_SIM_PARAM_KEYS,
+        )
 
 
 def normalize_distribution_speed_aliases(data: Any) -> None:
