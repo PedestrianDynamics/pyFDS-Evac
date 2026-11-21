@@ -47,9 +47,11 @@ from .agent_params import (
     _normalize_flow_schedule_entry,
     _normalized_flow_schedule,
     _spawn_value,
+    check_distribution_values,
     deck_default_number,
     max_agent_radius,
     parameters_as_dict,
+    warn_unknown_parameter_keys,
 )
 from .agent_seed import (
     INITIAL_ORIGIN,
@@ -156,6 +158,7 @@ from .route_graph import (
     should_reevaluate,
     stage_closed,
     terminal_exit,
+    warn_unknown_routing_keys,
     with_rival_edges,
 )
 from .smoke_speed import ConstantExtinctionField, sample_accepts_free_speed
@@ -2005,6 +2008,9 @@ def load_scenario(path: str) -> Scenario:
 
     check_journey_transitions(data)
     preference_nodes(data)
+    check_distribution_values(data)
+    warn_unknown_parameter_keys(data)
+    warn_unknown_routing_keys(data.get("routing"))
 
     sim_settings = data.get("config", {}).get("simulation_settings", {})
     sim_params = sim_settings.get("simulationParams", {})
@@ -2142,6 +2148,9 @@ def run_scenario(
     # An explicit cost config bypasses from_routing_params, so a removed
     # routing key is checked here whatever the overrides (#187).
     check_removed_routing_keys(scenario.raw.get("routing"))
+    # set_agent_params checks only some values; a deck edited through the API
+    # is checked here as a loaded one is (#1033).
+    check_distribution_values(scenario.raw)
     seed = seed if seed is not None else scenario.seed
     if seed_out_of_range(seed):
         raise ValueError(messages.seed_out_of_range(seed))

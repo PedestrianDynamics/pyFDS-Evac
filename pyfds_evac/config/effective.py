@@ -54,6 +54,7 @@ from .rules import (
     Inactive,
     Mechanisms,
     check_options,
+    distribution_value_issue,
     dt_issue,
     entrance_value_issue,
     gas_quantities,
@@ -588,6 +589,9 @@ def _errors(
     if issue is not None:
         errors.append(issue)
     issue = speed_alias_issue(raw)
+    if issue is not None:
+        errors.append(issue)
+    issue = distribution_value_issue(raw)
     if issue is not None:
         errors.append(issue)
     issue = routing_issue(raw)
