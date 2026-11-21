@@ -5164,10 +5164,9 @@ shown on its own, not as part of Remaining
 without data are listed under &lt;strong>Not shown&lt;/strong>. FED is shown live during a
 run.&lt;/li>
 &lt;li>&lt;strong>Trajectory replay&lt;/strong>: agents move between the stored trajectory samples,
-coloured by cumulative gas FED, by cumulative heat FED (a &amp;ldquo;heat FED&amp;rdquo;
-button, present only when the run modelled heat FED) or by assigned
-exit, with play, pause, a scrub bar, speeds of 1×, 2×, 5×, 10× and 50×
-or a custom speed, and scroll-to-zoom and drag-to-pan. When the run has an &lt;code>fds_dir&lt;/code>, the
+coloured by cumulative gas FED or by assigned exit, with play, pause, a
+scrub bar, speeds of 1×, 2×, 5×, 10× and 50× or a custom speed, and
+scroll-to-zoom and drag-to-pan. When the run has an &lt;code>fds_dir&lt;/code>, the
 horizontal extinction slice the engine samples is drawn under the agents
 in fixed &lt;em>K&lt;/em> bins, as a smoke layer that can be switched off; see
 &lt;a href="#look-at-the-results">Look at the results&lt;/a>. The result does not record
@@ -5176,13 +5175,11 @@ with the same rule
 (&lt;a href="https://github.com/PedestrianDynamics/pyFDS-Evac/issues/592" target="_blank" rel="noopener">#592&lt;/a>).
 Without a FED model, for example when the FDS output has no CO, CO₂ or O₂
 slices, agents are coloured by exit and the FED/exit
-switch is not shown. Heat FED and gas FED are coloured separately on the
-same scale; the core defines no combined dose, so none is drawn.&lt;/li>
+switch is not shown. The replay colours by gas FED only, not by heat FED
+(&lt;a href="https://github.com/PedestrianDynamics/pyFDS-Evac/issues/232" target="_blank" rel="noopener">#232&lt;/a>).&lt;/li>
 &lt;li>&lt;strong>FED panel&lt;/strong>: under the replay, when the run has a FED model. It shows
-the highest gas FED (or heat FED, while that colouring is selected) of
-any agent on one continuous scale that runs to 1, or
-to the run&amp;rsquo;s FED threshold if that is higher; heat FED uses this same
-scale and has no marker. A marker labelled
+the highest gas FED of any agent on one continuous scale that runs to 1, or
+to the run&amp;rsquo;s FED threshold if that is higher. A marker labelled
 &amp;ldquo;threshold&amp;rdquo; (deterministic mode) or &amp;ldquo;median threshold&amp;rdquo; (probabilistic
 mode) sits at the run&amp;rsquo;s &lt;code>fed_threshold&lt;/code>, read from the run&amp;rsquo;s own settings,
 not the current form. Without a recorded threshold there is no marker.&lt;/li>
