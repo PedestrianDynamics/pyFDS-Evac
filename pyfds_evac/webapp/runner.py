@@ -395,8 +395,10 @@ class RunManager:
                     result = run_scenario(
                         scenario, progress_callback=on_progress, **run_kwargs
                     )
-                    check_cancel()
+                    # Held before the cancel check so _finish discards its
+                    # temporary trajectory when the cancel lands here.
                     self.result = result
+                    check_cancel()
                     if post_run is not None:
                         self.artifacts = post_run(result)
                 outcome = "done"

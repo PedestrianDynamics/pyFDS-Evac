@@ -308,6 +308,28 @@ class TestCancelLifecycle:
         assert mgr.result is None
         assert calls["run"] == 1
 
+    def test_cancel_after_the_run_returns_discards_its_temp_files(
+        self, rm, monkeypatch
+    ):
+        """#319: a cancel landing as run_scenario returned leaked its sqlite."""
+        mgr, _calls, _gate = rm
+        discarded = []
+        result = SimpleNamespace(
+            sqlite_file=None,
+            status="completed",
+            cleanup=lambda: discarded.append(True),
+        )
+
+        def run_then_cancel(scenario, progress_callback=None, **kwargs):
+            mgr.cancel()
+            return result
+
+        monkeypatch.setattr("pyfds_evac.webapp.runner.run_scenario", run_then_cancel)
+        mgr.start(None, dict, "stub")
+        assert mgr.join(5.0)
+        assert mgr.status == "cancelled"
+        assert discarded == [True]
+
     def test_reset_is_refused_while_cancelling(self, rm):
         import threading
 
