@@ -600,13 +600,16 @@ Exit throughput throttling has no general test yet
   (`_measure_route`), including stretches the agent has never seen. With
   `anticipate` (default `true`, `foresight_horizon_s` = `inf`) each sample
   is read at the time the agent would reach it, up to the last FDS frame,
-  and `run.py` repeats the choice every 1 s. The ranking is therefore the
-  choice of an evacuee who knows the smoke on every route in its map, now
-  and on arrival. It makes no statement about what an occupant perceives of
+  and `run.py` repeats the choice every 1 s (a `RerouteConfig()` built in
+  Python every 10 s). The ranking is therefore close to the choice of an
+  evacuee who knows the smoke on every route in its map, now and on
+  arrival; it is a bound, not an exact optimum, because the arrival clock
+  uses the unimpeded speed and the path is searched on the smoke at
+  decision time. It makes no statement about what an occupant perceives of
   the smoke. Which exits and routes a discovery agent knows is limited by
   perception
   ([Wayfinding](/models/wayfinding.md#deviations-from-the-literature)).
-  `tau` stays in the ranking on this reading (decision of 2026-11-21).
+  `tau` stays in the ranking on this reading.
 - An exit is priced on its searched path (the least-smoky one under the gate),
   and on up to two more only after that one is refused
   ([#185](https://github.com/PedestrianDynamics/pyFDS-Evac/issues/185)).

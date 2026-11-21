@@ -298,8 +298,9 @@ apply to the same agent on the same tick and point in opposite directions:
   map never touches it.
 
 These are different kinds of knowledge — topology versus state — so it is not a
-formal contradiction. It is still not a coherent position, and it is sharpest
-exactly where the discovery tier's modelling is most careful.
+formal contradiction. It is still an unequal treatment of the two kinds of
+knowledge, and it is sharpest exactly where the discovery tier's modelling
+is most careful.
 
 **What this affects.** *Not* map growth: what an agent learns and when runs
 through `VisibilityModel` when the run has one, so results about map expansion, exploration
@@ -318,6 +319,7 @@ claims and only one of them is about smoke.
 **Decision (2026-11-21, #125): accept and label.** `tau` stays in the ranking
 and the engine is unchanged. `foresight_horizon_s` is the one lever already
 shipped that bounds half of it (the temporal half); it defaults to `inf`.
+See [Models › Routing, Limitations](/models/routing.md#limitations).
 
 ### One asymmetry favours the exit the agent already walks to
 

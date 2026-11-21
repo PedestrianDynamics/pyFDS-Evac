@@ -631,7 +631,8 @@ is the waypoint method of Börger, Belt and Arnold (2024), Eqs. (2) and
 - **Legibility is binary** and acts only on knowledge. In the discrete-choice
   studies on [Exit choice and familiarity](/fundamentals/exit-choice.md), exit
   visibility enters the utility as a graded attribute.
-- **Map growth is perception-limited, route choice is not**
+- **With a visibility model, map growth is perception-limited; route choice
+  is not**
   ([#125](https://github.com/PedestrianDynamics/pyFDS-Evac/issues/125)).
   Learning is limited by the sign-legibility test. Route costs are not: an
   agent that knows an exit prices the whole remaining route to it from the
@@ -640,9 +641,11 @@ is the waypoint method of Börger, Belt and Arnold (2024), Eqs. (2) and
   `RouteCostConfig.anticipate`, `RouteCostConfig.foresight_horizon_s`). The
   choice among known exits is therefore that of an evacuee who knows the
   smoke on those routes, an optimality bound
-  ([Routing › Limitations](/models/routing.md#limitations)). In a comparison
-  of familiarity tiers, results on which exits are learned and when, on
-  exploration and on exits that are never found rest on perception. A
+  that is approximate ([Routing › Limitations](/models/routing.md#limitations)).
+  In a comparison of familiarity tiers run with a visibility model, results
+  on which exits are learned and when, on exploration and on exits that are
+  never found rest on perception; without one, learning follows
+  `expand_on_arrival` and these results are not about perception. A
   difference in the choice among known exits follows from the routes each
   agent knows and shows no effect of perceived smoke.
 - **Haensel's heuristics are not reproduced.** Haensel (2014, §3.2) weights

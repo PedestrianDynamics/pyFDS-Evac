@@ -233,9 +233,10 @@ and an exit never becomes more attractive because others use it. See
 The pre-registered Station comparison with survivor exit-use data failed
 its gates; see the [Station study](/docs/study-station.md).
 
-**Route choice is not perception-limited.** A discovery agent knows only the exits
-its familiarity, `entrance` or a legible sign gave it, but it prices the routes to them with the smoke
-sampled along the whole route, including stretches it has never seen
+**Route choice is not perception-limited.** A discovery agent knows only
+the exits its familiarity, `entrance` or a legible sign gave it, but it
+prices the routes to them with the smoke sampled along the whole route,
+including stretches it has never seen
 ([issue #125](https://github.com/PedestrianDynamics/pyFDS-Evac/issues/125)).
 By default (`routing.anticipate` = true, `routing.foresight_horizon_s`
 unbounded), the path to each exit is found from the agent's position on the
@@ -246,7 +247,9 @@ routes an agent ranks, and only fully familiar agents know the whole graph;
 it does not limit the smoke those routes are priced with. The route choice of
 a discovery agent is therefore not limited by what it has perceived: it is
 the choice of an evacuee who knows the smoke on every route in its map, an
-optimality bound. Map growth is perception-limited
+optimality bound (approximate: the arrival clock uses the unimpeded speed
+and the path is searched on the smoke at decision time). With a visibility
+model, map growth is perception-limited
 ([Wayfinding](/models/wayfinding.md#deviations-from-the-literature)).
 
 **Route choice.** Route choice has open limitations: switching can oscillate
