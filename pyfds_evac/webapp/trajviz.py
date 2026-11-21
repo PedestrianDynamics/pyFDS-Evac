@@ -675,8 +675,8 @@ _JS = """
     var f = (t - T[lo]) / Math.max(1e-9, T[hi] - T[lo]);
     return [lo, hi, f];
   }
-  // The panel follows the quantity being coloured; in exit mode it keeps the
-  // last dose shown (gas when the run has it, else heat).
+  // The panel follows the quantity being coloured; in exit mode it shows
+  // gas when the run has it, else heat.
   function panelIsHeat() {
     return mode === 'heat' || (mode === 'exit' && !D.hasFed);
   }
@@ -1065,8 +1065,8 @@ def _fed_panel(threshold: Any, mode: Any, heat_first: bool = False) -> str:
         f"{note}</p>"
         '<p id="fed-heat-note" style="margin:8px 0 0;font-size:11px;'
         f'color:var(--ink-dim)"{"" if heat_first else " hidden"}>'
-        "Heat FED: convective dose from the FDS temperature, on the same "
-        "colour scale as gas FED. No threshold marker is drawn for it."
+        "Heat FED dose, on the same colour scale as gas FED. No threshold "
+        "marker is drawn for it."
         "</p>"
         "</div>"
     )
