@@ -207,9 +207,10 @@ signs can be read from the spawn area&amp;rsquo;s routing point (the same point 
 everyone spawning there).&lt;/li>
 &lt;li>&lt;strong>A number between 0 and 1&lt;/strong>: each exit is known from the start with that
 probability, so a crowd can be a mixture rather than two groups.&lt;/li>
-&lt;li>&lt;strong>&lt;code>entrance&lt;/code>&lt;/strong>: names one exit that is also known from the start, such as the
-door the agent came in by. It must be an exit reachable from the spawn area;
-otherwise it is ignored without a warning.&lt;/li>
+&lt;li>&lt;strong>&lt;code>entrance&lt;/code>&lt;/strong>: names an exit, or a list of exits, that are also known from
+the start, such as the door the agent came in by. An id that is not in
+&lt;code>exits&lt;/code> stops the run. An exit that no route from the spawn area reaches is
+reported as a warning.&lt;/li>
 &lt;/ul>
 &lt;p>After that, the map grows only when the agent can read a sign (a run with
 visibility switched off lets it learn by contact instead). A sign is
