@@ -439,7 +439,7 @@ def _snap_notes(obsts, holes_closed, dropped, max_shift):
             "A",
             "warning",
             "OBST",
-            "thinner than its mesh cell in plan: FDS puts it on one gridline",
+            "thinner than its mesh cell in plan: FDS puts it on one gridline; signs are visible through it; make it at least one cell thick",
             s.record,
         )
         for s in obsts

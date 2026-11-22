@@ -7,6 +7,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Changed
+
+- When an `&OBST` collapses onto one gridline in plan, the import warning notes
+  that signs are visible through it and advises making it at least one cell thick
+  (#948).
+
 ## [0.9.0] - 2026-11-21
 
 ### Upgrading
