@@ -68,7 +68,7 @@ if one run takes more than 20 min.**
 `python plans/b17-ballroom-perf/bench.py summary --out $OUT/A`
 
 **S2, block B (seeds 2 and 3).** Three reps each:
-`for s in 2 3; do python bench.py run --fire $FIRE --out $OUT/B --seed $s --reps 3 --warmup; done`
+`for s in 2 3; do python plans/b17-ballroom-perf/bench.py run --fire $FIRE --out $OUT/B --seed $s --reps 3 --warmup; done`
 `python plans/b17-ballroom-perf/bench.py summary --out $OUT/B`
 
 **S3, one profile (diagnostic).** Same command as S0 under cProfile, saved to
