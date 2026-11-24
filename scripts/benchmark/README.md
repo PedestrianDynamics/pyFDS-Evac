@@ -28,20 +28,31 @@ process-tree CPU, peak RSS and outcome per case.
 
 ```
 export FDS_EVAC_DATA="<path to the fds-evac-data directory>"
-git checkout <tag-or-commit>          # clean tree
-uv sync --frozen
-scripts/benchmark/rerun_paper.sh --outdir "$PWD/results-paper"
+git worktree add ../bench-target <tag-or-commit>     # clean tree of the commit to time
+(cd ../bench-target && uv sync --frozen)
+scripts/benchmark/rerun_paper.sh --checkout ../bench-target \
+    --commit <tag-or-commit> --outdir "$PWD/results-paper"
 ```
+
+The harness is not part of older commits, so it is run from a checkout that
+has it and times a second checkout of the commit named by `--commit`. The
+child interpreter is the `.venv` of that second checkout. The harness runs
+on Linux only (it reads `/proc` and reports `ru_maxrss` in KiB); on other
+systems it stops before the first run.
 
 - `--dry-run` prints the runs without executing them.
 - `--with-w1b` adds `paper_table_w1b.json` (C/VM2, long).
 - `--commit REV` names the commit the checkout must be at (default: its
-  `HEAD`); the harness never checks anything out itself.
+  `HEAD`); the harness never checks anything out itself. `--checkout DIR`
+  names the checkout to time (default: the repository of the script). Batch
+  items cannot set `--commit`, `--checkout`, `--outdir` or `--python`.
 - `PYTHON=<interpreter>` overrides the child interpreter (default:
   `.venv/bin/python` of the repository).
 - Results never go inside `scripts/benchmark`; the default `--outdir` is
-  `./benchmark-results`. Use a fresh directory per batch: a run id that
-  already exists is refused.
+  `./benchmark-results`. Untracked files inside the results directory do not
+  count against the clean-tree check, so a second run is not refused for the
+  first one's output. Use a fresh directory per batch: a run id that already
+  exists is refused.
 
 Single runs and comparisons:
 
@@ -61,13 +72,14 @@ written to `<outdir>/compare/`.
 ## Protocol
 
 Every run is a fresh process (`PYTHONHASHSEED=0`, `TMPDIR` inside the run
-directory). Each case has one untimed warm-up and then 5 repetitions
-(W1a, W2a, W3 reuse) or 3 (W1a_minimal, W3 first use, W1a_n100,
-W1a_n400); W1b has a warm-up and 2 repetitions. W1a and W1a_minimal
+directory). W1a, W2a, W3 reuse and W1b have one untimed warm-up; they have 5
+repetitions (W1a, W2a, W3 reuse) or 2 (W1b). W1a_minimal, W3 first use,
+W1a_n100 and W1a_n400 have no warm-up and 3 repetitions. W1a and W1a_minimal
 alternate. The vis cache of W3 is a disposable file in the run directory;
 for the reuse runs it is seeded from a copy of the first-use cache. Page
-cache is not controlled. Exit status 2 (simulation incomplete at the
-horizon) is a valid outcome; any other non-zero status or a kill at the
+cache is not controlled. Exit status 2 is a valid outcome only when the run printed its
+"Simulation incomplete" line (an argument error also exits 2 and counts as
+`failed`); any other non-zero status or a kill at the
 cap (900 s, W1b 3600 s) is recorded as `failed` or `cap_hit`, counted in
 `n_failed` and never dropped.
 

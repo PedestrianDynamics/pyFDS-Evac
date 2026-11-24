@@ -131,7 +131,7 @@ def runs_table(rows):
         loop = num(r["loop_s"])
         rss = int(r["peak_rss_kib"]) // 1024 if r["peak_rss_kib"] else None
         lines.append(
-            f"| {r['run_id']} | {r['kind']} | {r['status']} | {float(r['wall_s']):.1f} "
+            f"| {r['run_id']} | {r['kind']} | {r['status']} | {cell(num(r['wall_s']), '{:.1f}')} "
             f"| {cell(loop, '{:.1f}')} | {r['evacuated'] or 'null'}/{r['remaining'] or 'null'} | {cell(rss)} |"
         )
     return "\n".join(lines)

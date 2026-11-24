@@ -122,11 +122,34 @@ def resolve_commit(checkout, commit):
     return run_cmd(["git", "-C", checkout, "rev-parse", rev])
 
 
-def check_checkout(checkout, commit):
-    """HEAD must be the requested commit and the tree clean."""
+def untracked_under(line, rel):
+    """True for an untracked porcelain entry inside the results directory."""
+    if not line.startswith("?? "):
+        return False
+    path = line[3:].strip().strip('"')
+    return path == rel or path.startswith(rel + "/")
+
+
+def outdir_in_checkout(checkout, outdir):
+    """Path of the results directory relative to the checkout, else None."""
+    rel = os.path.relpath(os.path.realpath(outdir), os.path.realpath(checkout))
+    return None if rel == "." or rel.startswith("..") else rel
+
+
+def check_checkout(checkout, commit, outdir=None):
+    """HEAD must be the requested commit and the tree clean.
+
+    Untracked files inside the results directory do not count: the first run
+    creates them, and the second run must not be refused for them.
+    """
     want = resolve_commit(checkout, commit)
     head = run_cmd(["git", "-C", checkout, "rev-parse", "HEAD"])
     status = run_cmd(["git", "-C", checkout, "status", "--porcelain"])
+    rel = outdir_in_checkout(checkout, outdir) if outdir else None
+    if rel:
+        status = "\n".join(
+            ln for ln in status.splitlines() if not untracked_under(ln, rel)
+        )
     if head != want:
         sys.exit(
             f"refusing to start: checkout HEAD {head} != {want}; check the commit out first"
@@ -432,7 +455,7 @@ def apply_end_lines(o, stamped):
     """End line and counts from the stamped child stdout."""
     if not os.path.exists(stamped):
         return
-    with open(stamped) as f:
+    with open(stamped, errors="replace") as f:
         lines = f.read().splitlines()
     for line in lines:
         body = line[10:]
@@ -501,6 +524,14 @@ def apply_incapacitated(o, path):
     o["incapacitated_note"] = "agents with a non-empty incapacitation_cause in fed.csv"
 
 
+def tolerant(o, fn, *args):
+    """Run one outcome reader; an unreadable file is recorded, not raised."""
+    try:
+        fn(o, *args)
+    except (sqlite3.Error, json.JSONDecodeError, OSError, KeyError, ValueError) as e:
+        o.setdefault("parse_errors", []).append(f"{fn.__name__}: {e!r}")
+
+
 def parse_outcome(out_dir, stamped):
     """End line, counts and sqlite-derived facts; null where unavailable."""
     o = dict(
@@ -519,10 +550,10 @@ def parse_outcome(out_dir, stamped):
         frames=None,
         dt_s=None,
     )
-    apply_end_lines(o, stamped)
+    tolerant(o, apply_end_lines, stamped)
     sq = os.path.join(out_dir, "run.sqlite")
-    apply_run_manifest(o, os.path.join(out_dir, "run.manifest.json"))
-    apply_sqlite_facts(o, sq)
+    tolerant(o, apply_run_manifest, os.path.join(out_dir, "run.manifest.json"))
+    tolerant(o, apply_sqlite_facts, sq)
     if o["spawned"] is not None and o["not_spawned"] is not None:
         o["planned"] = o["spawned"] + o["not_spawned"]
     if o["simulated_time_s"] is not None and o["dt_s"]:
@@ -530,7 +561,7 @@ def parse_outcome(out_dir, stamped):
         o["steps_note"] = (
             "derived: simulated_time / dt; agent_steps need instrumentation"
         )
-    apply_incapacitated(o, os.path.join(out_dir, "fed.csv"))
+    tolerant(o, apply_incapacitated, os.path.join(out_dir, "fed.csv"))
     return o
 
 
@@ -607,7 +638,7 @@ def append_summary(m, outdir):
         "end_reason",
     )
     row.update({k: m["work"].get(k) for k in work_keys})
-    row["exit_status"] = m["measurements"]["returncode"]
+    row["exit_status"] = m["measurements"].get("returncode")
     with open(path, "a", newline="") as f:
         w = csv.DictWriter(f, SUMMARY_COLS)
         if new:
@@ -615,13 +646,17 @@ def append_summary(m, outdir):
         w.writerow({k: ("" if v is None else v) for k, v in row.items()})
 
 
-def classify(meas):
-    """Run status: exit 0 ok, exit 2 the documented incomplete outcome, else failed."""
+def classify(meas, work):
+    """Run status: exit 0 ok; exit 2 is the incomplete outcome only when the
+    run printed its "Simulation incomplete" line (an argparse error also
+    exits 2); anything else failed."""
     if meas["killed_at_cap"]:
         return "cap_hit"
     if meas["returncode"] == 0:
         return "ok"
-    return "incomplete_exit2" if meas["returncode"] == 2 else "failed"
+    if meas["returncode"] == 2 and work.get("status") == "incomplete":
+        return "incomplete_exit2"
+    return "failed"
 
 
 def require_fds(tpl):
@@ -655,11 +690,38 @@ def prepare_run(a, tpl):
     return run_id, out_dir, env, extra, fmt
 
 
+def record_not_run(a, run_id, out_dir, reason):
+    """A run that cannot start (for example its seed cache is missing) is
+    written as failed, so that it is counted and the batch goes on."""
+    m = dict(
+        run_id=run_id,
+        case=a.case,
+        kind=a.kind,
+        label=a.label,
+        seed=a.seed,
+        rep=a.rep,
+        status="failed",
+        not_run_reason=reason,
+        measurements={},
+        phases={},
+        work={"end_reason": "not_run"},
+    )
+    with open(os.path.join(out_dir, "manifest.json"), "w") as f:
+        json.dump(m, f, indent=2)
+    append_summary(m, a.outdir)
+    print(json.dumps(dict(run_id=run_id, status="failed", reason=reason)))
+    return m
+
+
 def one_run(a):
     tpl = load_case(a.case)
     require_fds(tpl)
-    head, status = check_checkout(a.checkout, a.commit)
+    head, status = check_checkout(a.checkout, a.commit, a.outdir)
     run_id, out_dir, env, extra, fmt = prepare_run(a, tpl)
+    if a.vis_cache_from and not os.path.exists(a.vis_cache_from):
+        return record_not_run(
+            a, run_id, out_dir, f"vis cache seed missing: {a.vis_cache_from}"
+        )
     imported = check_import(a.python, a.checkout, env)
     probe = env_probe(a.python, a.checkout, env)
     staged = stage_inputs(tpl, out_dir, fmt)
@@ -676,9 +738,9 @@ def one_run(a):
     host_after = host_snapshot()
     fds_after = {d: dir_listing_hash(d) for d in fds_dirs}
     pick_after = {p: sha256_file(p) for p in pickles}
-    st = classify(meas)
     stamped = os.path.join(out_dir, "stdout_stamped.txt")
     work = parse_outcome(out_dir, stamped)
+    st = classify(meas, work)
     if st == "cap_hit":
         work.update(partial_work(stamped))
     m = dict(
@@ -797,9 +859,18 @@ def common_flags(a):
     return flags + (["--commit", a.commit] if a.commit else [])
 
 
+COMMON_OPTIONS = ("--commit", "--checkout", "--outdir", "--python")
+
+
 def batch_items(a):
     with open(a.spec) as f:
         items = json.load(f)
+    for item in items:
+        bad = [
+            x for x in map(str, item["args"]) if x.split("=", 1)[0] in COMMON_OPTIONS
+        ]
+        if bad:
+            sys.exit(f"batch item sets {bad}; set these on the batch command line")
     for item in items:
         item["args"] = [str(x).replace("{OUTDIR}", a.outdir) for x in item["args"]]
     return items
@@ -813,7 +884,7 @@ def run_batch(a):
             continue
         m = one_run(parser().parse_args(["run", *common_flags(a), *item["args"]]))
         group = item.get("group")
-        if group:
+        if group and m["status"] not in ("failed", "cap_hit"):
             compare_to_previous(m, last.get(group), a)
             last[group] = m["run_id"]
 
@@ -823,6 +894,10 @@ def main():
     here = os.path.realpath(HERE) + os.sep
     if (os.path.realpath(a.outdir) + os.sep).startswith(here):
         sys.exit("--outdir must not be inside scripts/benchmark")
+    if sys.platform != "linux" and not getattr(a, "dry_run", False):
+        sys.exit(
+            "the harness reads /proc and reports ru_maxrss in KiB; run it on Linux"
+        )
     if a.cmd == "run":
         one_run(a)
         return

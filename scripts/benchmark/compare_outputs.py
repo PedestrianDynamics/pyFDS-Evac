@@ -38,6 +38,11 @@ import sqlite3
 import sys
 
 
+def sha256_file(path):
+    with open(path, "rb") as f:
+        return hashlib.sha256(f.read()).hexdigest()
+
+
 def table_hash(con, table, order):
     h = hashlib.sha256()
     n = 0
@@ -62,6 +67,11 @@ def compare_sqlite(pa, pb):
         )
     ]
     out = {"tables_equal": names == names_b}
+    out["schema_equal"] = all(
+        list(ca.execute(f"pragma table_info({t})"))
+        == list(cb.execute(f"pragma table_info({t})"))
+        for t in names
+    )
     for t in names:
         ha, na = table_hash(ca, t, "order by rowid")
         hb, nb = table_hash(cb, t, "order by rowid")
@@ -86,10 +96,11 @@ def first_diff(pa, pb):
     return {"line": i, "a": x[:200], "b": y[:200]}
 
 
-def vis_cache_equal(a, b, wa, wb, ba, bb):
-    """Same sha256, or equal arrays and equal meta once the checkout path is
-    normalised (the cache meta records the FDS directory path)."""
-    sha_a, sha_b = ba["vis_cache_sha256_after"], bb["vis_cache_sha256_after"]
+def vis_cache_equal(a, b, wa, wb):
+    """Same sha256 of the files now on disk, or equal arrays and equal meta
+    once the checkout path is normalised (the cache meta records the FDS
+    directory path)."""
+    sha_a, sha_b = sha256_file(a + "/vis.npz"), sha256_file(b + "/vis.npz")
     out = {
         "sha256_after_a": sha_a,
         "sha256_after_b": sha_b,
@@ -115,22 +126,26 @@ def vis_cache_equal(a, b, wa, wb, ba, bb):
     return out
 
 
-def filtered_stdout(path):
+def filtered_stdout(path, skip_route_cost):
+    """Stdout records without the progress lines; the route-cost lines are
+    dropped only when a run deliberately lacks that history."""
     keep = []
     for line in open(path + "/stdout_stamped.txt"):
         body = line[10:].rstrip("\n")
-        if (
-            not body.startswith(("Evacuated ", "Route cost samples"))
-            and "Route cost history" not in body
+        if body.startswith("Evacuated "):
+            continue
+        if skip_route_cost and (
+            body.startswith("Route cost samples") or "Route cost history" in body
         ):
-            keep.append(body)
+            continue
+        keep.append(body)
     return keep
 
 
 def is_flag(key):
     if key in ("equal", "tables_equal", "staged_equal"):
         return True
-    return key.startswith(("fds_listing", "pickles_"))
+    return key.startswith(("fds_listing", "pickles_")) or key == "schema_equal"
 
 
 def flat(x, acc):
@@ -184,17 +199,20 @@ def main():
         "equal": (ma["outcome"], ma["seed"]) == (mb["outcome"], mb["seed"]),
         "a": ma["outcome"],
     }
-    rep["stdout_without_progress"] = {"equal": filtered_stdout(a) == filtered_stdout(b)}
+    rep["stdout_without_progress"] = {
+        "equal": filtered_stdout(a, bool(allowed)) == filtered_stdout(b, bool(allowed))
+    }
     wa = json.load(open(a + "/manifest.json"))["checkout"].encode()
     wb = json.load(open(b + "/manifest.json"))["checkout"].encode()
     sa = open(a + "/stderr.txt", "rb").read().replace(wa, b"<CHECKOUT>")
     sb = open(b + "/stderr.txt", "rb").read().replace(wb, b"<CHECKOUT>")
     rep["stderr"] = {"equal": sa == sb, "bytes": [len(sa), len(sb)]}
     rep["vis_cache"] = None
-    if os.path.exists(a + "/vis.npz"):
-        ba = json.load(open(a + "/manifest.json"))["input_fingerprints"]
-        bb = json.load(open(b + "/manifest.json"))["input_fingerprints"]
-        rep["vis_cache"] = vis_cache_equal(a, b, wa, wb, ba, bb)
+    have = [os.path.exists(d + "/vis.npz") for d in (a, b)]
+    if all(have):
+        rep["vis_cache"] = vis_cache_equal(a, b, wa, wb)
+    elif any(have):
+        rep["vis_cache"] = {"equal": False, "note": "vis.npz present in one run only"}
     ia = json.load(open(a + "/manifest.json"))["input_fingerprints"]
     ib = json.load(open(b + "/manifest.json"))["input_fingerprints"]
     rep["inputs"] = {
