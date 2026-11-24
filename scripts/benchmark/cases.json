@@ -1,0 +1,273 @@
+{
+ "cases": {
+  "W1a": {
+   "note": "W1a headline: gate arm of run_p1.sh, serial; outputs sqlite + route, exit, fed, route-cost CSV",
+   "stage": [
+    "{ROOT}/assets/schroeder2015_route/evac/config_gate.json",
+    "{ROOT}/assets/schroeder2015_route/evac/geometry.wkt"
+   ],
+   "config_name": "config_gate.json",
+   "argv": [
+    "{PY}",
+    "{ROOT}/run.py",
+    "--scenario",
+    "{OUT}/config_gate.json",
+    "--seed",
+    "{SEED}",
+    "--fds-dir",
+    "{FDS}/schroeder2015-route/rerun_796/a047_pvc_h40",
+    "--output-sqlite",
+    "{OUT}/run.sqlite",
+    "--cleanup",
+    "--output-route-cost-history",
+    "{OUT}/rc.csv",
+    "--output-fed-history",
+    "{OUT}/fed.csv",
+    "--output-route-history",
+    "{OUT}/rh.csv",
+    "--output-exit-history",
+    "{OUT}/exit.csv"
+   ],
+   "fds_dirs": [
+    "{FDS}/schroeder2015-route/rerun_796/a047_pvc_h40"
+   ],
+   "cache_state": "fdsreader cache disabled by adapter; page cache uncontrolled; no vis cache",
+   "inputs_sha256": {
+    "assets/schroeder2015_route/evac/config_gate.json": "c53f402e8608128da9ab4629cbf351f9c84242256560fee03c9220c15604001a",
+    "assets/schroeder2015_route/evac/geometry.wkt": "88e0aff3defd8fca7dfb27e3f9287e09365c1f13e6130d0482f2365590827279",
+    "$FDS_EVAC_DATA/schroeder2015-route/rerun_796/a047_pvc_h40/a047_pvc_h40.smv": "0b0db55752b6bc4e5fed1e035f4dafa6efe00fc6671ac7edeb89d2a3208a7377",
+    "$FDS_EVAC_DATA/schroeder2015-route/rerun_796/a047_pvc_h40/a047_pvc_h40.fds": "5ffe0f4e82515fa826cd14e32c687fdf06cad10cf3b9b19a1952014da7f403c8"
+   }
+  },
+  "W1a_minimal": {
+   "note": "W1a minimal output: sqlite only (end-to-end comparison; sqlite is kept to read the outcome manifest)",
+   "stage": [
+    "{ROOT}/assets/schroeder2015_route/evac/config_gate.json",
+    "{ROOT}/assets/schroeder2015_route/evac/geometry.wkt"
+   ],
+   "config_name": "config_gate.json",
+   "argv": [
+    "{PY}",
+    "{ROOT}/run.py",
+    "--scenario",
+    "{OUT}/config_gate.json",
+    "--seed",
+    "{SEED}",
+    "--fds-dir",
+    "{FDS}/schroeder2015-route/rerun_796/a047_pvc_h40",
+    "--output-sqlite",
+    "{OUT}/run.sqlite",
+    "--cleanup"
+   ],
+   "fds_dirs": [
+    "{FDS}/schroeder2015-route/rerun_796/a047_pvc_h40"
+   ],
+   "cache_state": "fdsreader cache disabled by adapter; page cache uncontrolled; no vis cache",
+   "inputs_sha256": {
+    "assets/schroeder2015_route/evac/config_gate.json": "c53f402e8608128da9ab4629cbf351f9c84242256560fee03c9220c15604001a",
+    "assets/schroeder2015_route/evac/geometry.wkt": "88e0aff3defd8fca7dfb27e3f9287e09365c1f13e6130d0482f2365590827279",
+    "$FDS_EVAC_DATA/schroeder2015-route/rerun_796/a047_pvc_h40/a047_pvc_h40.smv": "0b0db55752b6bc4e5fed1e035f4dafa6efe00fc6671ac7edeb89d2a3208a7377",
+    "$FDS_EVAC_DATA/schroeder2015-route/rerun_796/a047_pvc_h40/a047_pvc_h40.fds": "5ffe0f4e82515fa826cd14e32c687fdf06cad10cf3b9b19a1952014da7f403c8"
+   }
+  },
+  "W2a": {
+   "note": "W2a: W1a deck without --fds-dir (clear air); sqlite + route and exit histories",
+   "stage": [
+    "{ROOT}/assets/schroeder2015_route/evac/config_gate.json",
+    "{ROOT}/assets/schroeder2015_route/evac/geometry.wkt"
+   ],
+   "config_name": "config_gate.json",
+   "argv": [
+    "{PY}",
+    "{ROOT}/run.py",
+    "--scenario",
+    "{OUT}/config_gate.json",
+    "--seed",
+    "{SEED}",
+    "--output-sqlite",
+    "{OUT}/run.sqlite",
+    "--cleanup",
+    "--output-route-history",
+    "{OUT}/rh.csv",
+    "--output-exit-history",
+    "{OUT}/exit.csv"
+   ],
+   "fds_dirs": [],
+   "cache_state": "no FDS; none",
+   "inputs_sha256": {
+    "assets/schroeder2015_route/evac/config_gate.json": "c53f402e8608128da9ab4629cbf351f9c84242256560fee03c9220c15604001a",
+    "assets/schroeder2015_route/evac/geometry.wkt": "88e0aff3defd8fca7dfb27e3f9287e09365c1f13e6130d0482f2365590827279"
+   }
+  },
+  "W3": {
+   "note": "W3: t_junction discovery on the extinction-only extract; vis cache at $OUT/vis.npz (first use: file absent; reuse: seeded by --vis-cache-from); scenario seed 42 is passed explicitly",
+   "stage": [
+    "{ROOT}/assets/t_junction/config_discovery.json",
+    "{ROOT}/assets/t_junction/geometry.wkt"
+   ],
+   "config_name": "config_discovery.json",
+   "argv": [
+    "{PY}",
+    "{ROOT}/run.py",
+    "--scenario",
+    "{OUT}/config_discovery.json",
+    "--seed",
+    "{SEED}",
+    "--fds-dir",
+    "{ROOT}/scripts/figures/data/t_junction_fire_2MW_PVC_extinction",
+    "--vis-cache",
+    "{OUT}/vis.npz",
+    "--output-sqlite",
+    "{OUT}/run.sqlite",
+    "--cleanup",
+    "--output-knowledge-history",
+    "{OUT}/knowledge.csv",
+    "--output-route-history",
+    "{OUT}/rh.csv",
+    "--output-smoke-history",
+    "{OUT}/smoke.csv"
+   ],
+   "fds_dirs": [
+    "{ROOT}/scripts/figures/data/t_junction_fire_2MW_PVC_extinction"
+   ],
+   "cache_state": "vis cache: per-run disposable file; fdsreader cache disabled; page cache uncontrolled",
+   "inputs_sha256": {
+    "assets/t_junction/config_discovery.json": "1063c5e486adb8eeae3194fdddc246f25bd21fe0fd47f45544e3076ea952669d",
+    "assets/t_junction/geometry.wkt": "a7610c860b51b2ffc3b2674447a5739715c8db0a3c9d46699808f94252590bbb",
+    "scripts/figures/data/t_junction_fire_2MW_PVC_extinction/t_junction.smv": "0f6bb8f4e5b5e38b67536d8dbaa08f3a95717eb9974b1c813a8833d546228570",
+    "scripts/figures/data/t_junction_fire_2MW_PVC_extinction/t_junction_1_1.sf": "b245e0545b8a5832ed0f6bc8238e960a05820979674817ca4bdb7273c84a0441",
+    "scripts/figures/data/t_junction_fire_2MW_PVC_extinction/t_junction_2_1.sf": "816fc7c745f40273336ffcc3f4e0cdcc3d70656f49c0d262c03954963a2faccb",
+    "scripts/figures/data/t_junction_fire_2MW_PVC_extinction/t_junction_3_1.sf": "e87c208eff32d2e0d12689c1356d5f4c7565812e61feceb2f72b2a5218619e69",
+    "scripts/figures/data/t_junction_fire_2MW_PVC_extinction/t_junction_4_1.sf": "8a3b32c964efd6a31c2090be518deab8c0570aef8922ad3d3631c49343be209e"
+   }
+  },
+  "W1a_n100": {
+   "note": "W1a with 100 agents: only distributions.jps-distributions_0.parameters.number is overridden in the staged config copy (config_edits); the repository file is untouched",
+   "stage": [
+    "{ROOT}/assets/schroeder2015_route/evac/config_gate.json",
+    "{ROOT}/assets/schroeder2015_route/evac/geometry.wkt"
+   ],
+   "config_name": "config_gate.json",
+   "argv": [
+    "{PY}",
+    "{ROOT}/run.py",
+    "--scenario",
+    "{OUT}/config_gate.json",
+    "--seed",
+    "{SEED}",
+    "--fds-dir",
+    "{FDS}/schroeder2015-route/rerun_796/a047_pvc_h40",
+    "--output-sqlite",
+    "{OUT}/run.sqlite",
+    "--cleanup",
+    "--output-route-cost-history",
+    "{OUT}/rc.csv",
+    "--output-fed-history",
+    "{OUT}/fed.csv",
+    "--output-route-history",
+    "{OUT}/rh.csv",
+    "--output-exit-history",
+    "{OUT}/exit.csv"
+   ],
+   "fds_dirs": [
+    "{FDS}/schroeder2015-route/rerun_796/a047_pvc_h40"
+   ],
+   "cache_state": "fdsreader cache disabled by adapter; page cache uncontrolled; no vis cache",
+   "config_edits": {
+    "distributions.jps-distributions_0.parameters.number": 100
+   },
+   "inputs_sha256": {
+    "assets/schroeder2015_route/evac/config_gate.json": "c53f402e8608128da9ab4629cbf351f9c84242256560fee03c9220c15604001a",
+    "assets/schroeder2015_route/evac/geometry.wkt": "88e0aff3defd8fca7dfb27e3f9287e09365c1f13e6130d0482f2365590827279",
+    "$FDS_EVAC_DATA/schroeder2015-route/rerun_796/a047_pvc_h40/a047_pvc_h40.smv": "0b0db55752b6bc4e5fed1e035f4dafa6efe00fc6671ac7edeb89d2a3208a7377",
+    "$FDS_EVAC_DATA/schroeder2015-route/rerun_796/a047_pvc_h40/a047_pvc_h40.fds": "5ffe0f4e82515fa826cd14e32c687fdf06cad10cf3b9b19a1952014da7f403c8"
+   }
+  },
+  "W1a_n400": {
+   "note": "W1a with 400 agents: only distributions.jps-distributions_0.parameters.number is overridden in the staged config copy (config_edits); the repository file is untouched",
+   "stage": [
+    "{ROOT}/assets/schroeder2015_route/evac/config_gate.json",
+    "{ROOT}/assets/schroeder2015_route/evac/geometry.wkt"
+   ],
+   "config_name": "config_gate.json",
+   "argv": [
+    "{PY}",
+    "{ROOT}/run.py",
+    "--scenario",
+    "{OUT}/config_gate.json",
+    "--seed",
+    "{SEED}",
+    "--fds-dir",
+    "{FDS}/schroeder2015-route/rerun_796/a047_pvc_h40",
+    "--output-sqlite",
+    "{OUT}/run.sqlite",
+    "--cleanup",
+    "--output-route-cost-history",
+    "{OUT}/rc.csv",
+    "--output-fed-history",
+    "{OUT}/fed.csv",
+    "--output-route-history",
+    "{OUT}/rh.csv",
+    "--output-exit-history",
+    "{OUT}/exit.csv"
+   ],
+   "fds_dirs": [
+    "{FDS}/schroeder2015-route/rerun_796/a047_pvc_h40"
+   ],
+   "cache_state": "fdsreader cache disabled by adapter; page cache uncontrolled; no vis cache",
+   "config_edits": {
+    "distributions.jps-distributions_0.parameters.number": 400
+   },
+   "inputs_sha256": {
+    "assets/schroeder2015_route/evac/config_gate.json": "c53f402e8608128da9ab4629cbf351f9c84242256560fee03c9220c15604001a",
+    "assets/schroeder2015_route/evac/geometry.wkt": "88e0aff3defd8fca7dfb27e3f9287e09365c1f13e6130d0482f2365590827279",
+    "$FDS_EVAC_DATA/schroeder2015-route/rerun_796/a047_pvc_h40/a047_pvc_h40.smv": "0b0db55752b6bc4e5fed1e035f4dafa6efe00fc6671ac7edeb89d2a3208a7377",
+    "$FDS_EVAC_DATA/schroeder2015-route/rerun_796/a047_pvc_h40/a047_pvc_h40.fds": "5ffe0f4e82515fa826cd14e32c687fdf06cad10cf3b9b19a1952014da7f403c8"
+   }
+  },
+  "W1b": {
+   "note": "W1b: C/VM2 north f1 config_f1_cap_queue.json, horizon overridden to 300 s in the staged copy (config_edits), smoke and FED histories on; the output set of the 1.0 study measurement (template W1b_activation there)",
+   "stage": [
+    "{FDS}/cvm2-function-centre/evac/north/config_f1_cap_queue.json",
+    "{FDS}/cvm2-function-centre/evac/north/geometry.wkt"
+   ],
+   "config_name": "config_f1_cap_queue.json",
+   "config_edits": {
+    "config.simulation_settings.simulationParams.max_simulation_time": 300
+   },
+   "argv": [
+    "{PY}",
+    "{ROOT}/run.py",
+    "--scenario",
+    "{OUT}/config_f1_cap_queue.json",
+    "--seed",
+    "{SEED}",
+    "--fds-dir",
+    "{FDS}/cvm2-function-centre/fds/f1",
+    "--output-sqlite",
+    "{OUT}/run.sqlite",
+    "--cleanup",
+    "--output-route-cost-history",
+    "{OUT}/rc.csv",
+    "--output-fed-history",
+    "{OUT}/fed.csv",
+    "--output-route-history",
+    "{OUT}/rh.csv",
+    "--output-exit-history",
+    "{OUT}/exit.csv",
+    "--output-smoke-history",
+    "{OUT}/smoke.csv"
+   ],
+   "fds_dirs": [
+    "{FDS}/cvm2-function-centre/fds/f1"
+   ],
+   "cache_state": "fdsreader cache disabled; page cache uncontrolled",
+   "inputs_sha256": {
+    "$FDS_EVAC_DATA/cvm2-function-centre/evac/north/config_f1_cap_queue.json": "5d509bc271f18616e066ce5f7007f989b88205e372548f65765b2887638ece35",
+    "$FDS_EVAC_DATA/cvm2-function-centre/evac/north/geometry.wkt": "308aa7ae522c7c5d80d7f9e862e2b5c1830f8d9d77d6562df723399556a9deef",
+    "$FDS_EVAC_DATA/cvm2-function-centre/fds/f1/f1.smv": "8878675276ac6157f3ef85b37e6015d21ab2d179ca8a34ebe4942356ec6f65a8",
+    "$FDS_EVAC_DATA/cvm2-function-centre/fds/f1/f1.fds": "597deafac30d12d57c8703710d627ffdb3c7e42bc11481651d743af02dd6cc81"
+   }
+  }
+ }
+}

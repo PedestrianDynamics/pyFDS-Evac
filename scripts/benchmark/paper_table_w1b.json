@@ -1,0 +1,5 @@
+[
+ {"group": "w1b", "args": ["--case", "W1b", "--seed", 1, "--rep", 0, "--kind", "warmup", "--label", "untimed warm-up", "--cap-s", 3600, "--run-id", "W1b_warmup0"]},
+ {"group": "w1b", "args": ["--case", "W1b", "--seed", 1, "--rep", 1, "--kind", "measured", "--label", "C/VM2 f1, 0-300 s window", "--cap-s", 3600, "--run-id", "W1b_measured1"]},
+ {"group": "w1b", "args": ["--case", "W1b", "--seed", 1, "--rep", 2, "--kind", "measured", "--label", "C/VM2 f1, 0-300 s window", "--cap-s", 3600, "--run-id", "W1b_measured2"]}
+]
