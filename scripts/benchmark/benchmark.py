@@ -122,11 +122,24 @@ def resolve_commit(checkout, commit):
     return run_cmd(["git", "-C", checkout, "rev-parse", rev])
 
 
-def untracked_under(line, rel):
-    """True for an untracked porcelain entry inside the results directory."""
-    if not line.startswith("?? "):
-        return False
-    path = line[3:].strip().strip('"')
+def status_entries(checkout):
+    """(XY, path) of every changed or untracked file, from NUL-delimited
+    porcelain output: no quoting of unusual names, no collapsed directories."""
+    raw = subprocess.run(
+        ["git", "-C", checkout, "status", "--porcelain", "-z", "--untracked-files=all"],
+        capture_output=True,
+        check=True,
+    ).stdout.decode(errors="surrogateescape")
+    fields = raw.split("\0")
+    entries = []
+    i = 0
+    while i < len(fields) and fields[i]:
+        entries.append((fields[i][:2], fields[i][3:]))
+        i += 2 if fields[i][0] in "RC" else 1  # a rename or copy lists its source next
+    return entries
+
+
+def inside(path, rel):
     return path == rel or path.startswith(rel + "/")
 
 
@@ -144,12 +157,12 @@ def check_checkout(checkout, commit, outdir=None):
     """
     want = resolve_commit(checkout, commit)
     head = run_cmd(["git", "-C", checkout, "rev-parse", "HEAD"])
-    status = run_cmd(["git", "-C", checkout, "status", "--porcelain"])
     rel = outdir_in_checkout(checkout, outdir) if outdir else None
-    if rel:
-        status = "\n".join(
-            ln for ln in status.splitlines() if not untracked_under(ln, rel)
-        )
+    status = "\n".join(
+        f"{xy} {path}"
+        for xy, path in status_entries(checkout)
+        if not (rel and xy == "??" and inside(path, rel))
+    )
     if head != want:
         sys.exit(
             f"refusing to start: checkout HEAD {head} != {want}; check the commit out first"
@@ -570,7 +583,10 @@ def hash_outputs(out_dir):
     for n in sorted(os.listdir(out_dir)):
         p = os.path.join(out_dir, n)
         if os.path.isfile(p) and n != "manifest.json":
-            res[n] = sha256_file(p)
+            try:
+                res[n] = sha256_file(p)
+            except OSError as e:
+                res[n] = f"unreadable: {e!r}"
     return res
 
 
@@ -647,11 +663,14 @@ def append_summary(m, outdir):
 
 
 def classify(meas, work):
-    """Run status: exit 0 ok; exit 2 is the incomplete outcome only when the
+    """Run status: exit 0 ok, unless an output file could not be read; exit 2
+    is the incomplete outcome only when the
     run printed its "Simulation incomplete" line (an argparse error also
     exits 2); anything else failed."""
     if meas["killed_at_cap"]:
         return "cap_hit"
+    if work.get("parse_errors"):
+        return "failed"
     if meas["returncode"] == 0:
         return "ok"
     if meas["returncode"] == 2 and work.get("status") == "incomplete":
@@ -828,9 +847,9 @@ def add_common(p):
 
 
 def parser():
-    p = argparse.ArgumentParser()
+    p = argparse.ArgumentParser(allow_abbrev=False)
     sub = p.add_subparsers(dest="cmd", required=True)
-    r = sub.add_parser("run")
+    r = sub.add_parser("run", allow_abbrev=False)
     r.add_argument("--case", required=True)
     r.add_argument("--seed", type=int, required=True)
     r.add_argument("--rep", type=int, default=0)
@@ -845,7 +864,7 @@ def parser():
     r.add_argument("--vis-cache-from")
     r.add_argument("--run-id")
     add_common(r)
-    b = sub.add_parser("batch")
+    b = sub.add_parser("batch", allow_abbrev=False)
     b.add_argument("spec")
     b.add_argument(
         "--dry-run", action="store_true", help="print the runs, execute nothing"
@@ -876,17 +895,24 @@ def batch_items(a):
     return items
 
 
+FAILED = ("failed", "cap_hit")
+
+
 def run_batch(a):
+    """Run the items serially; return how many runs failed or hit the cap."""
     last = {}
+    failed = 0
     for item in batch_items(a):
         if a.dry_run:
             print("run", shlex.join(item["args"]))
             continue
         m = one_run(parser().parse_args(["run", *common_flags(a), *item["args"]]))
+        failed += m["status"] in FAILED
         group = item.get("group")
-        if group and m["status"] not in ("failed", "cap_hit"):
+        if group and m["status"] not in FAILED:
             compare_to_previous(m, last.get(group), a)
             last[group] = m["run_id"]
+    return failed
 
 
 def main():
@@ -899,9 +925,8 @@ def main():
             "the harness reads /proc and reports ru_maxrss in KiB; run it on Linux"
         )
     if a.cmd == "run":
-        one_run(a)
-        return
-    run_batch(a)
+        sys.exit(1 if one_run(a)["status"] in FAILED else 0)
+    sys.exit(1 if run_batch(a) else 0)
 
 
 def compare_to_previous(m, prev, a):

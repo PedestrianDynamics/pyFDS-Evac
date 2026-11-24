@@ -67,11 +67,11 @@ def compare_sqlite(pa, pb):
         )
     ]
     out = {"tables_equal": names == names_b}
-    out["schema_equal"] = all(
-        list(ca.execute(f"pragma table_info({t})"))
-        == list(cb.execute(f"pragma table_info({t})"))
-        for t in names
+    definitions = (
+        "select type, name, sql from sqlite_master "
+        "where name not like 'sqlite_%' order by type, name"
     )
+    out["schema_equal"] = list(ca.execute(definitions)) == list(cb.execute(definitions))
     for t in names:
         ha, na = table_hash(ca, t, "order by rowid")
         hb, nb = table_hash(cb, t, "order by rowid")

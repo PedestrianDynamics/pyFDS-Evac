@@ -38,13 +38,14 @@ batch() {
 }
 
 rc=0
-batch paper_table.json || rc=$?
+worst() { [ "$1" -gt "$rc" ] && rc=$1; return 0; }
+batch paper_table.json || worst $?
 if [ "$w1b" = 1 ]; then
-    batch paper_table_w1b.json || rc=$?
+    batch paper_table_w1b.json || worst $?
 fi
 if [ ${#dry[@]} -gt 0 ]; then
     echo "would run: $py $here/analyse.py --outdir $outdir"
     exit "$rc"
 fi
-"$py" "$here/analyse.py" --outdir "$outdir" || rc=$?
+"$py" "$here/analyse.py" --outdir "$outdir" || worst $?
 exit "$rc"

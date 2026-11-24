@@ -98,3 +98,72 @@ def test_route_cost_lines_count_unless_allowed_missing(tmp_path):
     a, b = str(tmp_path / "a"), str(tmp_path / "b")
     assert compare.filtered_stdout(a, False) != compare.filtered_stdout(b, False)
     assert compare.filtered_stdout(a, True) == compare.filtered_stdout(b, True)
+
+
+def test_nested_and_non_ascii_results_directory(repo):
+    out = repo / "ergebnisse ä" / "batch1"
+    (out / "raw" / "läuft").mkdir(parents=True)
+    (out / "raw" / "läuft" / "übersicht.csv").write_text("x")
+    head, status = benchmark.check_checkout(str(repo), None, str(out))
+    assert status == ""
+
+
+def test_non_ascii_file_outside_results_still_refuses(repo):
+    (repo / "übrig.txt").write_text("x")
+    with pytest.raises(SystemExit):
+        benchmark.check_checkout(str(repo), None, str(repo / "benchmark-results"))
+
+
+@pytest.mark.parametrize("option", ["--comm=HEAD", "--check=/tmp/x", "--out=/tmp/x"])
+def test_abbreviated_options_are_refused(option):
+    with pytest.raises(SystemExit):
+        benchmark.parser().parse_args(["run", "--case", "W2a", "--seed", "1", option])
+
+
+def test_batch_item_with_equals_form_is_refused(tmp_path):
+    spec = tmp_path / "spec.json"
+    spec.write_text(json.dumps([{"args": ["--case", "W2a", "--commit=HEAD"]}]))
+    with pytest.raises(SystemExit):
+        benchmark.batch_items(Namespace(spec=str(spec), outdir=str(tmp_path)))
+
+
+def test_unreadable_output_is_a_failed_run():
+    meas = {"killed_at_cap": False, "returncode": 0}
+    assert benchmark.classify(meas, {"parse_errors": ["x"]}) == "failed"
+
+
+def test_unreadable_output_file_does_not_abort_hashing(tmp_path, monkeypatch):
+    (tmp_path / "fed.csv").write_text("x")
+
+    def refuse(path):
+        raise PermissionError(path)
+
+    monkeypatch.setattr(benchmark, "sha256_file", refuse)
+    assert benchmark.hash_outputs(str(tmp_path))["fed.csv"].startswith("unreadable")
+
+
+def test_batch_reports_failed_runs(tmp_path, monkeypatch):
+    spec = tmp_path / "spec.json"
+    spec.write_text(json.dumps([{"args": ["--case", "W2a", "--seed", "1"]}]))
+    monkeypatch.setattr(
+        benchmark, "one_run", lambda a: {"status": "failed", "run_id": "r"}
+    )
+    a = Namespace(
+        spec=str(spec),
+        outdir=str(tmp_path),
+        checkout=str(tmp_path),
+        python="python",
+        commit=None,
+        dry_run=False,
+    )
+    assert benchmark.run_batch(a) == 1
+
+
+def test_added_index_is_a_schema_difference(tmp_path):
+    table = "create table t(x); insert into t values (1);"
+    make_run(tmp_path / "a", table + "create index i on t(x);", "")
+    make_run(tmp_path / "b", table, "")
+    report = compare.compare_sqlite(
+        str(tmp_path / "a/run.sqlite"), str(tmp_path / "b/run.sqlite")
+    )
+    assert report["schema_equal"] is False

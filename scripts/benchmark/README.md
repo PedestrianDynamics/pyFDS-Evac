@@ -41,6 +41,9 @@ on Linux only (it reads `/proc` and reports `ru_maxrss` in KiB); on other
 systems it stops before the first run.
 
 - `--dry-run` prints the runs without executing them.
+- The exit status is non-zero when any run is `failed` or `cap_hit`
+  (`rerun_paper.sh` returns the worst code of its steps); the analysis runs
+  regardless. A run whose output file cannot be read is `failed`.
 - `--with-w1b` adds `paper_table_w1b.json` (C/VM2, long).
 - `--commit REV` names the commit the checkout must be at (default: its
   `HEAD`); the harness never checks anything out itself. `--checkout DIR`
