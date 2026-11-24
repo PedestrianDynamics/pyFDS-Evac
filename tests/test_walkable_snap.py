@@ -57,6 +57,10 @@ def test_quarter_cell_wall_collapses_to_the_nearer_gridline():
     assert _parts(result) == 2
     [note] = _notes(result, "thinner than its mesh cell")
     assert note[:3] == ("A", "warning", "OBST")
+    assert (
+        note[3]
+        == "thinner than its mesh cell in plan: FDS puts it on one gridline; signs are visible through it; make it at least one cell thick"
+    )
 
 
 def _boxes(records, mesh=MESH, **kwargs):
