@@ -79,6 +79,12 @@ __all__ = [
 
 
 def __getattr__(name: str):
+    if name == "__version__":
+        from importlib.metadata import version
+
+        value = version("pyfds-evac")
+        globals()[name] = value
+        return value
     module_name = _EXPORTS.get(name)
     if module_name is None:
         raise AttributeError(f"module {__name__!r} has no attribute {name!r}")
@@ -88,4 +94,4 @@ def __getattr__(name: str):
 
 
 def __dir__() -> list[str]:
-    return sorted(set(globals()) | set(__all__))
+    return sorted(set(globals()) | set(__all__) | {"__version__"})
