@@ -708,7 +708,7 @@ def _make_edge(src_node: StageNode, tgt_node: StageNode, routing_engine) -> Stag
         # so fall back rather than lose the connection or abort the run.
         try:
             waypoints = list(routing_engine.compute_waypoints(*straight))
-        except Exception as exc:
+        except RuntimeError as exc:
             _logger.warning(
                 "Routing %s -> %s failed (%s); using a straight centroid ray",
                 src_node.stage_id,
@@ -742,6 +742,23 @@ def _polyline_length(waypoints: list[tuple[float, float]]) -> float:
     return total
 
 
+# The routing engines whose failed query has been logged: once per engine, and
+# every run builds its own.
+_ROUTING_FALLBACK_LOGGED: weakref.WeakSet = weakref.WeakSet()
+
+
+def _warn_routing_failed(routing_engine, exc: Exception) -> None:
+    """Log once per engine that a path query failed and the straight line is used."""
+    if routing_engine in _ROUTING_FALLBACK_LOGGED:
+        return
+    _ROUTING_FALLBACK_LOGGED.add(routing_engine)
+    _logger.warning(
+        "Routing query failed (%s); using straight lines where it fails "
+        "(logged once per run).",
+        exc,
+    )
+
+
 def _walkable_waypoints(routing_engine, from_xy, to_xy) -> list[tuple[float, float]]:
     """Path through the walkable area, or the straight line if unavailable.
 
@@ -753,7 +770,8 @@ def _walkable_waypoints(routing_engine, from_xy, to_xy) -> list[tuple[float, flo
         return straight
     try:
         waypoints = list(routing_engine.compute_waypoints(from_xy, to_xy))
-    except Exception:
+    except RuntimeError as exc:
+        _warn_routing_failed(routing_engine, exc)
         return straight
     if len(waypoints) < 2:
         return straight
