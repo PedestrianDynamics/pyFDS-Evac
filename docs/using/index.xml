@@ -1719,8 +1719,7 @@ for example &lt;code>&amp;quot;reroute_interval&amp;quot;: 10.0&lt;/code>. Start
 &lt;code>build_run_kwargs&lt;/code> reads about 20 options, such as &lt;code>fds_dir&lt;/code>,
 &lt;code>reroute_interval&lt;/code>, &lt;code>fed_threshold&lt;/code> and the &lt;code>heat_*&lt;/code> options, as plain
 attributes, so a namespace that lacks an option a built model reads raises
-&lt;code>AttributeError&lt;/code>; start from the full &lt;code>DEFAULTS&lt;/code>. &lt;code>pyfds_evac.config&lt;/code>
-and &lt;code>DEFAULTS&lt;/code> are provisional public API in 0.3.x: names may change.&lt;/p>
+&lt;code>AttributeError&lt;/code>; start from the full &lt;code>DEFAULTS&lt;/code>.&lt;/p>
 &lt;p>&lt;strong>Show equivalent Python&lt;/strong> in the &lt;a href="https://pedestriandynamics.org/pyFDS-Evac/docs/using/web-gui/#show-the-run-as-python">web GUI&lt;/a>
 and &lt;code>p&lt;/code> in the &lt;a href="https://pedestriandynamics.org/pyFDS-Evac/docs/using/terminal-ui/#reproduce-a-run">terminal UI&lt;/a> write this
 pattern with every option set; the script reproduces the run of the front end.
@@ -1782,8 +1781,37 @@ are recorded as facts, and the configuration of the options is kept apart
 under &lt;code>predicted_from_options&lt;/code>, with the differing settings in
 &lt;code>mismatches&lt;/code> (e.g. &lt;code>tenability.fed_threshold&lt;/code>).
 From Python, &lt;code>pyfds_evac.config.effective_configuration(opts, scenario)&lt;/code>
-returns it; &lt;code>pyfds_evac.config&lt;/code> is provisional public API in 0.3.0 and can
-change in 0.3.x.&lt;/p>
+returns it.&lt;/p>
+&lt;h3>API stability&lt;span class="hx-absolute -hx-mt-20" id="api-stability">&lt;/span>
+&lt;a href="#api-stability" class="subheading-anchor" aria-label="Permalink for this section">&lt;/a>&lt;/h3>&lt;p>Stable for all 1.x releases:&lt;/p>
+&lt;ul>
+&lt;li>the names in &lt;code>pyfds_evac.__all__&lt;/code>;&lt;/li>
+&lt;li>the &lt;code>pyfds_evac.core&lt;/code> names the documentation uses: &lt;code>load_scenario&lt;/code> and
+&lt;code>run_scenario&lt;/code>, which &lt;code>pyfds_evac.core.__all__&lt;/code> lists;&lt;/li>
+&lt;li>the &lt;code>pyfds_evac.config&lt;/code> names &lt;code>DEFAULTS&lt;/code>, &lt;code>effective_configuration&lt;/code> and
+its return type &lt;code>EffectiveConfiguration&lt;/code>;&lt;/li>
+&lt;li>the names the exported &amp;ldquo;Show equivalent Python&amp;rdquo; script imports, by full
+module path: &lt;code>pyfds_evac.core.run_config.build_run_kwargs&lt;/code>,
+&lt;code>pyfds_evac.core.run_outputs.apply_outputs&lt;/code>,
+&lt;code>pyfds_evac.core.manifest.manifest_path_for&lt;/code> (documented in the
+&lt;a href="https://pedestriandynamics.org/pyFDS-Evac/docs/using/web-gui/#show-the-run-as-python">web GUI&lt;/a>) and
+&lt;code>pyfds_evac.config.frontend.stop_reason_phrase&lt;/code>;&lt;/li>
+&lt;li>the &lt;code>pyfds_evac.analysis&lt;/code> names the documentation uses: &lt;code>AsetCriteria&lt;/code>,
+&lt;code>AsetMap&lt;/code>, &lt;code>Measures&lt;/code>, &lt;code>aset_map&lt;/code>, &lt;code>convergence_curve&lt;/code>, &lt;code>diff_map&lt;/code>,
+&lt;code>grid_from_walkable&lt;/code>, &lt;code>load_exit_times&lt;/code>, &lt;code>load_trajectory&lt;/code>, &lt;code>measures&lt;/code>,
+&lt;code>plot_maps&lt;/code>, &lt;code>pool_rset&lt;/code>, &lt;code>pool_seeds&lt;/code>, &lt;code>read_crossings&lt;/code>,
+&lt;code>read_level_crossing&lt;/code>, &lt;code>release_measures&lt;/code>, &lt;code>rset_map&lt;/code> and &lt;code>seed_measures&lt;/code>;&lt;/li>
+&lt;li>the command-line flags of &lt;code>pyfds-evac&lt;/code>;&lt;/li>
+&lt;li>the output files and their columns.&lt;/li>
+&lt;/ul>
+&lt;p>Everything else is internal and may change in a minor release. Other names
+in &lt;code>pyfds_evac.core&lt;/code> still import, but are not part of this promise.&lt;/p>
+&lt;p>&lt;code>run_scenario&lt;/code> accepts the built-in model classes (&lt;code>SmokeSpeedModel&lt;/code>,
+&lt;code>DefaultFedModel&lt;/code>, &lt;code>DefaultHeatFedModel&lt;/code>, &lt;code>TenabilityConfig&lt;/code>,
+&lt;code>VisibilityModel&lt;/code>). Custom duck-typed model objects are not part of the 1.x
+contract.&lt;/p>
+&lt;p>The package ships its type hints (&lt;code>py.typed&lt;/code>). mypy is not enforced in CI,
+so a type checker may report errors in the library&amp;rsquo;s own code.&lt;/p>
 &lt;h3>Agent visualisation&lt;span class="hx-absolute -hx-mt-20" id="agent-visualisation">&lt;/span>
 &lt;a href="#agent-visualisation" class="subheading-anchor" aria-label="Permalink for this section">&lt;/a>&lt;/h3>&lt;p>Agent 3-D visualisation is handled by
 &lt;a href="https://github.com/PedestrianDynamics/fds-viewer" target="_blank" rel="noopener">fds-viewer&lt;/a>, which

@@ -999,7 +999,8 @@ call, the cached &lt;code>t_index&lt;/code> is reused, skipping the binary searc
 computed once and reused.&lt;/li>
 &lt;/ul>
 &lt;h2>Loading a sampler&lt;span class="hx-absolute -hx-mt-20" id="loading-a-sampler">&lt;/span>
-&lt;a href="#loading-a-sampler" class="subheading-anchor" aria-label="Permalink for this section">&lt;/a>&lt;/h2>&lt;p>Use &lt;code>load_slice_sampler()&lt;/code> to load a single FDS quantity:&lt;/p>
+&lt;a href="#loading-a-sampler" class="subheading-anchor" aria-label="Permalink for this section">&lt;/a>&lt;/h2>&lt;p>The submodule imports on this page are internal and may change in 1.x.&lt;/p>
+&lt;p>Use &lt;code>load_slice_sampler()&lt;/code> to load a single FDS quantity:&lt;/p>
 &lt;div class="hextra-code-block hx-relative hx-mt-6 first:hx-mt-0 hx-group/code">
 &lt;div>&lt;div class="highlight">&lt;pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;">&lt;code class="language-python" data-lang="python">&lt;span style="display:flex;">&lt;span>&lt;span style="color:#f92672">from&lt;/span> pyfds_evac.core.fds_sampling &lt;span style="color:#f92672">import&lt;/span> load_slice_sampler
 &lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>
