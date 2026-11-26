@@ -7,7 +7,7 @@ and checked with ``ast.literal_eval``; text that reaches a comment goes
 through :func:`_safe`, so no option text can break out into code.
 
 The GUI's "Show equivalent Python" (``pyfds_evac.webapp.pyexport``) adds
-its header to the same body. Provisional public API (0.3.0).
+its header to the same body.
 """
 
 from __future__ import annotations

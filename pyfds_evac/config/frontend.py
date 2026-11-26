@@ -6,7 +6,7 @@ finished run the same way (:func:`run_outcome`). This module imports only
 the standard library, so the TUI can use it without the GUI extra and
 without the simulation stack.
 
-Provisional public API (0.3.0): names may change in 0.3.x.
+Stability: see "API stability" in docs/usage.md.
 """
 
 from __future__ import annotations

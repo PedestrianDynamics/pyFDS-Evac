@@ -12,7 +12,7 @@ section); the order inside each help group follows from it.
 This module imports only the standard library and ``pyfds_evac.core.fed``
 (constants), so ``pyfds-evac --help`` stays fast (#496).
 
-Provisional public API (0.3.0): names may change in 0.3.x.
+Stability: see "API stability" in docs/usage.md.
 """
 
 from __future__ import annotations

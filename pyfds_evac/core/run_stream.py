@@ -11,7 +11,7 @@ to a queue.
 The run is the CLI's: the same options give the same outputs, with or
 without plan-view frames (off unless asked for).
 
-Provisional public API (0.3.0): names may change in 0.3.x.
+Stability: see "API stability" in docs/usage.md.
 """
 
 from __future__ import annotations

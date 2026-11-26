@@ -15,8 +15,7 @@ Two levels:
 ``pyfds-evac --show-config`` prints Level 2; the run manifest records it
 under ``configuration``.
 
-Provisional public API (0.3.0): names and the dictionary layout may change
-in 0.3.x.
+Stability: see "API stability" in docs/usage.md.
 """
 
 from __future__ import annotations
