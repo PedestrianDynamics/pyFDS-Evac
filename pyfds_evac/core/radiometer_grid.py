@@ -384,7 +384,17 @@ class RadiometerSource:
                 f"y {self.grid.ys[0]} to {self.grid.ys[-1]} m); the heat FED needs "
                 "a radiometer reading at every agent."
             )
-        return float(self.grid.sample(self._held(float(time_s)), x, y))
+        value = float(self.grid.sample(self._held(float(time_s)), x, y))
+        if math.isfinite(value):
+            return value
+        from pyfds_evac.core.fds_sampling import FdsDataError
+
+        raise FdsDataError(
+            f"'RADIOMETER' reading is not a finite number at ({x:.2f}, {y:.2f}) m, "
+            f"t={float(time_s):.1f} s, inside the radiometer grid. Check the FDS "
+            "device output (a NaN there means the device wrote no value), or "
+            "rerun FDS."
+        )
 
     def _before_first(self, time_s: float, first: float) -> float:
         """*first* within the start tolerance of *time_s*; an error before it."""

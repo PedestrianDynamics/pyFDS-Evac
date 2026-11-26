@@ -8,6 +8,7 @@ FED model (gas concentrations).
 from __future__ import annotations
 
 import logging
+import math
 from bisect import bisect_left
 from collections.abc import Iterator
 from contextlib import contextmanager
@@ -126,6 +127,15 @@ class FdsStartError(FdsHorizonError):
     ``FdsHorizonError`` so the sites that re-raise it keep working; unlike it,
     never relaxed by ``--allow-fds-horizon-hold``: before the first frame
     there is no data to hold.
+    """
+
+
+class FdsDataError(RuntimeError):
+    """A value the FDS slice holds inside its domain is not a finite number.
+
+    fdsreader fills a point without data with NaN. Not a ``ValueError``:
+    callers turn that into ambient air, which for a NaN would read as clear
+    sight, no dose or no heat.
     """
 
 
@@ -412,8 +422,20 @@ class SliceFieldSampler:
                 f"got the part {part.t_start:g}..{part.t_end:g} outside the slice"
             )
         i_index, j_index = part.cells
-        values = part.subslice.data[self._frames(times), i_index, j_index]
-        return np.asarray(values, dtype=float)
+        frames = self._frames(times)
+        values = np.asarray(part.subslice.data[frames, i_index, j_index], dtype=float)
+        if not np.isfinite(values).all():
+            k = int(np.argmin(np.isfinite(values)))
+            xs, ys = self._axes(part.subslice)
+            frame = np.broadcast_to(frames, values.shape)[k]
+            self._raise_non_finite(
+                float(times[k]),
+                float(xs[i_index[k]]),
+                float(ys[j_index[k]]),
+                int(frame),
+                part.subslice,
+            )
+        return values
 
     def _frames(self, times: np.ndarray) -> np.ndarray | int:
         """The frame of each time, horizon-checked as :meth:`sample` checks it."""
@@ -465,6 +487,18 @@ class SliceFieldSampler:
     def output_interval_s(self) -> float:
         """Return the output interval of the slice frames [s]."""
         return _output_interval(self._slice.times)
+
+    def _raise_non_finite(
+        self, time_s: float, x: float, y: float, t_index: int, subslice
+    ) -> None:
+        """Raise ``FdsDataError`` for a non-finite value read at (x, y)."""
+        mesh_id = getattr(subslice.mesh, "id", "?")
+        raise FdsDataError(
+            f"'{self.quantity}' is not a finite number at ({x:.2f}, {y:.2f}) m, "
+            f"t={time_s:.1f} s (frame at t={float(self._slice.times[t_index]):.1f} s, "
+            f"mesh {mesh_id}), inside the FDS slice domain. Check the FDS output "
+            "for that mesh and time, or rerun FDS."
+        )
 
     def _check_start(self, time_s: float) -> None:
         """Raise when *time_s* precedes the first slice frame (never held)."""
@@ -531,7 +565,10 @@ class SliceFieldSampler:
                 f"Point ({x}, {y}) is outside the sampled FDS slice domain"
             )
         i_index, j_index = self._grid(subslice).index(float(x), float(y))
-        return float(subslice.data[t_index, i_index, j_index])
+        value = float(subslice.data[t_index, i_index, j_index])
+        if not math.isfinite(value):
+            self._raise_non_finite(ts, float(x), float(y), t_index, subslice)
+        return value
 
 
 # Grids the samplers of a process share (#242). The key is the bytes of both

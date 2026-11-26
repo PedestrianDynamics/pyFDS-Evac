@@ -117,7 +117,7 @@ from .fds_coverage import (
     model_samplers,
     route_length_outside,
 )
-from .fds_sampling import FdsHorizonError
+from .fds_sampling import FdsDataError, FdsHorizonError
 from .fed import (
     DefaultFedInputs,
     HeatFedInputs,
@@ -3499,7 +3499,12 @@ def run_scenario(
 
                                 spawned_this_attempt = True
                                 break
-                            except (FdsHorizonError, ExitReplayError, SpawnKeyError):
+                            except (
+                                FdsHorizonError,
+                                FdsDataError,
+                                ExitReplayError,
+                                SpawnKeyError,
+                            ):
                                 raise
                             except Exception as err:
                                 if added:
