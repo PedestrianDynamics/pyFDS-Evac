@@ -72,3 +72,46 @@ def test_dropped_name_stays_importable(name):
     namespace: dict[str, object] = {}
     exec(f"from pyfds_evac.core import {name}", namespace)
     assert namespace[name] is attribute
+
+
+# Names outside ``pyfds_evac.__all__`` the stable API also lists, by full
+# module path ("API stability" in docs/usage.md).
+STABLE_SUBMODULE_NAMES = {
+    ("pyfds_evac.config", "DEFAULTS"),
+    ("pyfds_evac.config", "EffectiveConfiguration"),
+    ("pyfds_evac.config", "effective_configuration"),
+    ("pyfds_evac.config.frontend", "stop_reason_phrase"),
+    ("pyfds_evac.core", "load_scenario"),
+    ("pyfds_evac.core", "run_scenario"),
+    ("pyfds_evac.core.manifest", "manifest_path_for"),
+    ("pyfds_evac.core.run_config", "build_run_kwargs"),
+    ("pyfds_evac.core.run_outputs", "apply_outputs"),
+}
+
+
+def test_exported_script_imports_only_stable_names():
+    import ast
+
+    from pyfds_evac import cli
+    from pyfds_evac.config.script import python_script
+
+    opts = cli._build_parser().parse_args(["--scenario", "scenario.json"])
+    imported = set()
+    for node in ast.walk(ast.parse(python_script(opts))):
+        if isinstance(node, ast.ImportFrom) and node.module.startswith("pyfds_evac"):
+            imported |= {(node.module, alias.name) for alias in node.names}
+    assert imported
+    stable = STABLE_SUBMODULE_NAMES | {
+        ("pyfds_evac", name) for name in pyfds_evac.__all__
+    }
+    assert imported <= stable
+
+
+def test_stable_submodule_names_exist_and_are_documented():
+    from pathlib import Path
+
+    usage = (Path(__file__).resolve().parents[1] / "docs" / "usage.md").read_text()
+    section = usage.split("### API stability", 1)[1].split("\n### ", 1)[0]
+    for module, name in STABLE_SUBMODULE_NAMES:
+        assert hasattr(importlib.import_module(module), name), (module, name)
+        assert name in section, name
