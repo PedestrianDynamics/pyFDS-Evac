@@ -1214,6 +1214,7 @@ _COMMON: frozenset[str] = (
 GUI_HIDDEN: frozenset[str] = frozenset(
     {
         "help",
+        "version",
         "print_summary",
         "export_only",
         "inspect_fds",
