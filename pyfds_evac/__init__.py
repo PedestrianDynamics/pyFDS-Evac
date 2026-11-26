@@ -8,6 +8,8 @@ import importlib
 from typing import TYPE_CHECKING
 
 if TYPE_CHECKING:
+    __version__: str
+
     from pyfds_evac.core.fed import (
         DefaultFedConfig,
         DefaultFedModel,
@@ -80,9 +82,13 @@ __all__ = [
 
 def __getattr__(name: str):
     if name == "__version__":
-        from importlib.metadata import version
+        from importlib.metadata import PackageNotFoundError, version
 
-        value = version("pyfds-evac")
+        try:
+            value = version("pyfds-evac")
+        except PackageNotFoundError:
+            # A source checkout on PYTHONPATH has no distribution metadata.
+            value = "unknown"
         globals()[name] = value
         return value
     module_name = _EXPORTS.get(name)

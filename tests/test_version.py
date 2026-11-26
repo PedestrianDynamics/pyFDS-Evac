@@ -5,7 +5,7 @@ import sys
 from importlib.metadata import version
 
 import pyfds_evac
-from pyfds_evac.cli import main
+from pyfds_evac.cli import _build_parser, main
 
 
 def test_version_matches_installed_metadata():
@@ -28,3 +28,20 @@ def test_cli_version_flag(monkeypatch, capsys):
     except SystemExit as exc:
         assert exc.code == 0
     assert capsys.readouterr().out.strip() == f"pyfds-evac {pyfds_evac.__version__}"
+
+
+def test_version_is_unknown_without_distribution_metadata(monkeypatch):
+    import importlib.metadata
+
+    def missing(name):
+        raise importlib.metadata.PackageNotFoundError(name)
+
+    monkeypatch.setattr(importlib.metadata, "version", missing)
+    monkeypatch.delattr(pyfds_evac, "__version__", raising=False)
+    try:
+        assert pyfds_evac.__version__ == "unknown"
+        assert hasattr(pyfds_evac, "__version__")
+        _build_parser()
+    finally:
+        monkeypatch.undo()
+        vars(pyfds_evac).pop("__version__", None)
