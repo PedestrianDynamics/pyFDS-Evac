@@ -321,6 +321,8 @@ Stable for all 1.x releases:
 - the names in `pyfds_evac.__all__`;
 - the `pyfds_evac.core` names the documentation uses: `load_scenario` and
   `run_scenario`, which `pyfds_evac.core.__all__` lists;
+- the `pyfds_evac.config` names `DEFAULTS`, `effective_configuration` and
+  its return type `EffectiveConfiguration`;
 - the command-line flags of `pyfds-evac`;
 - the output files and their columns.
 

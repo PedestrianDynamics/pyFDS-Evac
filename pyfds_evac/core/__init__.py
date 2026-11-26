@@ -10,7 +10,102 @@ import importlib
 from typing import TYPE_CHECKING
 
 if TYPE_CHECKING:
-    from .scenario import load_scenario, run_scenario
+    from .fds_inventory import (
+        FdsQuantityInventory as FdsQuantityInventory,
+    )
+    from .fds_inventory import (
+        inspect_fds_quantities as inspect_fds_quantities,
+    )
+    from .fds_inventory import (
+        list_simulations as list_simulations,
+    )
+    from .fds_sampling import (
+        SliceFieldSampler as SliceFieldSampler,
+    )
+    from .fds_sampling import (
+        load_slice_sampler as load_slice_sampler,
+    )
+    from .fed import (
+        DefaultFedConfig as DefaultFedConfig,
+    )
+    from .fed import (
+        DefaultFedInputs as DefaultFedInputs,
+    )
+    from .fed import (
+        DefaultFedModel as DefaultFedModel,
+    )
+    from .fed import (
+        FdsFedField as FdsFedField,
+    )
+    from .fed import (
+        FedComponents as FedComponents,
+    )
+    from .fed import (
+        TenabilityConfig as TenabilityConfig,
+    )
+    from .fed import (
+        accumulate_default_fed as accumulate_default_fed,
+    )
+    from .fed import (
+        default_fed_components as default_fed_components,
+    )
+    from .fed import (
+        default_fed_rate_per_minute as default_fed_rate_per_minute,
+    )
+    from .fed import (
+        default_fic as default_fic,
+    )
+    from .fed import (
+        time_to_fed_threshold_s as time_to_fed_threshold_s,
+    )
+    from .route_graph import (
+        RerouteConfig as RerouteConfig,
+    )
+    from .route_graph import (
+        RouteCostConfig as RouteCostConfig,
+    )
+    from .route_graph import (
+        StageGraph as StageGraph,
+    )
+    from .route_graph import (
+        integrated_extinction_along_los as integrated_extinction_along_los,
+    )
+    from .scenario import (
+        ProgressEvent as ProgressEvent,
+    )
+    from .scenario import (
+        Scenario as Scenario,
+    )
+    from .scenario import (
+        ScenarioResult as ScenarioResult,
+    )
+    from .scenario import (
+        load_scenario as load_scenario,
+    )
+    from .scenario import (
+        run_scenario as run_scenario,
+    )
+    from .smoke_speed import (
+        ConstantExtinctionField as ConstantExtinctionField,
+    )
+    from .smoke_speed import (
+        ExtinctionField as ExtinctionField,
+    )
+    from .smoke_speed import (
+        SmokeSpeedConfig as SmokeSpeedConfig,
+    )
+    from .smoke_speed import (
+        SmokeSpeedModel as SmokeSpeedModel,
+    )
+    from .smoke_speed import (
+        extinction_from_soot_density as extinction_from_soot_density,
+    )
+    from .smoke_speed import (
+        speed_from_soot_density as speed_from_soot_density,
+    )
+    from .visibility import (
+        VisibilityModel as VisibilityModel,
+    )
 
 _EXPORTS = {
     "FdsQuantityInventory": "pyfds_evac.core.fds_inventory",

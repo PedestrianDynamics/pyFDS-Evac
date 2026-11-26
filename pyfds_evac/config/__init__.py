@@ -12,8 +12,8 @@
   share.
 
 Importing this package loads no simulation stack (JuPedSim, fdsreader,
-fdsvismap, matplotlib). Provisional public API in 0.3.0: names may change in
-0.3.x.
+fdsvismap, matplotlib). Stable for 1.x: DEFAULTS, effective_configuration and
+EffectiveConfiguration; see "API stability" in docs/usage.md.
 """
 
 from __future__ import annotations
