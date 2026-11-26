@@ -12,12 +12,53 @@ import pyfds_evac.core
 # "API stability" in docs/usage.md.
 STABLE_CORE_NAMES = ["load_scenario", "run_scenario"]
 
-DROPPED_FROM_ALL = sorted(set(pyfds_evac.core._EXPORTS) - set(STABLE_CORE_NAMES))
+# Every name that imports from ``pyfds_evac.core``: stable or dropped from
+# ``__all__``. Removing one is a breaking change.
+ALL_CORE_NAMES = [
+    "ConstantExtinctionField",
+    "DefaultFedConfig",
+    "DefaultFedInputs",
+    "DefaultFedModel",
+    "ExtinctionField",
+    "FdsFedField",
+    "FdsQuantityInventory",
+    "FedComponents",
+    "ProgressEvent",
+    "RerouteConfig",
+    "RouteCostConfig",
+    "Scenario",
+    "ScenarioResult",
+    "SliceFieldSampler",
+    "SmokeSpeedConfig",
+    "SmokeSpeedModel",
+    "StageGraph",
+    "TenabilityConfig",
+    "VisibilityModel",
+    "accumulate_default_fed",
+    "default_fed_components",
+    "default_fed_rate_per_minute",
+    "default_fic",
+    "extinction_from_soot_density",
+    "inspect_fds_quantities",
+    "integrated_extinction_along_los",
+    "list_simulations",
+    "load_scenario",
+    "load_slice_sampler",
+    "run_scenario",
+    "speed_from_soot_density",
+    "time_to_fed_threshold_s",
+]
+
+DROPPED_FROM_ALL = sorted(set(ALL_CORE_NAMES) - set(STABLE_CORE_NAMES))
 
 
 def test_core_all_is_pinned():
     assert sorted(pyfds_evac.core.__all__) == STABLE_CORE_NAMES
     assert sorted(dir(pyfds_evac.core)) == STABLE_CORE_NAMES
+
+
+def test_export_table_is_pinned():
+    assert sorted(pyfds_evac.core._EXPORTS) == ALL_CORE_NAMES
 
 
 def test_stable_core_names_are_public_names_too():
