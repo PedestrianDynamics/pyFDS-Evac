@@ -76,8 +76,8 @@ def test_cli_names_resolve_lazily():
 
 
 def test_core_exports_resolve_to_defining_module():
-    assert set(pyfds_evac.core.__all__) == set(pyfds_evac.core._EXPORTS)
-    for name in pyfds_evac.core.__all__:
+    assert set(pyfds_evac.core.__all__) <= set(pyfds_evac.core._EXPORTS)
+    for name in pyfds_evac.core._EXPORTS:
         value = getattr(pyfds_evac.core, name)
         assert value.__name__ == name
         assert value.__module__ == pyfds_evac.core._EXPORTS[name]

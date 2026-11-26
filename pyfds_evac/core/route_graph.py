@@ -10,7 +10,7 @@ import weakref
 from collections.abc import Callable, Iterable, Mapping
 from dataclasses import dataclass, field, replace
 from enum import Enum
-from typing import Any, Protocol
+from typing import TYPE_CHECKING, Any, Protocol
 
 import numpy as np
 from shapely.geometry import Polygon
@@ -24,6 +24,9 @@ from .smoke_speed import (
     speed_factor_from_extinction,
 )
 from .time_step import TIME_EPS_S
+
+if TYPE_CHECKING:
+    from .cognitive_map import AgentCognitiveMap
 
 _logger = logging.getLogger(__name__)
 
@@ -3124,7 +3127,7 @@ def rank_routes(
     *,
     cached_segments: dict[SegmentCacheKey, SegmentCost] | None = None,
     exit_counts: dict[str, int] | None = None,
-    cognitive_map=None,
+    cognitive_map: AgentCognitiveMap | None = None,
     agent_position: tuple[float, float] | None = None,
     current_exit: str | None = None,
     current_target: str | None = None,
@@ -4840,7 +4843,7 @@ def evaluate_and_reroute(
     cached_segments: dict[SegmentCacheKey, SegmentCost] | None = None,
     *,
     exit_counts: dict[str, int] | None = None,
-    cognitive_map=None,
+    cognitive_map: AgentCognitiveMap | None = None,
     agent_position: tuple[float, float] | None = None,
 ) -> RouteSwitch | None:
     """Evaluate routes and reroute the agent if a better exit is found.
@@ -4967,7 +4970,7 @@ def adopt_heading_exit(
     route_state: AgentRouteState,
     wait_info: dict,
     graph: StageGraph,
-    cognitive_map,
+    cognitive_map: AgentCognitiveMap | None,
     time_s: float,
 ) -> None:
     """Set the route state from the exit the agent's path ends at (#395 R-B).

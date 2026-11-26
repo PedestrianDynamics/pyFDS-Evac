@@ -11,46 +11,101 @@ from typing import TYPE_CHECKING
 
 if TYPE_CHECKING:
     from .fds_inventory import (
-        FdsQuantityInventory,
-        inspect_fds_quantities,
-        list_simulations,
+        FdsQuantityInventory as FdsQuantityInventory,
     )
-    from .fds_sampling import SliceFieldSampler, load_slice_sampler
+    from .fds_inventory import (
+        inspect_fds_quantities as inspect_fds_quantities,
+    )
+    from .fds_inventory import (
+        list_simulations as list_simulations,
+    )
+    from .fds_sampling import (
+        SliceFieldSampler as SliceFieldSampler,
+    )
+    from .fds_sampling import (
+        load_slice_sampler as load_slice_sampler,
+    )
     from .fed import (
-        DefaultFedConfig,
-        DefaultFedInputs,
-        DefaultFedModel,
-        FdsFedField,
-        FedComponents,
-        TenabilityConfig,
-        accumulate_default_fed,
-        default_fed_components,
-        default_fed_rate_per_minute,
-        default_fic,
-        time_to_fed_threshold_s,
+        DefaultFedConfig as DefaultFedConfig,
+    )
+    from .fed import (
+        DefaultFedInputs as DefaultFedInputs,
+    )
+    from .fed import (
+        DefaultFedModel as DefaultFedModel,
+    )
+    from .fed import (
+        FdsFedField as FdsFedField,
+    )
+    from .fed import (
+        FedComponents as FedComponents,
+    )
+    from .fed import (
+        TenabilityConfig as TenabilityConfig,
+    )
+    from .fed import (
+        accumulate_default_fed as accumulate_default_fed,
+    )
+    from .fed import (
+        default_fed_components as default_fed_components,
+    )
+    from .fed import (
+        default_fed_rate_per_minute as default_fed_rate_per_minute,
+    )
+    from .fed import (
+        default_fic as default_fic,
+    )
+    from .fed import (
+        time_to_fed_threshold_s as time_to_fed_threshold_s,
     )
     from .route_graph import (
-        RerouteConfig,
-        RouteCostConfig,
-        StageGraph,
-        integrated_extinction_along_los,
+        RerouteConfig as RerouteConfig,
+    )
+    from .route_graph import (
+        RouteCostConfig as RouteCostConfig,
+    )
+    from .route_graph import (
+        StageGraph as StageGraph,
+    )
+    from .route_graph import (
+        integrated_extinction_along_los as integrated_extinction_along_los,
     )
     from .scenario import (
-        ProgressEvent,
-        Scenario,
-        ScenarioResult,
-        load_scenario,
-        run_scenario,
+        ProgressEvent as ProgressEvent,
+    )
+    from .scenario import (
+        Scenario as Scenario,
+    )
+    from .scenario import (
+        ScenarioResult as ScenarioResult,
+    )
+    from .scenario import (
+        load_scenario as load_scenario,
+    )
+    from .scenario import (
+        run_scenario as run_scenario,
     )
     from .smoke_speed import (
-        ConstantExtinctionField,
-        ExtinctionField,
-        SmokeSpeedConfig,
-        SmokeSpeedModel,
-        extinction_from_soot_density,
-        speed_from_soot_density,
+        ConstantExtinctionField as ConstantExtinctionField,
     )
-    from .visibility import VisibilityModel
+    from .smoke_speed import (
+        ExtinctionField as ExtinctionField,
+    )
+    from .smoke_speed import (
+        SmokeSpeedConfig as SmokeSpeedConfig,
+    )
+    from .smoke_speed import (
+        SmokeSpeedModel as SmokeSpeedModel,
+    )
+    from .smoke_speed import (
+        extinction_from_soot_density as extinction_from_soot_density,
+    )
+    from .smoke_speed import (
+        speed_from_soot_density as speed_from_soot_density,
+    )
+    from .visibility import (
+        VisibilityModel as VisibilityModel,
+    )
 
 _EXPORTS = {
     "FdsQuantityInventory": "pyfds_evac.core.fds_inventory",
@@ -87,39 +142,11 @@ _EXPORTS = {
     "VisibilityModel": "pyfds_evac.core.visibility",
 }
 
+# The stable names: those the documentation uses from this namespace. Every
+# other name in _EXPORTS stays importable but may change in a minor release.
 __all__ = [
-    "ConstantExtinctionField",
-    "DefaultFedConfig",
-    "DefaultFedInputs",
-    "DefaultFedModel",
-    "ExtinctionField",
-    "FdsFedField",
-    "FdsQuantityInventory",
-    "FedComponents",
-    "ProgressEvent",
-    "RerouteConfig",
-    "RouteCostConfig",
-    "Scenario",
-    "ScenarioResult",
-    "SliceFieldSampler",
-    "SmokeSpeedConfig",
-    "SmokeSpeedModel",
-    "StageGraph",
-    "TenabilityConfig",
-    "VisibilityModel",
-    "accumulate_default_fed",
-    "default_fed_components",
-    "default_fed_rate_per_minute",
-    "default_fic",
-    "extinction_from_soot_density",
-    "inspect_fds_quantities",
-    "integrated_extinction_along_los",
-    "list_simulations",
     "load_scenario",
-    "load_slice_sampler",
     "run_scenario",
-    "speed_from_soot_density",
-    "time_to_fed_threshold_s",
 ]
 
 
@@ -133,4 +160,4 @@ def __getattr__(name: str):
 
 
 def __dir__() -> list[str]:
-    return sorted(set(globals()) | set(__all__))
+    return sorted(__all__)

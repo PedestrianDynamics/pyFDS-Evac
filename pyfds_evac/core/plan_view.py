@@ -11,7 +11,7 @@ the extinction slice through :class:`~pyfds_evac.core.fds_sampling.SliceGrid`,
 which does not touch the run's sampler. A run gives the same results with or
 without a recorder.
 
-Provisional public API (0.3.0): names may change in 0.3.x.
+Stability: see "API stability" in docs/usage.md.
 """
 
 from __future__ import annotations

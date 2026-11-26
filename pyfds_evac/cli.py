@@ -11,6 +11,7 @@ from typing import TYPE_CHECKING
 
 from rich_argparse import RawDescriptionRichHelpFormatter
 
+import pyfds_evac
 from pyfds_evac.config.parameters import _u_factor as _u_factor  # noqa: F401
 from pyfds_evac.config.parameters import add_arguments
 
@@ -126,6 +127,11 @@ def _build_parser() -> argparse.ArgumentParser:
         description=_DESCRIPTION,
         epilog=_EPILOG,
         formatter_class=_HelpFormatter,
+    )
+    parser.add_argument(
+        "--version",
+        action="version",
+        version=f"%(prog)s {pyfds_evac.__version__}",
     )
     add_arguments(parser)
     return parser

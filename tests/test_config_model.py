@@ -63,7 +63,9 @@ def _load(path: str):
 
 
 def test_parser_actions_follow_the_parameter_table():
-    actions = [a for a in cli._build_parser()._actions if a.dest != "help"]
+    actions = [
+        a for a in cli._build_parser()._actions if a.dest not in ("help", "version")
+    ]
     assert [a.dest for a in actions] == [p.dest for p in PARAMETERS]
     for action, param in zip(actions, PARAMETERS, strict=True):
         assert tuple(action.option_strings[:1]) == param.flags

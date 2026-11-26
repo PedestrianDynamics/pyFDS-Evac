@@ -16,7 +16,7 @@ time). Arrays travel as little-endian ``bytes``; the ``*_values`` helpers
 decode them with the standard library only. ``pyfds_evac.core.run_stream``
 sends all of these from a run.
 
-Provisional public API (0.3.0): fields may change in 0.3.x.
+Stability: see "API stability" in docs/usage.md.
 """
 
 from __future__ import annotations

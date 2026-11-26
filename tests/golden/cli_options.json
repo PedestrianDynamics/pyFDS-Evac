@@ -616,6 +616,16 @@
   "required": false,
   "type": "float"
  },
+ "--version": {
+  "action": "_VersionAction",
+  "choices": null,
+  "const": null,
+  "default": "==SUPPRESS==",
+  "dest": "version",
+  "nargs": 0,
+  "required": false,
+  "type": null
+ },
  "--vis-cache": {
   "action": "_StoreAction",
   "choices": null,

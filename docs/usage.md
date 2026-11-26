@@ -260,8 +260,7 @@ for example `"reroute_interval": 10.0`. Start from the full `DEFAULTS`:
 `build_run_kwargs` reads about 20 options, such as `fds_dir`,
 `reroute_interval`, `fed_threshold` and the `heat_*` options, as plain
 attributes, so a namespace that lacks an option a built model reads raises
-`AttributeError`; start from the full `DEFAULTS`. `pyfds_evac.config`
-and `DEFAULTS` are provisional public API in 0.3.x: names may change.
+`AttributeError`; start from the full `DEFAULTS`.
 
 **Show equivalent Python** in the [web GUI](web-gui.md#show-the-run-as-python)
 and `p` in the [terminal UI](terminal-ui.md#reproduce-a-run) write this
@@ -313,8 +312,41 @@ are recorded as facts, and the configuration of the options is kept apart
 under `predicted_from_options`, with the differing settings in
 `mismatches` (e.g. `tenability.fed_threshold`).
 From Python, `pyfds_evac.config.effective_configuration(opts, scenario)`
-returns it; `pyfds_evac.config` is provisional public API in 0.3.0 and can
-change in 0.3.x.
+returns it.
+
+### API stability
+
+Stable for all 1.x releases:
+
+- the names in `pyfds_evac.__all__`;
+- the `pyfds_evac.core` names the documentation uses: `load_scenario` and
+  `run_scenario`, which `pyfds_evac.core.__all__` lists;
+- the `pyfds_evac.config` names `DEFAULTS`, `effective_configuration` and
+  its return type `EffectiveConfiguration`;
+- the names the exported "Show equivalent Python" script imports, by full
+  module path: `pyfds_evac.core.run_config.build_run_kwargs`,
+  `pyfds_evac.core.run_outputs.apply_outputs`,
+  `pyfds_evac.core.manifest.manifest_path_for` (documented in the
+  [web GUI](web-gui.md#show-the-run-as-python)) and
+  `pyfds_evac.config.frontend.stop_reason_phrase`;
+- the `pyfds_evac.analysis` names the documentation uses: `AsetCriteria`,
+  `AsetMap`, `Measures`, `aset_map`, `convergence_curve`, `diff_map`,
+  `grid_from_walkable`, `load_exit_times`, `load_trajectory`, `measures`,
+  `plot_maps`, `pool_rset`, `pool_seeds`, `read_crossings`,
+  `read_level_crossing`, `release_measures`, `rset_map` and `seed_measures`;
+- the command-line flags of `pyfds-evac`;
+- the output files and their columns.
+
+Everything else is internal and may change in a minor release. Other names
+in `pyfds_evac.core` still import, but are not part of this promise.
+
+`run_scenario` accepts the built-in model classes (`SmokeSpeedModel`,
+`DefaultFedModel`, `DefaultHeatFedModel`, `TenabilityConfig`,
+`VisibilityModel`). Custom duck-typed model objects are not part of the 1.x
+contract.
+
+The package ships its type hints (`py.typed`). mypy is not enforced in CI,
+so a type checker may report errors in the library's own code.
 
 ### Agent visualisation
 

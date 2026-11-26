@@ -195,6 +195,8 @@ typically the same subslice):
 
 ## Loading a sampler
 
+The submodule imports on this page are internal and may change in 1.x.
+
 Use `load_slice_sampler()` to load a single FDS quantity:
 
 ```python

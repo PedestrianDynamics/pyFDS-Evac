@@ -6,7 +6,7 @@ finished run the same way (:func:`run_outcome`). This module imports only
 the standard library, so the TUI can use it without the GUI extra and
 without the simulation stack.
 
-Provisional public API (0.3.0): names may change in 0.3.x.
+Stability: see "API stability" in docs/usage.md.
 """
 
 from __future__ import annotations
@@ -277,8 +277,7 @@ def incapacitation_modelled(run_settings: Mapping[str, Any] | None) -> bool:
     FED model, or heat incapacitation and a heat FED model. False without a
     dose model, with FED disabled for missing species, and under
     ``disable_tenability`` or ``smoke_blind``, where a dose may still be
-    recorded but stops nobody. ``run_settings`` is provisional (0.3.0);
-    #141 asks the engine to report this itself.
+    recorded but stops nobody. #141 asks the engine to report this itself.
     """
     if not run_settings:
         return False

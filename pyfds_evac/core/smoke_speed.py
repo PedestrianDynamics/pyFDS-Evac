@@ -64,7 +64,9 @@ References
 import inspect
 import logging
 import math
+from collections.abc import Callable
 from dataclasses import dataclass
+from typing import Any
 
 import numpy as np
 
@@ -400,7 +402,7 @@ def speed_factor_from_extinction_fridolf(
     return float(speed / free_speed)
 
 
-def sample_accepts_free_speed(sample) -> bool:
+def sample_accepts_free_speed(sample: Callable[..., Any]) -> bool:
     """Return whether a ``sample`` callable takes ``free_speed_m_per_s``.
 
     Custom smoke models may define ``sample(time_s, x, y)`` only; callers

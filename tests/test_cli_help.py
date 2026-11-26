@@ -4,7 +4,7 @@
 help was grouped: option strings, dest, default, choices, type, nargs,
 required, const and action class, plus the flags added since: ``--debug``
 (#486), ``--show-config`` (#484), ``--output-pre-evacuation-times``
-(#120) and ``--output-knowledge-history`` (#943). Grouping the help must
+(#120), ``--output-knowledge-history`` (#943) and ``--version``. Grouping the help must
 not change it.
 """
 
@@ -67,8 +67,8 @@ def test_every_flag_is_in_exactly_one_named_group():
             assert dests, group.title
             seen += dests
         else:
-            assert dests in ([], ["help"]), group.title
-    flags = [a.dest for a in parser._actions if a.dest != "help"]
+            assert dests in ([], ["help"], ["help", "version"]), group.title
+    flags = [a.dest for a in parser._actions if a.dest not in ("help", "version")]
     assert sorted(seen) == sorted(flags)
 
 
