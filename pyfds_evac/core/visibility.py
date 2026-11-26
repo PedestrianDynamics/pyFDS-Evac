@@ -423,7 +423,9 @@ def _walls(piece, faces, cell_size_m: float, depth: int = 0) -> list[_Wall]:
     return walls
 
 
-def unresolved_wall(walkable, cell_size_m: float) -> tuple[float, float, float] | None:
+def unresolved_wall(
+    walkable: Polygon, cell_size_m: float
+) -> tuple[float, float, float] | None:
     """The thinnest wall a clear-air grid of *cell_size_m* may lose, or None.
 
     Returns its estimated width and a point on it. The obstructions are the
@@ -460,7 +462,9 @@ def unresolved_wall(walkable, cell_size_m: float) -> tuple[float, float, float] 
     return thinnest
 
 
-def wall_check(walkable, cell_size_m: float) -> tuple[dict[str, object], str | None]:
+def wall_check(
+    walkable: Polygon, cell_size_m: float
+) -> tuple[dict[str, object], str | None]:
     """The ``thin_wall_*`` record of a clear-air model and its warning text.
 
     ``thin_wall_m`` is the estimated width of the thinnest wall the grid may

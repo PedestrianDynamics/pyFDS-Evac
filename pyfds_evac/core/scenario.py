@@ -40,7 +40,10 @@ from pyfds_evac.config import messages
 from pyfds_evac.config.parameters import seed_out_of_range
 
 if TYPE_CHECKING:
+    from .fed import DefaultFedModel, DefaultHeatFedModel, TenabilityConfig
     from .plan_view import FrameRecorder
+    from .smoke_speed import SmokeSpeedModel
+    from .visibility import VisibilityModel
 
 from .agent_params import (
     SpawnConfigError,
@@ -2093,14 +2096,14 @@ def run_scenario(
     scenario: Scenario,
     *,
     seed: int | None = None,
-    smoke_speed_model=None,
-    fed_model=None,
-    heat_fed_model=None,
-    tenability_config=None,
+    smoke_speed_model: "SmokeSpeedModel | None" = None,
+    fed_model: "DefaultFedModel | None" = None,
+    heat_fed_model: "DefaultHeatFedModel | None" = None,
+    tenability_config: "TenabilityConfig | None" = None,
     reroute_config: RerouteConfig | None = None,
     collect_route_cost_history: bool = False,
     collect_cognitive_map_history: bool = False,
-    vis_model=None,
+    vis_model: "VisibilityModel | None" = None,
     progress_callback: ProgressCallback | None = None,
     smoke_blind: bool = False,
     replay_exits: Mapping[SpawnKey, str] | None = None,
@@ -2982,7 +2985,7 @@ def run_scenario(
                 if smoke_blind
                 else fed_state.get(agent_id, {}).get("cumulative", 0.0),
                 extinction_sampler=_ZERO_EXTINCTION
-                if clear_air
+                if clear_air or smoke_speed_model is None
                 else smoke_speed_model.field,
                 fed_rate_sampler=None if smoke_blind else _fed_rate_adapter,
                 config=closure_config,
@@ -4440,12 +4443,14 @@ def run_scenario(
                 heat_fed_method=getattr(heat_fed_model, "method", None),
                 heat_flux_parameters=(
                     heat_fed_model.heat_flux_parameters()
-                    if getattr(heat_fed_model, "method", None) == "total-flux"
+                    if heat_fed_model is not None
+                    and getattr(heat_fed_model, "method", None) == "total-flux"
                     else None
                 ),
                 heat_clothing=(
                     heat_fed_model.convective_clothing()
-                    if hasattr(heat_fed_model, "convective_clothing")
+                    if heat_fed_model is not None
+                    and hasattr(heat_fed_model, "convective_clothing")
                     else None
                 ),
                 heat_fed_threshold_override=(

@@ -10,6 +10,8 @@ from .fds_import_people import HUMAN_SMOKE_HEIGHT_M
 # fds_sampling loads numpy; it is imported where a sampler is used, so the
 # heat constants of this module reach the CLI parser without numpy (#503).
 if TYPE_CHECKING:
+    import random
+
     from .fds_sampling import SliceFieldSampler
     from .radiometer_grid import RadiometerSource
 
@@ -722,7 +724,7 @@ def _check_layer_parameters(
 
 
 def heat_flux_row_fields(
-    heat_fed_model,
+    heat_fed_model: "DefaultHeatFedModel | None",
     temperature_celsius: float,
     layer_temperature_celsius: float | None = None,
     integrated_intensity_kw_m2: float | None = None,
@@ -735,6 +737,8 @@ def heat_flux_row_fields(
     the radiometer source the net reading and the incident flux it implies
     (#276).
     """
+    if heat_fed_model is None:
+        return {}
     if getattr(heat_fed_model, "method", "convective") != "total-flux":
         return {}
     if getattr(heat_fed_model, "radiant_source", "gas") == "radiometer":
@@ -883,7 +887,9 @@ def _sample_threshold(threshold: float, mode: str, sigma: float, rng) -> float:
     return float(threshold) * math.exp(float(sigma) * rng.gauss(0.0, 1.0))
 
 
-def sample_incapacitation_threshold(config: "TenabilityConfig", rng) -> float:
+def sample_incapacitation_threshold(
+    config: "TenabilityConfig", rng: "random.Random"
+) -> float:
     """Draw one agent's cumulative-FED (gas) incapacitation threshold.
 
     See ``_sample_threshold``; deterministic mode returns ``fed_threshold``
@@ -899,7 +905,9 @@ def sample_incapacitation_threshold(config: "TenabilityConfig", rng) -> float:
     )
 
 
-def sample_heat_incapacitation_threshold(config: "TenabilityConfig", rng) -> float:
+def sample_heat_incapacitation_threshold(
+    config: "TenabilityConfig", rng: "random.Random"
+) -> float:
     """Draw one agent's cumulative heat-FED incapacitation threshold.
 
     Same mechanism as ``sample_incapacitation_threshold``, applied to
