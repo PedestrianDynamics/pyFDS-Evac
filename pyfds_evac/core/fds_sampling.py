@@ -115,6 +115,20 @@ class FdsHorizonError(ValueError):
     """
 
 
+FDS_START_TOLERANCE_S = 1e-3
+"""A first frame up to this late [s] still counts as the start at t = 0."""
+
+
+class FdsStartError(FdsHorizonError):
+    """The FDS output starts after t = 0, or a sample precedes its first frame.
+
+    Evacuation time t is FDS time t, so t = 0 must be FDS t = 0. A subclass of
+    ``FdsHorizonError`` so the sites that re-raise it keep working; unlike it,
+    never relaxed by ``--allow-fds-horizon-hold``: before the first frame
+    there is no data to hold.
+    """
+
+
 class FdsDomainError(ValueError):
     """A sample was requested outside the FDS slice domain in strict mode.
 
@@ -406,6 +420,7 @@ class SliceFieldSampler:
         first = float(times[0])
         if (times == first).all():
             return self._time_index(first)
+        self._check_start(float(times.min()))
         self._check_horizon(float(times.max()))
         return _nearest_frames(self._frame_times, times)
 
@@ -451,6 +466,20 @@ class SliceFieldSampler:
         """Return the output interval of the slice frames [s]."""
         return _output_interval(self._slice.times)
 
+    def _check_start(self, time_s: float) -> None:
+        """Raise when *time_s* precedes the first slice frame (never held)."""
+        first = float(self._slice.times[0])
+        if time_s >= first - FDS_START_TOLERANCE_S:
+            return
+        raise FdsStartError(
+            messages.fds_start_late(
+                None,
+                first,
+                quantity=self._slice.quantity.name,
+                requested_s=time_s,
+            )
+        )
+
     def _check_horizon(self, time_s: float) -> None:
         """Raise, or warn once, when *time_s* is past the slice output."""
         last = self.end_time_s
@@ -477,6 +506,7 @@ class SliceFieldSampler:
         t_index = self._t_index_cache.get(ts)
         if t_index is not None:
             return t_index
+        self._check_start(ts)
         self._check_horizon(ts)
         t_index = int(self._slice.get_nearest_timestep(ts))
         if len(self._t_index_cache) >= _T_INDEX_CACHE_SIZE:
@@ -911,6 +941,24 @@ def fds_output_horizon(fds_dir: str, *, simulation=None) -> tuple[float, float] 
         if len(s.times) > 1
     ]
     return min(ends, key=sum) if ends else None
+
+
+def fds_output_start(fds_dir: str, *, simulation=None) -> float | None:
+    """Return the latest first frame time [s] of the FDS slices with two frames.
+
+    The slices ``fds_output_horizon`` counts; the latest start is when every
+    slice has data. None when the case has no slice with two frames.
+    """
+    sim = simulation if simulation is not None else _open_simulation(fds_dir)
+    starts = [float(s.times[0]) for s in sim.slices if len(s.times) > 1]
+    return max(starts) if starts else None
+
+
+def check_fds_start(first_s: float, fds_dir: str, quantity: str | None = None) -> None:
+    """Raise ``FdsStartError`` when the FDS output starts after t = 0."""
+    if first_s <= FDS_START_TOLERANCE_S:
+        return
+    raise FdsStartError(messages.fds_start_late(fds_dir, first_s, quantity=quantity))
 
 
 def select_horizontal_slice(

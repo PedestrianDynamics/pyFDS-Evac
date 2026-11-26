@@ -356,7 +356,8 @@ class RadiometerSource:
     (FDS UG 6.10.1 Eq. 22.36, kW/m2), bilinear in x, y and linear in time.
     Time follows the slice rule: a time up to one output interval past the
     last frame holds the last frame; later it is an ``FdsHorizonError``, or,
-    with *allow_horizon_hold*, held after one warning.
+    with *allow_horizon_hold*, held after one warning. A time before the first
+    frame is an ``FdsStartError``.
     """
 
     grid: RadiometerGrid
@@ -385,6 +386,19 @@ class RadiometerSource:
             )
         return float(self.grid.sample(self._held(float(time_s)), x, y))
 
+    def _before_first(self, time_s: float, first: float) -> float:
+        """*first* within the start tolerance of *time_s*; an error before it."""
+        from pyfds_evac.config import messages
+        from pyfds_evac.core.fds_sampling import FDS_START_TOLERANCE_S, FdsStartError
+
+        if time_s >= first - FDS_START_TOLERANCE_S:
+            return first
+        raise FdsStartError(
+            messages.fds_start_late(
+                None, first, quantity="RADIOMETER", requested_s=time_s
+            )
+        )
+
     def _held(self, time_s: float) -> float:
         """*time_s* clamped to the output, after the horizon rule."""
         times = self.grid.times
@@ -392,7 +406,7 @@ class RadiometerSource:
         if first <= time_s <= last:
             return time_s
         if time_s < first:
-            return first
+            return self._before_first(time_s, first)
         interval = float(np.max(np.diff(times))) if times.size > 1 else 0.0
         if time_s <= last + interval + TIME_TOLERANCE_S:
             return last

@@ -681,6 +681,7 @@ def _patch(monkeypatch, slices):
     monkeypatch.setattr(
         run_config, "inspect_fds_quantities", lambda _d: _Inventory(slices)
     )
+    monkeypatch.setattr(run_config, "fds_output_start", lambda _d: None)
     monkeypatch.setattr(run_config.FdsHeatField, "from_fds", classmethod(fake_from_fds))
     return calls
 

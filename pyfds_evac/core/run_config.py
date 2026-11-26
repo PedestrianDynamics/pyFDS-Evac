@@ -32,7 +32,12 @@ from pyfds_evac.config.rules import (
 )
 
 from .fds_inventory import inspect_fds_quantities
-from .fds_sampling import fds_output_horizon, height_warnings_once
+from .fds_sampling import (
+    check_fds_start,
+    fds_output_horizon,
+    fds_output_start,
+    height_warnings_once,
+)
 from .fed import (
     DEFAULT_HEAT_CLOTHING,
     DefaultFedConfig,
@@ -141,6 +146,20 @@ def _allow_hold(opts: Any) -> bool:
 def _require_coverage(opts: Any) -> bool:
     """Return whether a sample outside the FDS slices is an error (#426)."""
     return bool(option(opts, "require_fds_coverage"))
+
+
+def _check_fds_start(opts: Any) -> None:
+    """Raise ``FdsStartError`` when the FDS output starts after t = 0.
+
+    Evacuation time is FDS time, so T_BEGIN > 0 leaves the first frames
+    without data. Never relaxed by ``--allow-fds-horizon-hold``.
+    """
+    if not opts.fds_dir:
+        return
+    start = fds_output_start(opts.fds_dir)
+    if start is None:
+        return
+    check_fds_start(start, opts.fds_dir)
 
 
 def _check_fds_horizon(scenario: Any, opts: Any, log: Logger = _noop) -> None:
@@ -615,6 +634,7 @@ def build_run_kwargs(scenario: Any, opts: Any, log: Logger = _noop) -> dict[str,
     validate_opts(opts)
     _warn_slice_height_differs(scenario, opts)
     with height_warnings_once():
+        _check_fds_start(opts)
         _check_fds_horizon(scenario, opts, log)
         smoke_speed_model = _build_smoke_model(opts, log)
         fed_model = _build_fed_model(opts, log)
