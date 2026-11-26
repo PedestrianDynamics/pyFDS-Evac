@@ -1179,7 +1179,7 @@ class ProgressEvent:
     clock in seconds, ``wall_time`` is real elapsed seconds since the run
     started, and ``pct`` is the integer evacuation percentage.
     ``incapacitated`` counts agents incapacitated so far and ``not_spawned``
-    flow agents still to enter (provisional fields, 0.3.0).
+    flow agents still to enter.
     Samples are taken while agents remain: when a run ends with the last
     agent leaving, the last event has ``evacuated < total``, so ``pct`` does
     not reach 100. In runs that end at the time limit or in deadlock, the
@@ -1235,15 +1235,15 @@ class ScenarioResult:
     knowledge_history: list[dict[str, Any]] | None = None
     manifest_file: str | None = None
     exit_history: list[dict[str, Any]] | None = None
-    # What the run used (seed, models built); provisional, see
+    # What the run used (seed, models built); see
     # manifest.run_settings.
     run_settings: dict[str, Any] | None = None
-    # Agents incapacitated during the run (gas or heat); provisional.
+    # Agents incapacitated during the run (gas or heat).
     agents_incapacitated: int = 0
     # One row per agent with a pre-movement time; see pre_evacuation_rows.
     pre_evacuation_times: list[dict[str, Any]] | None = None
     # Distribution key of every agent placed at the start (flow-spawned agents
-    # are not listed); provisional.
+    # are not listed).
     agent_distributions: dict[int, str] | None = None
     # Simulation time [s] at which JuPedSim removed each agent that left
     # through an exit; an agent still inside at the end has no entry.

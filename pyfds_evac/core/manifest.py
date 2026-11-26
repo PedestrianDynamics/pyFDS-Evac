@@ -127,7 +127,7 @@ def run_settings(
     """What a run used: the seed, and the models with their parameters.
 
     Read from the objects ``run_scenario`` received, never from the options
-    that produced them; a model that was not given is None (provisional).
+    that produced them; a model that was not given is None.
     """
     return {
         "seed": seed,
