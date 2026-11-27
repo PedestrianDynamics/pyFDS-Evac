@@ -8,6 +8,7 @@ FED model (gas concentrations).
 from __future__ import annotations
 
 import logging
+import math
 from bisect import bisect_left
 from collections.abc import Iterator
 from contextlib import contextmanager
@@ -112,6 +113,29 @@ class FdsHorizonError(ValueError):
     out-of-domain ``ValueError``: past the horizon there is no smoke data, so
     returning clear air or zero dose would be as wrong as holding the last
     frame.
+    """
+
+
+FDS_START_TOLERANCE_S = 1e-3
+"""A first frame up to this late [s] still counts as the start at t = 0."""
+
+
+class FdsStartError(FdsHorizonError):
+    """The FDS output starts after t = 0, or a sample precedes its first frame.
+
+    Evacuation time t is FDS time t, so t = 0 must be FDS t = 0. A subclass of
+    ``FdsHorizonError`` so the sites that re-raise it keep working; unlike it,
+    never relaxed by ``--allow-fds-horizon-hold``: before the first frame
+    there is no data to hold.
+    """
+
+
+class FdsDataError(RuntimeError):
+    """A value the FDS slice holds inside its domain is not a finite number.
+
+    fdsreader fills a point without data with NaN. Not a ``ValueError``:
+    callers turn that into ambient air, which for a NaN would read as clear
+    sight, no dose or no heat.
     """
 
 
@@ -398,14 +422,27 @@ class SliceFieldSampler:
                 f"got the part {part.t_start:g}..{part.t_end:g} outside the slice"
             )
         i_index, j_index = part.cells
-        values = part.subslice.data[self._frames(times), i_index, j_index]
-        return np.asarray(values, dtype=float)
+        frames = self._frames(times)
+        values = np.asarray(part.subslice.data[frames, i_index, j_index], dtype=float)
+        if not np.isfinite(values).all():
+            k = int(np.argmin(np.isfinite(values)))
+            xs, ys = self._axes(part.subslice)
+            frame = np.broadcast_to(frames, values.shape)[k]
+            self._raise_non_finite(
+                float(times[k]),
+                float(xs[i_index[k]]),
+                float(ys[j_index[k]]),
+                int(frame),
+                part.subslice,
+            )
+        return values
 
     def _frames(self, times: np.ndarray) -> np.ndarray | int:
         """The frame of each time, horizon-checked as :meth:`sample` checks it."""
         first = float(times[0])
         if (times == first).all():
             return self._time_index(first)
+        self._check_start(float(times.min()))
         self._check_horizon(float(times.max()))
         return _nearest_frames(self._frame_times, times)
 
@@ -451,6 +488,32 @@ class SliceFieldSampler:
         """Return the output interval of the slice frames [s]."""
         return _output_interval(self._slice.times)
 
+    def _raise_non_finite(
+        self, time_s: float, x: float, y: float, t_index: int, subslice
+    ) -> None:
+        """Raise ``FdsDataError`` for a non-finite value read at (x, y)."""
+        mesh_id = getattr(subslice.mesh, "id", "?")
+        raise FdsDataError(
+            f"'{self.quantity}' is not a finite number at ({x:.2f}, {y:.2f}) m, "
+            f"t={time_s:.1f} s (frame at t={float(self._slice.times[t_index]):.1f} s, "
+            f"mesh {mesh_id}), inside the FDS slice domain. Check the FDS output "
+            "for that mesh and time, or rerun FDS."
+        )
+
+    def _check_start(self, time_s: float) -> None:
+        """Raise when *time_s* precedes the first slice frame (never held)."""
+        first = float(self._slice.times[0])
+        if time_s >= first - FDS_START_TOLERANCE_S:
+            return
+        raise FdsStartError(
+            messages.fds_start_late(
+                None,
+                first,
+                quantity=self._slice.quantity.name,
+                requested_s=time_s,
+            )
+        )
+
     def _check_horizon(self, time_s: float) -> None:
         """Raise, or warn once, when *time_s* is past the slice output."""
         last = self.end_time_s
@@ -477,6 +540,7 @@ class SliceFieldSampler:
         t_index = self._t_index_cache.get(ts)
         if t_index is not None:
             return t_index
+        self._check_start(ts)
         self._check_horizon(ts)
         t_index = int(self._slice.get_nearest_timestep(ts))
         if len(self._t_index_cache) >= _T_INDEX_CACHE_SIZE:
@@ -501,7 +565,10 @@ class SliceFieldSampler:
                 f"Point ({x}, {y}) is outside the sampled FDS slice domain"
             )
         i_index, j_index = self._grid(subslice).index(float(x), float(y))
-        return float(subslice.data[t_index, i_index, j_index])
+        value = float(subslice.data[t_index, i_index, j_index])
+        if not math.isfinite(value):
+            self._raise_non_finite(ts, float(x), float(y), t_index, subslice)
+        return value
 
 
 # Grids the samplers of a process share (#242). The key is the bytes of both
@@ -911,6 +978,24 @@ def fds_output_horizon(fds_dir: str, *, simulation=None) -> tuple[float, float] 
         if len(s.times) > 1
     ]
     return min(ends, key=sum) if ends else None
+
+
+def fds_output_start(fds_dir: str, *, simulation=None) -> float | None:
+    """Return the latest first frame time [s] of the FDS slices with two frames.
+
+    The slices ``fds_output_horizon`` counts; the latest start is when every
+    slice has data. None when the case has no slice with two frames.
+    """
+    sim = simulation if simulation is not None else _open_simulation(fds_dir)
+    starts = [float(s.times[0]) for s in sim.slices if len(s.times) > 1]
+    return max(starts) if starts else None
+
+
+def check_fds_start(first_s: float, fds_dir: str, quantity: str | None = None) -> None:
+    """Raise ``FdsStartError`` when the FDS output starts after t = 0."""
+    if first_s <= FDS_START_TOLERANCE_S:
+        return
+    raise FdsStartError(messages.fds_start_late(fds_dir, first_s, quantity=quantity))
 
 
 def select_horizontal_slice(

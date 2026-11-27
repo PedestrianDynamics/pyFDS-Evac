@@ -1985,7 +1985,7 @@ class DefaultHeatFedModel:
         )
 
     def _warn_missing_radiometer_once(self, inputs: HeatFedInputs) -> None:
-        """Log once per model when the radiometer reading is not finite."""
+        """Log once per model when the radiometer reading is missing (NaN)."""
         if self._warned_missing_radiometer:
             return
         reading = inputs.radiometer_kw_m2
@@ -1994,9 +1994,8 @@ class DefaultHeatFedModel:
         self._warned_missing_radiometer = True
         _logger.warning(
             "An agent is outside the TEMPERATURE slice (outside the FDS "
-            "domain) or its radiometer reading is not finite: its heat dose "
-            "rate is zero there, and the reading and q read NaN in the FED "
-            "history. Logged once per run."
+            "domain): its heat dose rate is zero there, and the reading and "
+            "q read NaN in the FED history. Logged once per run."
         )
 
     def advance(

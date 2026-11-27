@@ -365,8 +365,10 @@ class TestDesiredSpeedFallbacks:
 
     def test_unreadable_and_read_only_attribute(self):
         agent = _Obj(model=CollisionFreeSpeedModelV2State())
-        assert get_agent_desired_speed(agent) is None
-        assert set_agent_desired_speed(agent, 0.5) is False
+        with pytest.raises(RuntimeError, match="CollisionFreeSpeedModelV2State"):
+            get_agent_desired_speed(agent)
+        with pytest.raises(RuntimeError, match="CollisionFreeSpeedModelV2State"):
+            set_agent_desired_speed(agent, 0.5)
 
     def test_write_is_a_float(self):
         agent = _Obj(model=CollisionFreeSpeedModelState(1.0))

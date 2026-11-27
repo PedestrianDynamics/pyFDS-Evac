@@ -306,6 +306,7 @@ def temperature_only_case(monkeypatch):
     monkeypatch.setattr(
         run_config, "inspect_fds_quantities", lambda _d: _TemperatureOnlyInventory()
     )
+    monkeypatch.setattr(run_config, "fds_output_start", lambda _d: None)
     monkeypatch.setattr(
         run_config.FdsHeatField,
         "from_fds",

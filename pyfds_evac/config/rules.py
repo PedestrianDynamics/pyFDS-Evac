@@ -47,12 +47,14 @@ class FdsFacts:
     ``integrated_intensity``). ``horizon`` is ``(last time, output interval)``
     [s] or None. ``slice_heights`` maps each FDS quantity name to the
     mid-heights [m] of its horizontal slices, in declaration order (empty
-    when unknown: no height warning is predicted).
+    when unknown: no height warning is predicted). ``start`` is the latest
+    first frame time [s] over the slices, or None.
     """
 
     slices: frozenset[str]
     horizon: tuple[float, float] | None = None
     slice_heights: Mapping[str, tuple[float, ...]] = field(default_factory=dict)
+    start: float | None = None
 
     def has(self, quantity: str) -> bool:
         return quantity in self.slices
@@ -72,6 +74,7 @@ class FdsFacts:
         from pyfds_evac.core.fds_inventory import inspect_fds_quantities
         from pyfds_evac.core.fds_sampling import (
             fds_output_horizon,
+            fds_output_start,
             horizontal_slice_heights,
         )
 
@@ -80,6 +83,7 @@ class FdsFacts:
             frozenset(inventory.canonical_slice_names()),
             fds_output_horizon(fds_dir),
             horizontal_slice_heights(fds_dir),
+            fds_output_start(fds_dir),
         )
 
 
@@ -87,6 +91,7 @@ class _Unknown:
     """No FDS inventory read yet: every slice counts as present."""
 
     horizon = None
+    start = None
 
     def has(self, quantity: str) -> bool:
         return True
@@ -296,6 +301,17 @@ def height_warnings(
         if text is not None:
             found.append(text)
     return found
+
+
+def start_late(opts: Any, fds: Any) -> str | None:
+    """D36: how the FDS output starts after t = 0, or None."""
+    from pyfds_evac.core.fds_sampling import FDS_START_TOLERANCE_S
+
+    fds_dir = option(opts, "fds_dir")
+    start = getattr(fds, "start", None)
+    if not fds_dir or start is None or start <= FDS_START_TOLERANCE_S:
+        return None
+    return messages.fds_start_late(fds_dir, start)
 
 
 def horizon_overrun(opts: Any, max_time: Any, fds: Any) -> str | None:

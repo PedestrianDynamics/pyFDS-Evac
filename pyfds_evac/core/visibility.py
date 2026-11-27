@@ -153,7 +153,8 @@ def _extinction_slice_index(fds_dir: str, slice_height_m: float) -> int:
     the walking-speed and FED samplers use, and handed to fdsvismap by its
     index in ``Simulation.slices``. fdsvismap 0.3.1 applies the same rule
     itself (fdsvismap#55); passing the index keeps one owner of the rule and
-    its height-mismatch warning.
+    its height-mismatch warning. Raises ``FdsStartError`` when that slice
+    starts after t = 0.
     """
     from .fdsreader_adapter import open_fds_simulation
 
@@ -163,6 +164,7 @@ def _extinction_slice_index(fds_dir: str, slice_height_m: float) -> int:
     chosen = fds_sampling.select_horizontal_slice(
         extinction, slice_height_m, _EXTINCTION_QUANTITY, fds_dir
     )
+    fds_sampling.check_fds_start(float(chosen.times[0]), fds_dir, _EXTINCTION_QUANTITY)
     return next(i for i, s in enumerate(slices) if s is chosen)
 
 

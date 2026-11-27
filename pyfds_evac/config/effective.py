@@ -69,6 +69,7 @@ from .rules import (
     routing_issue,
     spawn_issue,
     speed_alias_issue,
+    start_late,
     visibility_value_issue,
 )
 
@@ -568,6 +569,9 @@ def _errors(
 ) -> list[ConfigIssue]:
     """The F, I and B errors the run would stop on at setup, in check order."""
     errors = list(check_options(opts))
+    late = start_late(opts, fds)
+    if late is not None:
+        errors.append(ConfigIssue("D36", "fds_dir", late, "I"))
     overrun = horizon_overrun(opts, max_time, fds)
     if overrun is not None and not option(opts, "allow_fds_horizon_hold"):
         errors.append(

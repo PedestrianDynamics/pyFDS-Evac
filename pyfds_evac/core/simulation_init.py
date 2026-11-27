@@ -1934,8 +1934,10 @@ def _initialize_with_fallback(
             continue
         try:
             checkpoint_polygon = Polygon(coordinates)
-        except Exception:
-            continue
+        except (ValueError, TypeError) as exc:
+            raise ValueError(
+                f"checkpoints.{cp_id}: coordinates do not form a polygon: {exc}"
+            ) from exc
         waiting_time, enable_throttling, speed_factor = _normalize_checkpoint_mode(
             cp_data.get("waiting_time", 0),
             cp_data.get("enable_throughput_throttling", False),
@@ -1962,8 +1964,10 @@ def _initialize_with_fallback(
             continue
         try:
             zone_polygon = Polygon(coordinates)
-        except Exception:
-            continue
+        except (ValueError, TypeError) as exc:
+            raise ValueError(
+                f"zones.{zone_id}: coordinates do not form a polygon: {exc}"
+            ) from exc
         direct_steering_info[zone_id] = {
             "polygon": zone_polygon,
             "waiting_time": 0.0,
@@ -2480,6 +2484,22 @@ def _find_nearest_exit(
     raise ValueError("No exits available for nearest-exit assignment")
 
 
+_BUFFER_WARNED: set[bytes] = set()
+
+
+def _warn_buffer_failed(polygon, exc: Exception) -> None:
+    """Warn once per polygon that its inner buffer failed (spawns use the polygon)."""
+    key = polygon.wkb
+    if key in _BUFFER_WARNED:
+        return
+    _BUFFER_WARNED.add(key)
+    _logger.warning(
+        "Inner buffer of a spawn polygon failed (%s); placing agents in the "
+        "polygon itself, without clearance from its border.",
+        exc,
+    )
+
+
 def _random_point_in_polygon(polygon, rng, min_clearance: float = 0.2):
     """Generate a random point inside a polygon, preferring interior clearance."""
 
@@ -2494,7 +2514,8 @@ def _random_point_in_polygon(polygon, rng, min_clearance: float = 0.2):
                     )
                 else:
                     candidate_polygon = inner_polygon
-        except Exception:
+        except shapely.errors.GEOSException as exc:
+            _warn_buffer_failed(polygon, exc)
             candidate_polygon = polygon
 
     minx, miny, maxx, maxy = candidate_polygon.bounds

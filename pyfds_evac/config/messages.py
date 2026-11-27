@@ -143,6 +143,24 @@ def horizon_error(overrun: str) -> str:
     )
 
 
+def fds_start_late(
+    fds_dir: str | None,
+    start_s: float,
+    *,
+    quantity: str | None = None,
+    requested_s: float | None = None,
+) -> str:
+    """D36: the FDS output starts after t = 0, which the run reads as ignition."""
+    where = f" in {fds_dir}" if fds_dir else ""
+    what = f" ({quantity})" if quantity else ""
+    asked = f" Requested at t={requested_s:.1f} s." if requested_s is not None else ""
+    return (
+        f"The FDS output{where} starts at t={start_s:.3f} s{what}, but "
+        "pyFDS-Evac reads evacuation time t as FDS time t: t = 0 is FDS t = 0, "
+        f"the ignition.{asked} Set T_BEGIN = 0 in the FDS deck and rerun FDS."
+    )
+
+
 INSPECT_NEEDS_FDS = "--inspect-fds requires --fds-dir"
 VIS_CACHE_NEEDS_REROUTING = "--vis-cache requires --enable-rerouting"
 CLEAR_AIR_CONTRADICTS_FDS = (

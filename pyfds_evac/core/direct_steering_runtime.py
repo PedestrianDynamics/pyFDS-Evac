@@ -272,6 +272,16 @@ _MODEL_SPEED_ATTRS: dict[str, str] = {
 }
 
 
+def _speed_attr_error(
+    action: str, agent, model_obj, speed_attr: str, exc: Exception
+) -> RuntimeError:
+    """The error for a failed read or write of an agent's desired speed."""
+    return RuntimeError(
+        f"Cannot {action} {speed_attr} of agent {getattr(agent, 'id', '?')} "
+        f"({type(model_obj).__name__}): {exc}"
+    )
+
+
 def get_agent_desired_speed(agent) -> float | None:
     """Read the agent's desired speed from the documented JuPedSim runtime API."""
     model_obj = getattr(agent, "model", None)
@@ -282,8 +292,8 @@ def get_agent_desired_speed(agent) -> float | None:
         return None
     try:
         return float(getattr(model_obj, speed_attr))
-    except Exception:
-        return None
+    except (TypeError, ValueError, AttributeError) as exc:
+        raise _speed_attr_error("read", agent, model_obj, speed_attr, exc) from exc
 
 
 def set_agent_desired_speed(agent, speed: float) -> bool:
@@ -297,8 +307,8 @@ def set_agent_desired_speed(agent, speed: float) -> bool:
     try:
         setattr(model_obj, speed_attr, float(speed))
         return True
-    except Exception:
-        return False
+    except (TypeError, ValueError, AttributeError) as exc:
+        raise _speed_attr_error("write", agent, model_obj, speed_attr, exc) from exc
 
 
 # Smoke and FIC factors of the last write without a zone factor; see
